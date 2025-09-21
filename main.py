@@ -1,5 +1,5 @@
+import os
 import tkinter as tk
-import settings as s
 import texioty
 import subprocess
 import threading
@@ -24,12 +24,12 @@ class Application(tk.Frame):
             "TXTY": self.texioty_frame,
             "SPLD": spell_depicter
         }
-        
         self.texioty_frame.grid()
+        linux_user = os.getcwd().split("/")[2]
+        self.texioty_frame.log_profile_in([linux_user, "p455"])
 
 if __name__ == '__main__':
     root = tk.Tk()
-    root.title('Regular Generator')
 
     root.configure(background='#0f6faa')
     screen_width = root.winfo_screenwidth()

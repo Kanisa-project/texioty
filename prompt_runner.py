@@ -1,60 +1,116 @@
+import os
+import random
 import tkinter as tk
 
+import texity
+import texoty
+
+MAIN_OPTIONS = ["launcher(Gaim)",
+                "Discord.bot()",
+                "laser_tag(RUN)",
+                "TCG__[labrat]",
+                "foto(FUNCS{})",
+                "Profile/-make"]
+
+GAIM_OPTIONS = ['PyLanes', 'kPaint', 'ThurBo', 'Othaido', 'spaceDits']
+KBOT_OPTIONS = ['Config', 'Launch']
+LASERTAG_OPTIONS = ['Start lobby', 'Edit config']
+TCG_OPTIONS = ['Magic the Gathering', 'Pokemon', 'Lorcana', 'Yu-Gi-Oh', 'Digimon', 'All']
+LAB_OPTIONS = ['Card%Puzzler()',
+               'Card-0wn1oad3r',
+               'RanDexter-2110']
+FUNCFOTO_OPTIONS = ['Depictinator{}',
+                    'TC-Blender 690',
+                    'Deep-friar 420']
+PROFILE_OPTIONS = ['kanisa',
+                   'texioty',
+                   'laser_tag',
+                   'view_profiles']
+
+
+
 class PromptRunner(tk.LabelFrame):
-    def __init__(self, master):
+    def __init__(self, master, txo: texoty.TEXOTY, txi: texity.TEXITY):
         tk.LabelFrame.__init__(self, master)
+        self.response_dict = {}
+        self.txo: texoty.TEXOTY = txo
+        self.txi: texity.TEXITY = txi
         self.in_questionnaire_mode = False
-        self.master = master
         self.question_prompt_dict = {}
         self.question_keys = []
         self.current_question_index = 0
 
-    def start_question_prompt(self, question_dict: dict):
+    def start_question_prompt(self, question_dict: dict, clear_txo=False):
         """
         Checks if Textioty is already in a questionnaire prompt. If not, sets up the first question and starts the
         prompt to receive answers. Anything typed and sent in Texity will be saved as answers for the prompt questions.
         :param question_dict: Dictionary of questions, consider making a dataclass.
+        :param clear_txo: Clears the Texioty header before starting the questionnaire prompt.
         :return:
         """
-        self.texoty.clear_add_header()
+        if clear_txo:
+            self.txo.clear_add_header()
         if not self.in_questionnaire_mode:
             self.question_prompt_dict = question_dict
+            self.response_dict = question_dict
             self.question_keys = list(question_dict.keys())
+            # for key in self.question_keys:
+            #     self.response_dict[key] = [None, None, None, question_dict[key][3]]
             self.in_questionnaire_mode = True
             self.current_question_index = 0
             self.display_question()
         else:
-            self.texoty.priont_string("Already in a questionnaire prompt.")
+            self.txo.priont_string("Already in a questionnaire prompt.")
             self.display_question()
+
+    def display_options(self, avail_options: list):
+        for i in range(self.txo.texoty_h-len(avail_options)):
+            self.txo.priont_string(' '*(self.txo.texoty_w-2)+'\n')
+        for option in avail_options:
+            self.txo.priont_string(option)
 
     def display_question(self):
         """Displays a question from the loaded questionnaire prompt dictionary."""
         if self.current_question_index < len(self.question_keys):
             question_key = self.question_keys[self.current_question_index]
             question = self.question_prompt_dict[question_key][0]
-            self.texoty.priont_string(question)
+            for i in range(self.txo.texoty_h-3):
+                self.txo.priont_string('')
+            self.txo.insert(tk.END, question)
+            self.txo.priont_string(f"[{self.question_prompt_dict[question_key][2]}]")
+            # self.txi.command_string_var.set(f"[{self.question_prompt_dict[question_key][2]}]  ›")
+            self.txi.icursor(tk.END)
         else:
-            self.end_question_prompt(self.question_prompt_dict)
+            self.end_question_prompt(self.response_dict)
 
-    def end_question_prompt(self, question_dict: dict):
-        self.texoty.priont_string("Prompt ended, here are the results: ")
-        self.texoty.priont_dict(question_dict)
+    def end_question_prompt(self, question_dict: dict) -> dict:
+        """End the questionnaire prompt and return the results."""
+        self.txo.priont_string("Prompt ended, here are the results: ")
+        self.txo.priont_dict(question_dict)
         self.in_questionnaire_mode = False
+        # self.response_dict = question_dict
+        print(self.response_dict)
+        self.response_dict['confirming_function'][3](self.response_dict['confirming_function'][1])
+        return question_dict
 
-    def store_response(self, answer):
+    def store_response(self, answer: str):
         """ Store the response in the questionnaire dictionary and advance to the next question."""
         question_key = self.question_keys[self.current_question_index]
         if answer == "":
             answer = self.question_prompt_dict[question_key][2]
-            self.texoty.priont_string("|>  " + str(answer) + " (Default)")
+            self.txo.priont_string("|>  " + answer + " (Default)")
         else:
-            self.texoty.priont_string("|>  " + str(answer))
-        self.question_prompt_dict[question_key][1] = answer
+            self.txo.priont_string("|>  " + answer)
+        self.response_dict[question_key][1] = answer
 
         self.current_question_index += 1
         self.display_question()
-        # if question_key == "confirmation":
-        #     if answer.startswith('y'):
-        #         pass
-        #     else:
-        #         self.texoty.priont_string("Canceling, please restart the prompt.")
+
+    def run_skrypto(self, args):
+        self.start_question_prompt(
+                {"profile_name": [f"What to name the profile?", "", os.getcwd().split('/')[2]],
+                 "password": [f"What to use for password?", "", str(random.randint(1000, 9999))],
+                 "color_theme": ["Which color theme to use?", "", random.choice(['bluebrrryy dark', 'bluebrrryy light',
+                                                                                 'nulbrrryyy dark', 'nulbrrryyy light'])],
+                 "confirming_function": ["Does this look good?", "", random.choice(['yes', 'no']), print]},
+                clear_txo=True)

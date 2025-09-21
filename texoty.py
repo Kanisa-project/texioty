@@ -30,18 +30,6 @@ class TEXOTY(Text):
         super(TEXOTY, self).__init__(master=master, bg=self.active_profile.color_theme[2], height=self.texoty_h,
                                      width=self.texoty_w,
                                      spacing2=0)
-        self.artay_method_dict = {
-            "glyth": create_glyth_line,
-            "glyph": create_glyph_line,
-            "wordie": create_wordie_line,
-            # "foto": self.create_foto_line
-        }
-        self.new_something_dict = {
-            "miner": create_glyth_line,
-            "owner": create_glyph_line,
-            "tech": create_wordie_line,
-            "pool": self.create_foto_line
-        }
         self.set_header()
         self.hyperlink = HyperlinkManager(self)
 

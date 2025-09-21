@@ -49,7 +49,7 @@ class TEXITY(tk.Entry):
         Returns the questions response as a string, including the entire Texity input.
         :return: entire string from Texity
         """
-        text_input = self.command_string_var.get()
+        text_input = self.command_string_var.get().split("›")[-1]
         return text_input
 
     def parse_gaim_play(self) -> str:

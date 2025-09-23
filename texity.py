@@ -36,9 +36,9 @@ class TEXITY(tk.Entry):
         Returns a list of command arguments.
         :return: command argument list
         """
-        text_input = self.command_string_var.get()
+        text_input = self.command_string_var.get().strip()
         # Simply splits Texity input by spaces.
-        return text_input.split()
+        return text_input.split() if text_input else []
 
     def parse_diary_line(self) -> str:
         text_input = self.command_string_var.get()

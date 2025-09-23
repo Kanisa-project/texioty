@@ -1,20 +1,19 @@
 import math
-from mtgsdk import Card, Set
+from mtgsdk import Card
 from PIL import Image, ImageDraw
 import random
-import numpy as np
 import settings as s
-import tkinter as tk
-import this
+import theme as t
+import tex_helper
 
 
-class SpellDepicter(tk.LabelFrame):
-    def __init__(self, width, height, master=None):
-        super().__init__(master, width=width, height=height)
+class SpellDepicter(tex_helper.TexiotyHelper):
+    def __init__(self, txo, txi):
+        super().__init__(txo, txi)
         self.txo = None
         self.texioty_commands = {
             "depict_spell": [self.depict_mtg_spell, "Depicts a spell from MTG.",
-                             {}, [], s.rgb_to_hex(s.INDIAN_RED), s.rgb_to_hex(s.BLACK)], }
+                             {}, [], s.rgb_to_hex(t.INDIAN_RED), s.rgb_to_hex(t.BLACK)], }
 
     def depict_mtg_spell(self, args):
         self.txo.priont_string(f"Depicting the '{args[0].title()}' spell.")
@@ -79,7 +78,7 @@ def lsystem_dual_mana_decoder(lstring: str, start_point=(480, 480), start_length
                                       color, (w, h))
         line_points_list.append(line_tuple)
         prev_line_tuple = line_tuple
-    # color = random.choice(s.RANDOM_COLORS)
+    # color = random.choice(t.RANDOM_COLORS)
     return line_points_list
 
 

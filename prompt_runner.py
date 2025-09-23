@@ -1,13 +1,13 @@
 import os
 import random
 import tkinter as tk
-
+import tex_helper
 import texity
 import texoty
 
-MAIN_OPTIONS = ["launcher(Gaim)",
-                "Discord.bot()",
-                "laser_tag(RUN)",
+MAIN_OPTIONS = ["launcher>Gaim",
+                "Discord.botty",
+                "laser%tag$RUN",
                 "TCG__[labrat]",
                 "foto(FUNCS{})",
                 "Profile/-make"]
@@ -29,16 +29,17 @@ PROFILE_OPTIONS = ['kanisa',
 
 
 
-class PromptRunner(tk.LabelFrame):
-    def __init__(self, master, txo: texoty.TEXOTY, txi: texity.TEXITY):
-        tk.LabelFrame.__init__(self, master)
-        self.response_dict = {}
-        self.txo: texoty.TEXOTY = txo
-        self.txi: texity.TEXITY = txi
+class PromptRunner(tex_helper.TexiotyHelper):
+    def __init__(self, txo: texoty.TEXOTY, txi: texity.TEXITY):
+        super().__init__(txo, txi)
+        self.txo = txo
+        self.txi = txi
         self.in_questionnaire_mode = False
         self.question_prompt_dict = {}
+        self.response_dict = {}
         self.question_keys = []
         self.current_question_index = 0
+        self.texioty_commands = {}
 
     def start_question_prompt(self, question_dict: dict, clear_txo=False):
         """
@@ -63,19 +64,19 @@ class PromptRunner(tk.LabelFrame):
             self.txo.priont_string("Already in a questionnaire prompt.")
             self.display_question()
 
-    def display_options(self, avail_options: list):
+    def display_option_question(self, avail_options: list):
         for i in range(self.txo.texoty_h-len(avail_options)):
             self.txo.priont_string(' '*(self.txo.texoty_w-2)+'\n')
-        for option in avail_options:
-            self.txo.priont_string(option)
+        for i, option in enumerate(avail_options):
+            self.txo.priont_string(f"{i} - {option}")
 
-    def display_question(self):
+    def display_question(self, options=[]):
         """Displays a question from the loaded questionnaire prompt dictionary."""
         if self.current_question_index < len(self.question_keys):
             question_key = self.question_keys[self.current_question_index]
             question = self.question_prompt_dict[question_key][0]
             for i in range(self.txo.texoty_h-3):
-                self.txo.priont_string('')
+                self.txo.priont_string(' -')
             self.txo.insert(tk.END, question)
             self.txo.priont_string(f"[{self.question_prompt_dict[question_key][2]}]")
             # self.txi.command_string_var.set(f"[{self.question_prompt_dict[question_key][2]}]  ›")
@@ -107,10 +108,17 @@ class PromptRunner(tk.LabelFrame):
         self.display_question()
 
     def run_skrypto(self, args):
+        self.display_option_question(MAIN_OPTIONS)
+
+    def prompt_texioty_profile(self):
         self.start_question_prompt(
                 {"profile_name": [f"What to name the profile?", "", os.getcwd().split('/')[2]],
                  "password": [f"What to use for password?", "", str(random.randint(1000, 9999))],
                  "color_theme": ["Which color theme to use?", "", random.choice(['bluebrrryy dark', 'bluebrrryy light',
                                                                                  'nulbrrryyy dark', 'nulbrrryyy light'])],
-                 "confirming_function": ["Does this look good?", "", random.choice(['yes', 'no']), print]},
+                 "confirming_function": ["Does this look good?", "", random.choice(['yes', 'no']), self.txo.master.create_profile]},
                 clear_txo=True)
+
+    def check_question_confirmation(self, answer: str):
+        if self.response_dict['confirming_function'][1] == 'yes':
+            pass

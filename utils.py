@@ -1,5 +1,16 @@
 import os
 import glob
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+def check_file_exists(path: str) -> bool:
+    """Use glob to check if a file exists."""
+    if glob.glob(path):
+        return True
+    return False
 
 def project_root() -> str:
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -41,3 +52,9 @@ def safe_filename(name: str, replacement: str = "_") -> str:
     """
     invalid = '<>:"/\\|?*\n\r\t'
     return "".join((c if c not in invalid else replacement) for c in name).strip()
+
+def get_stock_price(ticker):
+    url = f"https://api.api-ninjas.com/v1/stockprice?ticker={ticker}"
+    response = requests.get(url, headers={"X-Api-Key": os.getenv("API_NINJAS")})
+    data = response.json()
+    return data

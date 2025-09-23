@@ -1,10 +1,12 @@
 import random
 from tkinter import *
+
+import theme
 from tkHyperLinkManager import HyperlinkManager
 import webbrowser
 from functools import partial
 
-import settings as s
+# import settings as s
 import texioty
 import texity
 
@@ -26,11 +28,18 @@ class TEXOTY(Text):
         self.texoty_w = int(width // 4.2)
         self.y_line_index = 0
         self.master: texioty.Texioty = master
-        self.active_profile = self.master.active_profile
-        super(TEXOTY, self).__init__(master=master, bg=self.active_profile.color_theme[2], height=self.texoty_h,
+        # self.active_profile = self.master.active_profile
+        super(TEXOTY, self).__init__(master=master,
+                                     height=self.texoty_h,
                                      width=self.texoty_w,
                                      spacing2=0)
         self.set_header()
+        self.scroll_bar = Scrollbar(master=self.master, width=10, command=self.yview)
+        self['yscrollcommand'] = self.scroll_bar.set
+        self.scroll_bar.propagate(False)
+        self.scroll_bar.grid(column=1, sticky='nsew')
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
         self.hyperlink = HyperlinkManager(self)
 
     def priont_hyperlink(self, tex: str, link: str, line_index=END):
@@ -70,7 +79,8 @@ class TEXOTY(Text):
         self.make_text_colored(font_color, primary_color, f"1.{self.texoty_w}", f"1.end")
 
     def make_text_colored(self, fg_color, bg_color, start_index, end_index):
-        self.tag_configure(f"{fg_color}_{bg_color}", background=bg_color, foreground=fg_color)
+        print(fg_color, bg_color, start_index, end_index)
+        self.tag_configure(f"{fg_color}_{bg_color}", background=theme.rgb_to_hex(bg_color), foreground=theme.rgb_to_hex(fg_color))
         self.tag_add(f"{fg_color}_{bg_color}", start_index, end_index)
         # self.tag_ranges(f'{fg_color}_{bg_color}')
         # self.tag_delete(f'{fg_color}_{bg_color}', '1.5', END)
@@ -258,19 +268,20 @@ class TEXOTY(Text):
         """
         self.priont_string(str(number_list))
 
-    def priont_list(self, items: list, list_key=None, parent_key=None):
+    def priont_list(self, items: list, list_key=None, parent_key=None, numbered=False):
         """
         Display a list of items on texoty, each item in the list on its own line.
 
         @param items:
         @param list_key:
         @param parent_key:
+        @param numbered:
         """
 
         if list_key:
             leading_spaces = " " * (len(list_key) + 1)
         elif parent_key:
-            leading_spaces = " " * len(parent_key)
+            leading_spaces = " " * (len(parent_key) + 1)
         else:
             leading_spaces = " "
 
@@ -280,10 +291,12 @@ class TEXOTY(Text):
             self.priont_string(parent_key + "┐")
             for item in items:
                 prefix = "└" if items.index(item) == len(items) - 1 else "├"
+                if numbered:
+                    prefix = str(items.index(item)) + prefix
                 if isinstance(item, str) and item.startswith('http'):
                     self.priont_hyperlink("Click Me", item)
                 else:
-                    self.priont_string(f'{leading_spaces}{prefix}{item}')
+                    self.priont_string(f'{leading_spaces[len(str(items.index(item))) + 1:]}{prefix}{item}')
         else:
             for item in items:
                 prefix = "└" if items.index(item) == len(items) - 1 else "├"
@@ -314,55 +327,3 @@ class TEXOTY(Text):
 
     def set_char_on_line(self, x_loc, y_loc, char="┐"):
         self.insert(f"{x_loc}.{y_loc}", char)
-
-    def create_foto_line(self, one, two):
-        print(one, two)
-        start_x = 0
-        start_y = 3
-        for i in range(20):
-            if i % 2 == 0:
-                start_y += 1
-                self.set_char_on_line(0, 0, f"{' ' * i}┐\n")
-            else:
-                start_x += 1
-                self.set_char_on_line(0, 0, f"{' ' * i}└\n")
-
-
-def create_glyth_line(mstrpc_w, mstrpc_a) -> str:
-    """
-    Create a line of glyth like text with a total length of mstrpc_w.
-    :param mstrpc_w: Width of the masterpiece.
-    :param mstrpc_a: Amount of textual glyths or something.
-    :return:
-    """
-    dots = random.choice('.:*')
-    lines = random.choice('_-+/')
-    return f"{dots * (mstrpc_w - mstrpc_a)}{lines}{dots * mstrpc_a}"
-
-
-def create_glyph_line(mstrpc_w, mstrpc_a) -> str:
-    """
-    Create a line of glyph like text totaling length of mstrpc_w.
-    :param mstrpc_w: Width of the masterpiece.
-    :param mstrpc_a: Amount of textual glyths or something.
-    :return:
-    """
-    dots = random.choice('▓▒░')
-    lines = random.choice('▐▌▄▀')
-    return f"{dots * (mstrpc_w - mstrpc_a)}{lines}{dots * mstrpc_a}"
-
-
-def create_wordie_line(mstrpc_w, mstrpc_a) -> str:
-    """
-    Create a line of not wordie like text with the width of mstrpc_w.
-    :param mstrpc_w: Width of the masterpiece.
-    :param mstrpc_a: Amount of textual glyths or something.
-    :return:
-    """
-    dots = random.choice('┐└┴┬├─┼┘┌')
-    lines = random.choice('╚╔╩╦╠═╬')
-    return f"{lines * (mstrpc_w - mstrpc_a)}{dots}{lines * mstrpc_a}"
-
-
-def hyperlink_callback(url):
-    webbrowser.open_new_tab(url)

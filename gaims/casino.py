@@ -1,6 +1,8 @@
 import random
 
-from gaims.gaim_runner import BaseGaim
+from gaims.base_gaim import BaseGaim
+import theme as t
+
 
 suits = "♠♥♣♦"
 card_vals = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
@@ -23,6 +25,11 @@ dealer_hand_value = 0
 class CasinoRunner(BaseGaim):
     def __init__(self, txo, txi):
         super().__init__(txo, txi, "Casino")
+        self.gaim_commands['hit'] = [self.blackjack_hit, "Have the dealer serve you another card.",
+                                       {}, [], t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
+
+    def blackjack_hit(self, args):
+        pass
 
 
 def draw_a_card() -> (str, int):

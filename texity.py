@@ -9,7 +9,7 @@ class Command:
     handler: Any
     help_message: str
     possible_args: dict
-    executed_args: tuple
+    helper_symbol: str
     text_color: str
     bg_color: str
 
@@ -52,9 +52,9 @@ class TEXITY(tk.Entry):
         text_input = self.command_string_var.get().split("›")[-1]
         return text_input
 
-    def parse_gaim_play(self) -> str:
+    def parse_gaim_command(self) -> list:
         text_input = self.command_string_var.get()
-        return text_input
+        return text_input.split()
 
     def command_list_previous(self):
         """Changes the input box to the previous command in the list."""
@@ -80,6 +80,7 @@ class TEXITY(tk.Entry):
 
     def respond_to_prompt(self):
         pass
+
 
 
 def clamp(n, minn, maxn) -> int:

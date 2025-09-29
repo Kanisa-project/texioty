@@ -39,7 +39,7 @@ class PromptRunner(tex_helper.TexiotyHelper):
         self.response_dict = {}
         self.question_keys = []
         self.current_question_index = 0
-        self.texioty_commands = {}
+        self.helper_commands = {}
 
     def start_question_prompt(self, question_dict: dict, clear_txo=False):
         """

@@ -289,6 +289,13 @@ ALPHANUMERIC_COLORS = {
     "z": ZENYTE_YELLOW
 }
 
+def string_to_hex(any_str: str) -> str:
+    """
+    Transforms any string into a hexadecimal color.
+    """
+    hex_color = ''
+    return hex_color
+
 def rgb_to_hex(color):
     if isinstance(color, str):
         color_str = color.strip()

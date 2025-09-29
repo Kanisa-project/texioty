@@ -1,4 +1,4 @@
-from gaims.gaim_runner import BaseGaim
+from gaims.base_gaim import BaseGaim
 import theme as t
 import random
 import json
@@ -42,11 +42,16 @@ class CandySlingerRunner(BaseGaim):
     def __init__(self, txo, txi):
         super().__init__(txo, txi, "Candy Slinger")
         self.gaim_commands["move"] = [self.move_location, "Move to a new location in the city.",
-                                       {}, [], t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
+                                       {}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
         self.gaim_commands["buy"] = [self.buy_candy, "Buy some candy from your location.",
-                                       {}, [], t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
+                                       {}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
         self.gaim_commands["sell"] = [self.sell_candy, "Sell some candy where you are.",
-                                       {}, [], t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
+                                       {}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
+
+    def new_game(self, args):
+        super().new_game(args)
+        self.texioty_commands = self.gaim_commands
+        self.txo.master.add_command_dict(self.texioty_commands)
 
     def move_location(self, args):
         pass

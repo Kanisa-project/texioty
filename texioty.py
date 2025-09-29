@@ -5,9 +5,13 @@ import tkinter as tk
 from dataclasses import dataclass
 from os.path import exists
 from typing import Dict, Any
+
+from digiary import Digiary
+from gaims.gaim_registry import GaimRegistry
 from utils import get_stock_price
 import settings as s
 import theme as t
+from tex_helper import TexiotyHelper
 import texoty
 import texity
 
@@ -18,7 +22,13 @@ class CommandRegistry:
     """
     commands: Dict[str, texity.Command]
 
-    def add_command(self, name: str, handler: Any, msg: str, p_args: Any, e_args: Any,
+    def remove_commands(self, help_symb: str):
+        """
+        Remove a command from the registry.
+        """
+        pass
+
+    def add_command(self, name: str, handler: Any, msg: str, p_args: Any, help_symb: Any,
                     t_color: str, b_color: str) -> None:
         """
         Add a new command that Texity will recognize and Texoty can display.
@@ -26,7 +36,7 @@ class CommandRegistry:
         :param handler: Defined function for execution.
         :param msg: A message of helping for the help display.
         :param p_args: Possible arguments for Texity.
-        :param e_args: Exact arguments for Texity to use.
+        :param help_symb: Symbol of helper that contains this command.
         :param t_color: Text color for help display.
         :param b_color: Background color for help display.
         :return:
@@ -35,7 +45,7 @@ class CommandRegistry:
                                              handler=handler,
                                              help_message=msg,
                                              possible_args=p_args,
-                                             executed_args=e_args,
+                                             helper_symbol=help_symb,
                                              text_color=t_color,
                                              bg_color=b_color)
 
@@ -48,7 +58,7 @@ class CommandRegistry:
         """
         command = self.commands.get(name)
         if command:
-            print(command.handler)
+            # print(command.handler)
             command.handler(args)
         else:
             print(f"Command '{name}' not found.")
@@ -66,16 +76,9 @@ class Texioty(tk.LabelFrame):
         """
         super(Texioty, self).__init__(master)
         self.current_mode = "Texioty"
-        # self.configure(text="Texioty:  ")
-
-        # INITIATE DIARY VARIABLES
-        self.diary_line_length = 75
-        self.diarySentenceList = []
-        self.in_diary_mode = False
-
         self.registry = CommandRegistry({})
 
-        self.helper_dict = {}
+        self.active_helpers = ['TXTY', 'HLPR', 'DIRY', 'GAIM']
         self.available_profiles = s.available_profiles
         self.active_profile = self.available_profiles["guest"]
 
@@ -85,31 +88,26 @@ class Texioty(tk.LabelFrame):
         self.texity.grid(column=0, row=1)
 
         self.texity.focus_set()
-        self.texity.bind('<KP_Enter>', lambda e: self.process_command())
-        self.texity.bind('<Return>', lambda e: self.process_command())
+        self.texity.bind('<KP_Enter>', lambda e: self.process_texity())
+        self.texity.bind('<Return>', lambda e: self.process_texity())
 
+        self.base_helper = TexiotyHelper(self.texoty, self.texity)
+        self.digiary = Digiary(self.texoty, self.texity)
+        self.gaim_registry = GaimRegistry(self.texoty, self.texity)
+        self.default_helpers = {"TXTY": [self],
+                            "HLPR": [self.base_helper],
+                            "DIRY": [self.digiary],
+                            "GAIM": [self.gaim_registry]}
+        self.helper_dict = self.default_helpers
         # Set up basic commands for Texioty to know automatically.
         self.known_commands_dict = {
-            "welcome": [self.welcome_message, "Displays a message of helping helpfulness.",
-                     {}, [], s.rgb_to_hex(t.GREEN_YELLOW), s.rgb_to_hex(t.BLACK)],
-            "help": [self.display_help_message, "Displays a message of helping helpfulness.",
-                     {}, [], s.rgb_to_hex(t.GREEN_YELLOW), s.rgb_to_hex(t.BLACK)],
-            "commands": [self.display_available_commands, "Displays all available commands.",
-                         {}, [], s.rgb_to_hex(t.GREEN_YELLOW), s.rgb_to_hex(t.BLACK)],
-            "login": [self.log_profile_in, "This logs the user into a profile: ",
-                      {'guest': "Basic account with a few permissions."},
-                      [], s.rgb_to_hex(t.DIM_GREY), s.rgb_to_hex(t.BLACK)],
-            "dear_sys,": [self.start_diary_mode, "Starts a diary entry.",
-                     {}, [], s.rgb_to_hex(t.VIOLET_RED), s.rgb_to_hex(t.BLACK)],
-            "/until_next_time": [self.stop_diary_mode, "Ends a diary entry.",
-                     {}, [], s.rgb_to_hex(t.VIOLET_RED), s.rgb_to_hex(t.BLACK)],
+            "login": [self.log_profile_in, "This logs the user into a profile. ",
+                      self.available_profiles, "TXTY", s.rgb_to_hex(t.DIM_GREY), s.rgb_to_hex(t.BLACK)],
             "exit": [self.close_program, "Exits the program.",
-                     {}, [], s.rgb_to_hex(t.PURPLE), s.rgb_to_hex(t.BLACK)],
+                     {}, "TXTY", s.rgb_to_hex(t.PURPLE), s.rgb_to_hex(t.BLACK)],
         }
-
+        self.helper_commands = self.helper_dict["HLPR"][0].helper_commands|self.known_commands_dict
         self.welcome_message([])
-        # Add the basic commands for Texioty.
-        self.all_commands = {}
         self.add_command_dict(self.known_commands_dict)
 
     def add_command_dict(self, command_dict: dict):
@@ -119,15 +117,36 @@ class Texioty(tk.LabelFrame):
         :return:
         """
         for command in command_dict:
+            # print(command, command_dict[command])
+            if command_dict[command][3] not in self.active_helpers:
+                self.active_helpers.append(command_dict[command][3])
             self.registry.add_command(name=command,
                                       handler=command_dict[command][0],
                                       msg=command_dict[command][1],
                                       p_args=command_dict[command][2],
-                                      e_args=command_dict[command][3],
+                                      help_symb=command_dict[command][3],
                                       t_color=command_dict[command][4],
                                       b_color=command_dict[command][5])
             self.texoty.tag_config(f'{command}',
                                    background=f'{command_dict[command][5]}', foreground=f'{command_dict[command][4]}')
+
+    def remove_commands(self):
+        self.registry.commands = {}
+        self.active_helpers = []
+
+    def change_current_mode(self, new_mode: str, new_commands: dict):
+        self.current_mode = new_mode
+        # print('old_commands: ', self.registry.commands)
+        self.remove_commands()
+        self.add_command_dict(new_commands)
+#         print('new_commands: ', self.registry.commands)
+
+    def default_mode(self):
+        self.current_mode = "Texioty"
+        self.remove_commands()
+        for key, helper in self.default_helpers.items():
+            self.add_helper_widget(key, helper[0])
+
 
     def close_program(self, args):
         """
@@ -137,41 +156,17 @@ class Texioty(tk.LabelFrame):
         """
         self.master.destroy()
 
-    def add_helper_widget(self, helper_type: str, helper_widget):
+    def add_helper_widget(self, helper_symbol: str, helper_widget):
         """
         Add a helper widget and all of its commands to texioty while supplying access to texoty.
-        :param helper_type: Type of helper (e.g. Database/API/Other)
+        :param helper_symbol: Symbol of helper (e.g. TXTY GAIM DIRY)
         :param helper_widget:
         :return:
         """
-        helper_widget.txo = self.texoty
-        if len(helper_widget.texioty_commands) > 0:
-            self.add_command_dict(helper_widget.texioty_commands)
-        self.helper_dict[helper_type] = [helper_widget]
-
-    def display_help_message(self, args):
-        """
-        Print the available commands for use with a header added to the top.
-        :param args:
-        :return:
-        """
-        self.texoty.clear_add_header()
-        if self.active_profile:
-            self.texoty.priont_string('\n⦓PROFILE⦙ ' + self.active_profile.username)
-        self.texoty.priont_string("⦓⦙ Seems like you might need help, good luck!")
-        self.texoty.priont_string("   Anything that can be done in this program can be")
-        self.texoty.priont_string("   done through this Texioty widget.")
-        self.texoty.priont_string("⦓⦙ Here are a couple of easy commands to get you started: \n\n")
-        self.texoty.priont_command(self.registry.commands["help"])
-        self.texoty.priont_command(self.registry.commands["commands"])
-
-    def display_available_commands(self, args):
-        """Prints out all the commands that are available."""
-        self.clear_texoty()
-        command_index = 2
-        for command in self.registry.commands:
-            self.texoty.priont_command(self.registry.commands[command])
-            command_index += 1
+        # helper_widget.txo = self.texoty
+        if len(helper_widget.helper_commands) > 0:
+            self.add_command_dict(helper_widget.helper_commands)
+        self.helper_dict[helper_symbol] = [helper_widget]
 
     def clear_texoty(self):
         """Clear all the text from texoty and replace the header."""
@@ -206,16 +201,16 @@ class Texioty(tk.LabelFrame):
         self.texoty.priont_string("⦓⦙ Finally type 'kin8' and press enter, the result should show on the right.")
 
 
-    def process_command(self, event=None):
+    def process_texity(self, event=None):
         """
         Process the command before executing it. Decide which helpers to use or if just a regular command.
         :return:
         """
+        prefix = ''
         match self.current_mode:
             case "Texioty":
                 parsed_input = self.texity.parse_input_command()
                 if not parsed_input:
-                    self.texity.command_string_var.set("")
                     return
                 command = parsed_input[0]
                 arguments = parsed_input[1:]
@@ -223,15 +218,25 @@ class Texioty(tk.LabelFrame):
             case "Diary":
                 if self.texity.parse_diary_line() != "/until_next_time":
                     parsed_input = self.texity.parse_diary_line()
-                    self.add_diary_line(parsed_input)
+                    self.helper_dict["DIRY"][0].add_diary_line(parsed_input)
                 else:
                     self.execute_command("/until_next_time", [])
             case "Questionnaire":
                 parsed_input = self.texity.parse_question_response()
                 self.helper_dict["PRUN"][0].store_response(parsed_input)
             case "Gaim":
-                self.helper_dict["GAIM"][0].process_command()
-        self.texity.command_string_var.set("")
+                parsed_input_list = self.texity.parse_gaim_command()
+                helper_gaim_cmds = self.helper_dict["GAIM"][0].current_gaim.gaim_commands|self.helper_dict["GAIM"][0].current_gaim.helper_commands
+                print(list(helper_gaim_cmds.keys()))
+                if parsed_input_list[0] in list(helper_gaim_cmds.keys()):
+                    # self.texoty.priont_string(f"Found {parsed_input_list[0]}")
+                    self.execute_command(parsed_input_list[0], parsed_input_list[1:])
+                if self.helper_dict["GAIM"][0].current_gaim:
+                    prefix = self.helper_dict["GAIM"][0].current_gaim.gaim_prefix
+        self.texity.command_string_var.set(prefix)
+
+    def execute_gaim_command(self, command, arguments):
+        pass
 
     def execute_command(self, command, arguments):
         """
@@ -291,34 +296,6 @@ class Texioty(tk.LabelFrame):
         else:
             self.texoty.priont_string("You have to log in before you can log out.")
 
-    def start_diary_mode(self, args) -> datetime.datetime:
-        """Begin diary entry and add a timestamp line to the beginning of the entry."""
-        start_now = datetime.datetime.now()
-        self.current_mode = "Diary"
-        self.texoty.priont_string(f"\n-Entering diary mode-   {start_now}")
-        opening_line = timestamp_line_entry(start_now, 'dear_sys,', lead_line='ts',
-                                            follow_line=' ' * (self.diary_line_length - len('dear_sys,')))
-        self.diarySentenceList = [opening_line]
-        return start_now
-
-    def add_diary_line(self, new_line):
-        """Add a line to the current diary entry."""
-        self.texoty.priont_string(f'  [+{"".join(random.sample(new_line, len(new_line)))}')
-        self.diarySentenceList.append(timestamp_line_entry(datetime.datetime.now(), new_line, lead_line='  ',
-                                                           follow_line='_' * (self.diary_line_length - len(
-                                                               new_line) - 2)))
-
-    def stop_diary_mode(self, args) -> datetime.datetime:
-        """End a diary entry and save the entry to a file."""
-        end_now = datetime.datetime.now()
-        self.current_mode = "Texioty"
-        self.texoty.priont_string(f"-Exiting diary mode-   {end_now}\n")
-        ending_line = timestamp_line_entry(end_now, '/until_next_time', lead_line='ts',
-                                           follow_line=' ' * (self.diary_line_length - len('/until_next_time')))
-        self.diarySentenceList.append(ending_line)
-        create_date_entry(end_now, self.diarySentenceList)
-        return end_now
-
     def create_profile(self, args):
         """Create a new profile."""
         if "yes" in args:
@@ -334,44 +311,3 @@ class Texioty(tk.LabelFrame):
                 f.write(json.dumps({"texioty": self.available_profiles[profile_name].__dict__}, indent=4, sort_keys=True,
                                    default=lambda o: o.__dict__, ensure_ascii=False))
             self.texoty.priont_string(f"Profile '{profile_name}' created.")
-
-
-def create_date_entry(entry_time: datetime.datetime, entry_list: list):
-    """
-    Create a date entry for today.
-    :param entry_time: Exact time the entry was created.
-    :param entry_list: List of entry lines.
-    :return:
-    """
-    entry_date_name = f'{entry_time.year}_{entry_time.month}_{entry_time.day}'
-    # entry_list.pop(len(entry_list) - 3)
-    if exists(f'.diary/{entry_date_name}.txt'):
-        with open(f'.diary/{entry_date_name}.txt', 'a') as f:
-            for ent in entry_list:
-                f.write(ent + "\n")
-            f.write("\n")
-    else:
-        with open(f'.diary/{entry_date_name}.txt', 'w') as f:
-            for ent in entry_list:
-                f.write(ent + "\n")
-            f.write("\n")
-
-
-def timestamp_line_entry(entry_time: datetime, entry_line: str, lead_line=" ", follow_line=" ") -> str:
-    """
-    Take an entry line and add a time stamp with a lead and follow string.
-
-    :param entry_time: Hour:Minute:Seconds
-    :param entry_line: Text to be timestamped
-    :param lead_line: Text to the left of the entry_line
-    :param follow_line: Text to the right of the entry_line
-    :return:
-    """
-    time_stamp = f'{entry_time.hour:02d}:{entry_time.minute:02d}:{entry_time.second:02d}'
-    ret_str = lead_line + entry_line + follow_line
-    if lead_line == "ts":
-        ret_str = '  ' + entry_line + follow_line + time_stamp
-        if entry_line == "dear_sys," or entry_line == "/until_next_time":
-            ret_str = entry_line + follow_line + time_stamp + f':{entry_time.microsecond:2d}'
-
-    return ret_str

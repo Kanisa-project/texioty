@@ -178,7 +178,7 @@ class TEXOTY(Text):
         :param command:
         :return:
         """
-        self.priont_break_line()
+        # self.command_group_break(command.helper_symbol)
         self.priont_command_colorized(f'{command.name}╕', command.text_color, command.bg_color)
         if not command.possible_args:
             help_message_text = f'{" " * len(command.name)}╘► {command.help_message}'
@@ -203,8 +203,25 @@ class TEXOTY(Text):
         fg = self.active_profile.color_theme[0]
         self.tag_configure('break_line', foreground=fg, background=bg)
         for _ in range(self.texoty_w - 2):
-            break_line += random.choice('═─')
+            break_line += random.choice('┉┅')
         self.insert(END, f"\n╫{break_line}╫", 'break_line')
+
+    def command_group_break(self, helper_symbol: str):
+        """
+        Adds a break line in Texoty with style.
+        :return:
+        """
+        break_line = ""
+        helper_shades = '▓▒░'
+        help_shade = ''
+        for shade in helper_shades:
+            help_shade += shade * 7
+        bg = self.active_profile.color_theme[2]
+        fg = self.active_profile.color_theme[0]
+        self.tag_configure('break_line', foreground=fg, background=bg)
+        for _ in range(self.texoty_w - 28):
+            break_line += random.choice('┉┅')
+        self.insert(END, f"\n╫{help_shade}{helper_symbol} {break_line}╫", 'break_line')
 
     def priont_string(self, striong: str, line_index=END):
         """

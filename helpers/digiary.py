@@ -4,9 +4,9 @@ from os.path import exists
 import settings as s
 import theme as t
 
-import tex_helper
+from helpers.tex_helper import TexiotyHelper
 
-class Digiary(tex_helper.TexiotyHelper):
+class Digiary(TexiotyHelper):
     def __init__(self, txo, txi):
         super().__init__(txo, txi)
         self.txo = txo

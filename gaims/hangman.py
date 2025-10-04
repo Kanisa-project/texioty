@@ -96,6 +96,8 @@ class HangmanRunner(BaseGaim):
 
     def new_game(self, args):
         super().new_game(args)
+        self.missed_letters = []
+        self.correct_letters = []
         self.pick_new_phrase()
         self.welcome_message([])
         self.gaim_prefix = 'guess '
@@ -104,17 +106,20 @@ class HangmanRunner(BaseGaim):
         """Display the progress of the man being hanged."""
         if len(self.missed_letters) <= len(HANGMAN_TEXTMAN_LIST)-2:
             self.txo.priont_string(HANGMAN_TEXTMAN_LIST[len(self.missed_letters)])
-            self.txo.priont_list(self.missed_letters)
+            self.txo.priont_list(self.missed_letters, parent_key="Missed letters:")
         else:
             self.txo.priont_string(HANGMAN_TEXTMAN_LIST[len(HANGMAN_TEXTMAN_LIST)-1])
-            self.txo.priont_string("Sorry, you guessed too many wrong letters.")
+            self.txo.priont_string("Sorry, you guessed too many wrong letters.\n\n")
             self.txo.priont_string(self.gaim_phrase)
-            self.gaim_prefix = "new "
+            self.gaim_prefix = random.choice(['new ', 'stop '])
 
     def display_phrase(self):
         """Display the progress of the phrase discovered so far."""
-        self.txo.priont_string(''.join(self.hidden_dict.values()))
-        # self.txo.priont_dict(self.hidden_dict)
+        hidden_phrase = ''.join(self.hidden_dict.values())
+        self.txo.priont_string(hidden_phrase)
+        if "◙" not in hidden_phrase:
+            self.txo.priont_string("CONGRATS! YOU WIN!")
+            self.gaim_prefix = random.choice(['new ', 'stop '])
 
     def pick_new_phrase(self):
         """Pick a new phrase and generate it into a hidden dictionary as well."""
@@ -129,7 +134,7 @@ class HangmanRunner(BaseGaim):
             if c in [' ', '.', ',', '\'']:
                 hide_it = c
             while c in self.hidden_dict:
-                c += c
+                c += c[0]
             self.hidden_dict[c] = hide_it
 
     def welcome_message(self, args):
@@ -141,6 +146,24 @@ class HangmanRunner(BaseGaim):
         self.txo.priont_string("")
         self.display_man()
         self.display_phrase()
+
+    def save_game(self, args):
+        self.game_state = {
+            "player_name": self.txo.master.active_profile.username,
+            "missed_letters": self.missed_letters,
+            "correct_letters": self.correct_letters,
+            "gaim_phrase": self.gaim_phrase,
+            "hidden_dict": self.hidden_dict
+        }
+        super().save_game([self.game_state])
+
+    def load_game(self, args):
+        self.game_state = super().load_game([self.txo.master.active_profile.username])
+        self.missed_letters = self.game_state['missed_letters']
+        self.correct_letters = self.game_state['correct_letters']
+        self.gaim_phrase = self.game_state['gaim_phrase']
+        self.hidden_dict = self.game_state['hidden_dict']
+        self.welcome_message([])
 
     def guess_letter(self, guessed_letter: str):
         """
@@ -180,7 +203,6 @@ class HangmanRunner(BaseGaim):
 
     def display_available_commands(self, args):
         super().display_available_commands(args)
-        # self.txo.priont_command(self.gaim_commands['guess'])
 
     def stop_game(self, args):
         super().stop_game(args)

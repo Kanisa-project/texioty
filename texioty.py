@@ -1,17 +1,14 @@
-import datetime
 import json
-import random
 import tkinter as tk
 from dataclasses import dataclass
-from os.path import exists
 from typing import Dict, Any
 
-from digiary import Digiary
-from gaims.gaim_registry import GaimRegistry
-from utils import get_stock_price
+from helpers.digiary import Digiary
+from helpers.gaim_registry import GaimRegistry
 import settings as s
 import theme as t
-from tex_helper import TexiotyHelper
+from helpers.prompt_runner import PromptRunner
+from helpers.tex_helper import TexiotyHelper
 import texoty
 import texity
 
@@ -78,7 +75,7 @@ class Texioty(tk.LabelFrame):
         self.current_mode = "Texioty"
         self.registry = CommandRegistry({})
 
-        self.active_helpers = ['TXTY', 'HLPR', 'DIRY', 'GAIM']
+        self.active_helpers = ['TXTY', 'HLPR', 'DIRY', 'GAIM', 'PRUN']
         self.available_profiles = s.available_profiles
         self.active_profile = self.available_profiles["guest"]
 
@@ -94,20 +91,22 @@ class Texioty(tk.LabelFrame):
         self.base_helper = TexiotyHelper(self.texoty, self.texity)
         self.digiary = Digiary(self.texoty, self.texity)
         self.gaim_registry = GaimRegistry(self.texoty, self.texity)
+        self.prompt_runner = PromptRunner(self.texoty, self.texity)
         self.default_helpers = {"TXTY": [self],
-                            "HLPR": [self.base_helper],
-                            "DIRY": [self.digiary],
-                            "GAIM": [self.gaim_registry]}
-        self.helper_dict = self.default_helpers
-        # Set up basic commands for Texioty to know automatically.
+                                "HLPR": [self.base_helper],
+                                "DIRY": [self.digiary],
+                                "GAIM": [self.gaim_registry],
+                                "PRUN": [self.prompt_runner]}
+        self.active_helper_dict = self.default_helpers
+
         self.known_commands_dict = {
             "login": [self.log_profile_in, "This logs the user into a profile. ",
                       self.available_profiles, "TXTY", s.rgb_to_hex(t.DIM_GREY), s.rgb_to_hex(t.BLACK)],
-            "exit": [self.close_program, "Exits the program.",
+            "exit": [self.close_program, "Exits Texioty.",
                      {}, "TXTY", s.rgb_to_hex(t.PURPLE), s.rgb_to_hex(t.BLACK)],
         }
-        self.helper_commands = self.helper_dict["HLPR"][0].helper_commands|self.known_commands_dict
-        self.welcome_message([])
+        self.helper_commands = self.active_helper_dict["HLPR"][0].helper_commands|self.known_commands_dict
+        self.active_helper_dict['HLPR'][0].welcome_message([])
         self.add_command_dict(self.known_commands_dict)
 
     def add_command_dict(self, command_dict: dict):
@@ -166,40 +165,12 @@ class Texioty(tk.LabelFrame):
         # helper_widget.txo = self.texoty
         if len(helper_widget.helper_commands) > 0:
             self.add_command_dict(helper_widget.helper_commands)
-        self.helper_dict[helper_symbol] = [helper_widget]
+        self.active_helper_dict[helper_symbol] = [helper_widget]
 
     def clear_texoty(self):
         """Clear all the text from texoty and replace the header."""
         self.texoty.delete("0.0", tk.END)
         self.texoty.set_header()
-
-    def welcome_message(self, welcoming_msgs: list):
-        """
-        Display welcoming messages with a few commands to get started.
-
-        """
-        self.texoty.clear_add_header("Welcome!")
-        # price_dict = get_stock_price('GME')
-        # welcoming_msgs.append(f'<{price_dict["ticker"]}>   {price_dict['name']} is at ${price_dict["price"]} since {price_dict["updated"]}.')
-        today_date = datetime.datetime.date(datetime.datetime.now())
-        today_day = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][
-            datetime.datetime.weekday(today_date)]
-        self.texoty.priont_string(
-            f"⦓⦙ Welcome to Texioty! The date is {today_date} on a {today_day}.")
-        for msg in welcoming_msgs:
-            self.texoty.priont_string("⦓⦙ " + msg)
-        self.texoty.priont_string("\n")
-
-        cmnds = [random.choice(["help", "commands"]),
-                 random.choice(["kre8dict", "dear_sys,"]),
-                 random.choice(["exit"])]
-        self.texoty.priont_list(cmnds, parent_key="Here are a few commands you could try:")
-        sequence = ["glyph add 2", "glyth add 4", "kin8"]
-        self.texoty.priont_string("")
-        self.texoty.priont_list(sequence, parent_key="Or try this sequence of commands:", numbered=True)
-        self.texoty.priont_string("⦓⦙ Type 'glyph add 2' and press enter, then 'glyth add 4' and press enter.")
-        self.texoty.priont_string("⦓⦙ Finally type 'kin8' and press enter, the result should show on the right.")
-
 
     def process_texity(self, event=None):
         """
@@ -218,21 +189,21 @@ class Texioty(tk.LabelFrame):
             case "Diary":
                 if self.texity.parse_diary_line() != "/until_next_time":
                     parsed_input = self.texity.parse_diary_line()
-                    self.helper_dict["DIRY"][0].add_diary_line(parsed_input)
+                    self.active_helper_dict["DIRY"][0].add_diary_line(parsed_input)
                 else:
                     self.execute_command("/until_next_time", [])
             case "Questionnaire":
                 parsed_input = self.texity.parse_question_response()
-                self.helper_dict["PRUN"][0].store_response(parsed_input)
+                self.active_helper_dict["PRUN"][0].store_response(parsed_input)
             case "Gaim":
                 parsed_input_list = self.texity.parse_gaim_command()
-                helper_gaim_cmds = self.helper_dict["GAIM"][0].current_gaim.gaim_commands|self.helper_dict["GAIM"][0].current_gaim.helper_commands
+                helper_gaim_cmds = self.active_helper_dict["GAIM"][0].current_gaim.gaim_commands|self.active_helper_dict["GAIM"][0].current_gaim.helper_commands
                 print(list(helper_gaim_cmds.keys()))
                 if parsed_input_list[0] in list(helper_gaim_cmds.keys()):
                     # self.texoty.priont_string(f"Found {parsed_input_list[0]}")
                     self.execute_command(parsed_input_list[0], parsed_input_list[1:])
-                if self.helper_dict["GAIM"][0].current_gaim:
-                    prefix = self.helper_dict["GAIM"][0].current_gaim.gaim_prefix
+                if self.active_helper_dict["GAIM"][0].current_gaim:
+                    prefix = self.active_helper_dict["GAIM"][0].current_gaim.gaim_prefix
         self.texity.command_string_var.set(prefix)
 
     def execute_gaim_command(self, command, arguments):
@@ -281,6 +252,7 @@ class Texioty(tk.LabelFrame):
                     self.texoty.priont_string(f"⦓⦙ Don't forget to type a password.")
             else:
                 self.texoty.priont_string(f"⦓⦙ I don't recognize '{args[0]}' as profile username.")
+                self.active_helper_dict['PRUN'][0].prompt_texioty_profile()
         except IndexError:
             self.texoty.priont_string("⦓⦙ What username to login to?")
 
@@ -300,9 +272,9 @@ class Texioty(tk.LabelFrame):
         """Create a new profile."""
         if "yes" in args:
             self.texoty.priont_string("Creating a new profile...")
-            profile_name = self.helper_dict["PRUN"][0].question_prompt_dict['profile_name'][1]
-            password = self.helper_dict["PRUN"][0].question_prompt_dict['password'][1]
-            color_theme = self.helper_dict["PRUN"][0].question_prompt_dict['color_theme'][1]
+            profile_name = self.active_helper_dict["PRUN"][0].question_prompt_dict['profile_name'][1]
+            password = self.active_helper_dict["PRUN"][0].question_prompt_dict['password'][1]
+            color_theme = self.active_helper_dict["PRUN"][0].question_prompt_dict['color_theme'][1]
             color_theme = t.DEFAULT_THEMES[color_theme]
             self.available_profiles[profile_name] = s.TexiotyProfile(profile_name, password, color_theme)
             save_path = f".profiles/{profile_name}.json"

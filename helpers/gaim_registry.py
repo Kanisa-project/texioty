@@ -1,14 +1,14 @@
 import settings as s
 import theme as t
 
-import tex_helper
+from helpers.tex_helper import TexiotyHelper
 
 from gaims.hangman import HangmanRunner
 from gaims.casino import CasinoRunner
 from gaims.candy_slinger import CandySlingerRunner
 
 
-class GaimRegistry(tex_helper.TexiotyHelper):
+class GaimRegistry(TexiotyHelper):
     def __init__(self, txo, txi):
         super().__init__(txo, txi)
         self.txo = txo
@@ -19,8 +19,8 @@ class GaimRegistry(tex_helper.TexiotyHelper):
                                 "slinger": CandySlingerRunner}
         self.helper_commands = {
             "start": [self.start_game, "Start a text based game.",
-                      self.available_games,
-                      "GAIM", s.rgb_to_hex(t.GREEN), s.rgb_to_hex(t.BLACK)]
+                      self.available_games, "GAIM",
+                      s.rgb_to_hex(t.GREEN), s.rgb_to_hex(t.BLACK)]
         }
         self.current_gaim = None
 

@@ -2,7 +2,6 @@ from gaims.base_gaim import BaseGaim
 import theme as t
 import random
 import json
-import os
 
 INSTRUCTIONS = {'objective': 'Main point of this game is to buy candy cheap and sell it expensive.',
                      'controls': 'You\'ll have an inventory to manage, along with money.',
@@ -23,8 +22,12 @@ LOCATIONS = {
         'theater': {
             'price_mod': 6,
             'amount_mod': 4},
-        'casino': [],
-        'arcade': []}
+        'casino': {
+            'price_mod': 8,
+            'amount_mod': 7},
+        'arcade': {
+            'price_mod': 4,
+            'amount_mod': 3}}
 CANDIES = {
     "skittle": {'price_range': (1, 3), "inventory_range": (6, 9)},
     "dumdum": {'price_range': (2, 4), "inventory_range": (4, 7)},
@@ -34,34 +37,93 @@ CANDIES = {
 
 title_msg = "A game where you can buy and sell candy all around town."
 
-
-def gather_candy_amount(buyorsell) -> int:
-    return int(input(f"How many to {buyorsell}? "))
-
 class CandySlingerRunner(BaseGaim):
     def __init__(self, txo, txi):
-        super().__init__(txo, txi, "Candy Slinger")
+        super().__init__(txo, txi, "CandySlinger")
         self.gaim_commands["move"] = [self.move_location, "Move to a new location in the city.",
                                        {}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
         self.gaim_commands["buy"] = [self.buy_candy, "Buy some candy from your location.",
                                        {}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
         self.gaim_commands["sell"] = [self.sell_candy, "Sell some candy where you are.",
                                        {}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
+        self.player = Player(self.txo.master.active_profile.username)
+        self.world = World(self.player)
 
     def new_game(self, args):
         super().new_game(args)
-        self.texioty_commands = self.gaim_commands
-        self.txo.master.add_command_dict(self.texioty_commands)
+        self.welcome_message([])
+        self.display_player_invo()
+
+
+    def load_game(self, args):
+        self.game_state = super().load_game([self.txo.master.active_profile.username])
+        self.player = Player(self.game_state['player_name'])
+        self.player.money = self.game_state['money']
+        self.player.inventory = self.game_state['inventory']
+        self.player.location = self.game_state['location']
+        self.world = World(self.player)
+        self.welcome_message([])
+        self.display_player_invo()
+
+    def save_game(self, args):
+        self.game_state = {
+            'player_name': self.txo.master.active_profile.username,
+            'money': self.player.money,
+            'inventory': self.player.inventory,
+            'location': self.player.location
+        }
+        super().save_game([self.game_state])
 
     def move_location(self, args):
-        pass
+        self.world.update_new_location(args[0])
+        self.welcome_message([])
+        self.display_player_invo()
 
     def buy_candy(self, args):
-        pass
+        self.player.buy_candy(candy=args[1],
+                              purchase_amt=int(args[0]),
+                              candy_price_ea=self.world.buying_prices[args[1]][0])
+        self.welcome_message([])
+        self.display_player_invo()
 
     def sell_candy(self, args):
-        pass
+        self.player.sell_candy(candy=args[1],
+                               sale_amt=int(args[0]),
+                               candy_price_ea=self.world.selling_prices[args[1]][0])
+        self.welcome_message([])
+        self.display_player_invo()
 
+    def display_player_invo(self):
+        invo_cash_line = f" Inventory: ────────────────────── ${self.player.money} "
+        self.txo.priont_string(f"╔{invo_cash_line}╗")
+        self.txo.priont_string(f"║{' '*len(invo_cash_line)}║")
+        for candy in list(self.player.inventory.keys()):
+            selling_price = self.world.selling_prices[candy][0]
+            sell_avail = f"{self.player.inventory[candy]['inventory']}x"
+            sell_price = f"${selling_price}"
+            candy_line = f"{sell_avail} {candy.title()} {'┄'*(len(invo_cash_line)-len(candy)-len(sell_price)-len(sell_avail)-3)} {sell_price}"
+            self.txo.priont_string(f"║{candy_line}{' '*(len(invo_cash_line)-len(candy_line))}║")
+        self.txo.priont_string(f"╚{'═'*(len(invo_cash_line))}╝\n\n")
+        self.display_loca(len(invo_cash_line))
+
+    def display_loca(self, invo_width: int):
+        location_line = f"{'─'*(invo_width-len(self.player.location)-11)} Location: {self.player.location.title()}"
+        self.txo.priont_string(f"╭{location_line}╮")
+        self.txo.priont_string(f"│{' '*len(location_line)}╽")
+        for candy in list(CANDIES.keys()):
+            buy_price = f'${self.world.buying_prices[candy][0]}'
+            buy_avail = f'{self.world.buying_prices[candy][1]}x'
+            candy_buy_line = f"{buy_avail} {candy.title()} {'┄'*(invo_width-len(candy)-len(buy_price)-len(buy_avail)-3)} {buy_price}"
+            self.txo.priont_string(f"│{candy_buy_line}{' '*(len(location_line)-len(candy_buy_line))}║")
+        self.txo.priont_string(f"╘{'═'*(len(location_line))}╝\n")
+
+    def welcome_message(self, args):
+        super().welcome_message(args)
+        self.txo.priont_string("")
+        self.txo.priont_string("Candy Slinger is as simple as the market should be.")
+        self.txo.priont_string("Buy what you can low, sell what you have high.")
+        self.txo.priont_string("Move around town to get the best prices.")
+        self.txo.priont_string("")
 
 class Player:
     def __init__(self, player_name):
@@ -80,7 +142,8 @@ class Player:
             "player_name": self.player_name,
             "money": self.money,
             "inventory": self.inventory,
-            "location": self.location}
+            "location": self.location
+        }
 
     def buy_candy(self, candy: str, purchase_amt: int, candy_price_ea: int):
         if self.money >= purchase_amt * candy_price_ea:
@@ -94,49 +157,14 @@ class Player:
             self.money += sale_amt * candy_price_ea
 
 
-def new_gaim(player_name) -> Player:
-    new_player = Player(player_name)
-    return new_player
-
-
-def load_gaim(player_name) -> Player:
-    loaded_player = Player(player_name)
-    return loaded_player
-
-
 class World:
     def __init__(self, player):
         self.player = player
         self.selling_prices = {}
         self.buying_prices = {}
-        self.player_location = random.choice(list(LOCATIONS.keys()))
-        # self.new_buying_prices()
-        # self.new_selling_prices()
-
-    def display_player_invo(self):
-        invo_cash_line = f" Inventory: ────────────────────── ${self.player.money} "
-        print(f"╔{invo_cash_line}╗")
-        print(f"║{' '*len(invo_cash_line)}║")
-        price_mod = LOCATIONS[self.player.location]['price_mod']
-        for candy in list(self.player.inventory.keys()):
-            selling_price = self.selling_prices[candy][0]
-            sell_avail = f"{self.player.inventory[candy]['inventory']}x"
-            sell_price = f"${selling_price}"
-            candy_line = f"{sell_avail} {candy.title()} {'┄'*(len(invo_cash_line)-len(candy)-len(sell_price)-len(sell_avail)-3)} {sell_price}"
-            print(f"║{candy_line}{' '*(len(invo_cash_line)-len(candy_line))}║")
-        print(f"╚{'═'*(len(invo_cash_line))}╝\n")
-        return len(invo_cash_line)
-
-    def display_loca(self, invo_width: int):
-        location_line = f"{'─'*(invo_width-len(self.player_location)-11)} Location: {self.player_location.title()}"
-        print(f"╭{location_line}╮")
-        print(f"│{' '*len(location_line)}╽")
-        for candy in list(CANDIES.keys()):
-            buy_price = f'${self.buying_prices[candy][0]}'
-            buy_avail = f'{self.buying_prices[candy][1]}x'
-            candy_buy_line = f"{buy_avail} {candy.title()} {'┄'*(invo_width-len(candy)-len(buy_price)-len(buy_avail)-3)} {buy_price}"
-            print(f"│{candy_buy_line}{' '*(len(location_line)-len(candy_buy_line))}║")
-        print(f"╘{'═'*(len(location_line))}╝\n")
+        self.player_location = player.location
+        self.new_buying_prices()
+        self.new_selling_prices()
 
     def new_selling_prices(self):
         self.selling_prices = {}
@@ -166,6 +194,7 @@ class World:
             candy_sold = input("'nvm' to exit or type a candy to sell: ")
         if candy_sold in list(CANDIES.keys()):
             return candy_sold
+        return None
 
     def gather_buying_choice(self):
         candy_bought = input(" -Wutar ya buyin? ")
@@ -175,6 +204,7 @@ class World:
             candy_bought = input("'nvm' to exit or type a candy to buy: ")
         if candy_bought in list(CANDIES.keys()):
             return candy_bought
+        return None
 
     def player_move_location(self):
         for i, location in enumerate(LOCATIONS):
@@ -194,6 +224,7 @@ class World:
 
     def update_new_location(self, new_location):
         self.player_location = new_location
+        self.player.location = new_location
         self.new_buying_prices()
         self.new_selling_prices()
 
@@ -211,92 +242,3 @@ class World:
             self.player.location = player_data['location']
         else:
             return
-
-
-
-def game_running_loop(player, world):
-    running = True
-    while running:
-        os.system('clear')
-        #print(os.get_terminal_size().columns)
-        inv_width = world.display_player_invo()
-        world.display_loca(inv_width)
-        option_line = ' | '.join(PLAYER_CHOICES)
-        player_choice = input(f" {option_line} --> ")
-        if 'move' in player_choice:
-            player.location = world.player_move_location()
-            world.update_new_location(player.location)
-        elif 'buy' in player_choice:
-            print('')
-            candy = world.gather_buying_choice()
-            if candy == '':
-                continue
-            purch_amnt = player.gather_candy_amount('buy')
-            if purch_amnt <= world.buying_prices[candy][1]:
-                player.buy_candy(candy, purch_amnt, world.buying_prices[candy][0])
-                world.buying_prices[candy][1] -= purch_amnt
-        elif 'sell' in player_choice:
-            print('')
-            candy = world.gather_selling_choice()
-            if candy == '':
-                continue
-            sale_amnt = player.gather_candy_amount('sell')
-            if sale_amnt <= player.inventory[candy]['inventory']:
-                player.sell_candy(candy, sale_amnt, world.selling_prices[candy][0])
-        elif 'save' in player_choice:
-            player_data = {
-                "player_name": player.player_name,
-                "money": player.money,
-                "inventory": player.inventory,
-                "location": player.location}
-            world.save_progress(player_data)
-            running = input("Saved!\n'y' to continue '' to exit: ")
-        elif player_choice in '':
-            running = False
-
-
-def print_save_files():
-    pass
-
-
-def load_json_save(player_name):
-    pass
-
-
-def main_menu():
-    script_running = True
-    while script_running:
-        os.system('clear')
-        print("Welcome to.....")
-        # s.print_block_font('   candy')
-        # s.print_block_font('  slinger!')
-        print("\n" + title_msg + '\n\n')
-        for choice in USER_CHOICES:
-            print(f"  {choice.title()}")
-        user_input = input("What would you like to do? ")
-
-        if "new" in user_input.lower():
-            player_name = input(" -What is your candy dealin' name, partn'r? ")
-            player = Player(player_name)
-            world = World(player)
-            game_running_loop(player, world)
-        elif "load" in user_input.lower():
-            print_save_files()
-            player_name = input("What name are you trying to load, mate? ")
-            player = Player(player_name)
-            world = World(player)
-            player_datadict = load_json_save(player_name)
-            if isinstance(player_datadict, dict):
-                world.load_player(player_datadict)
-            else:
-                player_name = input(" -What is your candy dealin' name, partn'r? ")
-                player = Player(player_name)
-                world = World(player)
-                game_running_loop(player, world)
-
-            game_running_loop(player, world)
-        elif "exit" in user_input.lower():
-            script_running = False
-
-if __name__ == "__main__":
-    main_menu()

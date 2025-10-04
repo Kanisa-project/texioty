@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "texioty"
+version = "0.1.0"
+description = "Text based GUI for a CLI."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT"}
+authors = [
+    {name = "Bluebeard22", email="this.robe@gmail.com"}
+]
+keywords = ["text-based", "GUI", "CLI"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License"
+]
+
+dependencies = [
+    "numpy",
+    "Pillow",
+    "requests",
+    "python-dotenv",
+    "mtgsdk"
+]

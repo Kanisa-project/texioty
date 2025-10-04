@@ -26,7 +26,7 @@ class CasinoRunner(BaseGaim):
     def __init__(self, txo, txi):
         super().__init__(txo, txi, "Casino")
         self.gaim_commands['hit'] = [self.blackjack_hit, "Have the dealer serve you another card.",
-                                       {}, [], t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
+                                       {}, "CSNO", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
 
     def blackjack_hit(self, args):
         pass

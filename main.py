@@ -4,12 +4,10 @@ import texioty
 import subprocess
 import threading
 
-from gaims.gaim_registry import GaimRegistry
-from spell_depicter import SpellDepicter
-from prompt_runner import PromptRunner
-from tex_helper import TexiotyHelper
-from digiary import Digiary
-from gaims import casino, candy_slinger, hangman
+from helpers.gaim_registry import GaimRegistry
+from helpers.prompt_runner import PromptRunner
+from helpers.tex_helper import TexiotyHelper
+from helpers.digiary import Digiary
 from utils import check_file_exists
 
 
@@ -29,12 +27,12 @@ class Application(tk.Frame):
         base_helper = TexiotyHelper(self.txty.texoty, self.txty.texity)
         digiary = Digiary(self.txty.texoty, self.txty.texity)
         # spell_depicter = SpellDepicter(self.txty.texoty, self.txty.texity)
-        # prompt_runner = PromptRunner(self.txty.texoty, self.txty.texity)
+        prompt_runner = PromptRunner(self.txty.texoty, self.txty.texity)
         gaim_registry = GaimRegistry(self.txty.texoty, self.txty.texity)
         self.txty.add_helper_widget("HLPR", base_helper)
         self.txty.add_helper_widget("DIRY", digiary)
         # self.txty.add_helper_widget("DPCT", spell_depicter)
-        # self.txty.add_helper_widget("PRUN", prompt_runner)
+        self.txty.add_helper_widget("PRUN", prompt_runner)
         self.txty.add_helper_widget("GAIM", gaim_registry)
 
         self.txty.grid()
@@ -44,8 +42,17 @@ class Application(tk.Frame):
             # self.txty.log_profile_in([linux_user, "1631"])
             pass
         else:
-            self.txty.helper_dict["PRUN"][0].prompt_texioty_profile()
-            
+            self.txty.active_helper_dict["PRUN"][0].prompt_texioty_profile()
+
+def run():
+    if __name__ == '__main__':
+        rroot = tk.Tk()
+        rroot.configure(background='#0f6faa')
+        rscreen_width = rroot.winfo_screenwidth()
+        rscreen_height = rroot.winfo_screenheight()
+        rapp = Application(rscreen_width, rscreen_height, master=root)
+        rapp.mainloop()
+
 
 if __name__ == '__main__':
     root = tk.Tk()

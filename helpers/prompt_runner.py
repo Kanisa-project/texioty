@@ -1,7 +1,7 @@
 import os
 import random
 import tkinter as tk
-import tex_helper
+from helpers import tex_helper
 import texity
 import texoty
 
@@ -83,6 +83,7 @@ class PromptRunner(tex_helper.TexiotyHelper):
             self.txi.icursor(tk.END)
         else:
             self.end_question_prompt(self.response_dict)
+            self.txo.master.default_mode()
 
     def end_question_prompt(self, question_dict: dict) -> dict:
         """End the questionnaire prompt and return the results."""
@@ -110,7 +111,12 @@ class PromptRunner(tex_helper.TexiotyHelper):
     def run_skrypto(self, args):
         self.display_option_question(MAIN_OPTIONS)
 
+    def get_single_response(self, args) -> str:
+        self.display_option_question(args[1])
+        return ''
+
     def prompt_texioty_profile(self):
+        self.txo.master.change_current_mode("Questionnaire", self.helper_commands)
         self.start_question_prompt(
                 {"profile_name": [f"What to name the profile?", "", os.getcwd().split('/')[2]],
                  "password": [f"What to use for password?", "", str(random.randint(1000, 9999))],
@@ -118,6 +124,7 @@ class PromptRunner(tex_helper.TexiotyHelper):
                                                                                  'nulbrrryyy dark', 'nulbrrryyy light'])],
                  "confirming_function": ["Does this look good?", "", random.choice(['yes', 'no']), self.txo.master.create_profile]},
                 clear_txo=True)
+
 
     def check_question_confirmation(self, answer: str):
         if self.response_dict['confirming_function'][1] == 'yes':

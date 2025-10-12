@@ -328,25 +328,21 @@ DEFAULT_THEMES = {
     "bluebrrryy light": {
         "background": rgb_to_hex(LIGHT_BLUE),
         "foreground": rgb_to_hex(DARK_SLATE_BLUE),
-        "accent": rgb_to_hex(GREY50),
-        "font": ("Arial", 12)
+        "accent": rgb_to_hex(GREY50)
     },
     "bluebrrryy dark": {
         "background": rgb_to_hex(DARK_GREY_BLUE),
         "foreground": rgb_to_hex(LIGHT_GREY_BLUE),
-        "accent": rgb_to_hex(GREY50),
-        "font": ("Arial", 12)
+        "accent": rgb_to_hex(GREY50)
     },
     "nulbrrryyy light": {
         "background": rgb_to_hex(LIGHT_PINK),
         "foreground": rgb_to_hex(DARK_ORCHID),
-        "accent": rgb_to_hex(GREY50),
-        "font": ("Arial", 12)
+        "accent": rgb_to_hex(GREY50)
     },
     "nulbrrryyy dark": {
         "background": rgb_to_hex(DARK_VIOLET),
         "foreground": rgb_to_hex(LIGHT_CORAL),
-        "accent": rgb_to_hex(GREY50),
-        "font": ("Arial", 12)
+        "accent": rgb_to_hex(GREY50)
     }
 }

@@ -1,5 +1,5 @@
 from gaims.base_gaim import BaseGaim
-import theme as t
+from settings import themery as t
 import random
 import json
 
@@ -49,14 +49,14 @@ class CandySlingerRunner(BaseGaim):
         self.player = Player(self.txo.master.active_profile.username)
         self.world = World(self.player)
 
-    def new_game(self, args):
-        super().new_game(args)
+    def new_game(self):
+        super().new_game()
         self.welcome_message([])
         self.display_player_invo()
 
 
-    def load_game(self, args):
-        self.game_state = super().load_game([self.txo.master.active_profile.username])
+    def load_game(self):
+        self.game_state = super().load_game()
         self.player = Player(self.game_state['player_name'])
         self.player.money = self.game_state['money']
         self.player.inventory = self.game_state['inventory']
@@ -65,28 +65,32 @@ class CandySlingerRunner(BaseGaim):
         self.welcome_message([])
         self.display_player_invo()
 
-    def save_game(self, args):
+    def save_game(self):
         self.game_state = {
             'player_name': self.txo.master.active_profile.username,
             'money': self.player.money,
             'inventory': self.player.inventory,
             'location': self.player.location
         }
-        super().save_game([self.game_state])
+        super().save_game()
 
-    def move_location(self, args):
+    def move_location(self, *args):
         self.world.update_new_location(args[0])
         self.welcome_message([])
         self.display_player_invo()
 
-    def buy_candy(self, args):
+    def buy_candy(self, *args):
+        if self.world.buying_prices[args[1]][1] < int(args[0]):
+            self.txo.priont_string(f"Sorry, but there's not enough {args[1]} to buy.")
+            return
         self.player.buy_candy(candy=args[1],
                               purchase_amt=int(args[0]),
                               candy_price_ea=self.world.buying_prices[args[1]][0])
+        self.world.buying_prices[args[1]][1] -= int(args[0])
         self.welcome_message([])
         self.display_player_invo()
 
-    def sell_candy(self, args):
+    def sell_candy(self, *args):
         self.player.sell_candy(candy=args[1],
                                sale_amt=int(args[0]),
                                candy_price_ea=self.world.selling_prices[args[1]][0])

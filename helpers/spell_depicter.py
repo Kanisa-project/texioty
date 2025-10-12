@@ -2,8 +2,7 @@ import math
 from mtgsdk import Card
 from PIL import Image, ImageDraw
 import random
-import settings as s
-import theme as t
+from settings import themery as t, alphanumers as s, utils as u
 import tex_helper
 
 
@@ -13,7 +12,7 @@ class SpellDepicter(tex_helper.TexiotyHelper):
         self.txo = None
         self.texioty_commands = {
             "depict_spell": [self.depict_mtg_spell, "Depicts a spell from MTG.",
-                             {}, [], s.rgb_to_hex(t.INDIAN_RED), s.rgb_to_hex(t.BLACK)], }
+                             {}, [], u.rgb_to_hex(t.INDIAN_RED), u.rgb_to_hex(t.BLACK)], }
 
     def depict_mtg_spell(self, args):
         self.txo.priont_string(f"Depicting the '{args[0].title()}' spell.")
@@ -26,15 +25,6 @@ class SpellDepicter(tex_helper.TexiotyHelper):
 
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
-
-
-def plan_angled_line(x, y, angle, length, width, color, img_size):
-    endx = x + length * math.cos(math.radians(angle + 180)) * -1
-    endy = y + length * math.sin(math.radians(angle + 180)) * -1
-    return (clamp(x, 0, img_size[0]),
-            clamp(y, 0, img_size[1]),
-            clamp(endx, 0, img_size[0]),
-            clamp(endy, 0, img_size[1])), width, color
 
 
 def polypointlist(sides: int, offset: int, cx: int, cy: int, radius: int) -> list:
@@ -82,7 +72,7 @@ def lsystem_dual_mana_decoder(lstring: str, start_point=(480, 480), start_length
     return line_points_list
 
 
-def depict_spell(img: Image, spell_info_dict: dict):
+def depict_spell(img: Image.Image, spell_info_dict: dict):
     spell_name = spell_info_dict['spell_name']
     spell_cmc = spell_info_dict['spell_cmc']
     spell_type = spell_info_dict['spell_type']
@@ -230,10 +220,114 @@ def build_spell_dict(spell_card):
         return spell_dict_list
 
 
-def create_depiction(img: Image, spell_dict: dict):
-    depicted_spell = depict_spell(new_spell_img, spell_dict)
+def create_depiction(img: Image.Image, spell_dict: dict):
+    new_spell_img = Image.new("RGBA", (320, 320), t.KHAKI)
+    depict_spell(new_spell_img, spell_dict)
     card_name = spell_dict['spell_name']
     save_name = "_".join(card_name.split())
     save_path = f"depictions/{save_name.split('_//_')[0]}.png"
     img.save(save_path)
+
+
+
+class TcgDepicter:
+    def __init__(self, config_dict: dict):
+        self.select_choices = ["Name a card.", "Random card.", "Cards batch."]
+
+        self.single_card_queries = {"name": 'What name would you like to find? ',
+                             "type": 'What type of card is it? ',
+                             "coloring": 'What colors are the card? '}
+
+        self.batch_cards_queries = {"set_code": 'What is the setcode for the batch? ',
+                            "batch_size": 'How many cards to batch? ',
+                            "batch_types": 'What type is each card in the batch? '}
+        self.card_datadict = {}
+        self.config = config_dict
+
+    def build_card_datadict(self, card_data) -> dict:
+        """
+        Fetch the card_id from the tcg_name's library of cards and creates a datadict to be
+        depicted and drawn.
+        :param card_data: The card data directly from the API.
+        :return:
+        """
+        print("CARD_DATA", card_data)
+        card_datadict = {
+            'name': 'R4nd0m',
+            'type': 'Sorcery',
+            'rarity': 'Common',
+            'id': 'SOAD-420'
+        }
+        self.card_datadict = card_datadict
+        return card_datadict
+
+    def depict_card(self, datadict: dict) -> Image.Image:
+        print(self.config)
+        print(datadict)
+        img = Image.new('RGBA', self.config["image_size"], tuple(self.config["background"]))
+        name_points = self.depict_name()
+        type_points = self.depict_type()
+        id_points = self.depict_id()
+        rarity_points = self.depict_rarity()
+        # self.depict_coloring()
+        pointlist_dict = {"name_points": name_points,
+                          "type_points": type_points,
+                          "id_points": id_points,
+                          "rarity_points": rarity_points}
+        self.draw_depiction(img, pointlist_dict)
+        return img
+
+    def draw_depiction(self, img: Image.Image, card_pointlists: dict):
+        draw = ImageDraw.Draw(img)
+        color_list = self.config['palette']
+        print(color_list)
+        for n_point in card_pointlists["name_points"]:
+            draw.line([(n_point[0][0], n_point[0][1]),
+                       (n_point[0][2], n_point[0][3])],
+                      fill=tuple(random.choice(color_list)))
+        for i_point in card_pointlists["id_points"]:
+            draw.line([(0, i_point[0][1]),
+                       (img.size[0], i_point[0][1])],
+                      fill=tuple(random.choice(color_list)))
+            draw.line([(i_point[0][2], 0),
+                       (i_point[0][2], img.size[1])],
+                      fill=tuple(random.choice(color_list)))
+
+    def depict_name(self) -> list:
+        name_len = len(self.card_datadict['name'])
+        image_size = self.config['image_size']
+        planned_name_lines = []
+        for x in range(0, image_size[0], 3):
+            planned_name_lines.append(u.plan_angled_line(x, 0, 90, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
+            planned_name_lines.append(
+                u.plan_angled_line(x, image_size[1], 270, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
+        for y in range(0, image_size[1], 3):
+            planned_name_lines.append(u.plan_angled_line(0, y, 0, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
+            planned_name_lines.append(
+                u.plan_angled_line(image_size[0], y, 180, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
+        return planned_name_lines
+
+    def depict_type(self) -> list:
+        card_type = u.string_to_morse(self.card_datadict['type'])
+        type_lstring = lsystem_string_maker(card_type, s.MORSE_CODE_AXIOMS, 2)
+        lsystem_points = u.lsystem_morse_coder(type_lstring)
+        return lsystem_points
+
+    def depict_rarity(self) -> list:
+        card_rarity = u.string_to_morse(self.card_datadict['rarity'])
+        rarity_lstring = lsystem_string_maker(card_rarity, s.MORSE_CODE_AXIOMS, 2)
+        lsystem_points = u.lsystem_morse_coder(rarity_lstring)
+        return lsystem_points
+
+    def depict_id(self) -> list:
+        card_id = u.string_to_morse(self.card_datadict['id'])
+        id_lstring = lsystem_string_maker(card_id, s.MORSE_CODE_AXIOMS, 2)
+        lsystem_points = u.lsystem_morse_coder(id_lstring)
+        return lsystem_points
+
+    def depict_coloring(self) -> list:
+        card_coloring = u.string_to_morse(self.card_datadict['coloring'])
+        coloring_lstring = lsystem_string_maker(card_coloring, s.MORSE_CODE_AXIOMS, 2)
+        lsystem_points = u.lsystem_morse_coder(coloring_lstring)
+        return lsystem_points
 

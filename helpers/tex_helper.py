@@ -1,13 +1,65 @@
 import datetime
+import random
 from dataclasses import dataclass
 from tkinter import END
 from typing import Optional, List, Callable, Tuple
 
-import settings as s
-import theme as t
+from settings import themery as t, utils as u
 import texity
 import texoty
-from utils import get_stock_price
+
+
+ALPHA_BLK_DICT = {
+    ' ': ['   ', '   ', '   '],
+    '-': ['   ', ' ▁▁', '▔▔ '],
+    '_': ['   ', '   ', '▁▁▁'],
+    '!': [' ▅▆', ' ▐▛', ' ▗▖'],
+    '?': ['▗▅▃', ' ▗▛', ' ▗▖'],
+    '.': ['   ', '   ', ' ▅ '],
+    ':': ['   ', ' ▀ ', ' ▀ '],
+    '(': ['▗  ', '▌  ', '▚  '],
+    '{': ['▗  ', '▞  ', '▚  '],
+    ')': ['  ▖', '  ▐', '  ▞'],
+    '}': ['  ▖', '  ▚', '  ▞'],
+    '%': ['▀ ▞', ' ▞ ', '▞ ▗'],
+    '0': ['▗▆▖', '▌.▋', '▙▃▖'],
+    '1': ['▃▅▆', ' ▉ ', ' ▛ '],
+    '2': ['▂▃▃', ' ▃▛', '▟▂▂'],
+    '3': ['━━▗', ' ━▐', '▁▁▟'],
+    '4': ['  ', '▐▁▌', ' ▔▌'],
+    '5': ['▗━┓', ' ▚▖', '▚▁▞'],
+    '6': ['▗━▃', '▌▗▁', '▚▁▞'],
+    '7': ['▃▅▆', ' ▉ ', ' ▛ '],
+    '8': ['▗━▖', '▐━▎', '▐▂▌'],
+    '9': ['━━▖', '  ▌', '▃▁▞'],
+    'a': [' ▄ ', '▐▁▌', '▛▔▜'],
+    'b': ['▗━▖', '▐━▎', '▐▂▌'],
+    'c': ['▗━┓', '▌  ', '▚▁▞'],
+    'd': ['▄━▖', '▌ ▐', '▙▂▞'],
+    'e': ['▗━━', '▐━ ', '▟▁▁'],
+    'f': ['▄━━', '▐━ ', '▐  '],
+    'g': ['▗━▃', '▌▗▁', '▚▁▞'],
+    'h': ['▗ ▗', '▌▁▐', '▌▔▞'],
+    'i': ['▗▃▃', ' ▟ ', '▄▙▖'],
+    'j': ['━━▖', '  ▌', '▃▁▞'],
+    'k': ['▖ ▖', '▌▞ ', '▌ ▚'],
+    'l': ['▖  ', '▐  ', '▟▄▖'],
+    'n': ['▗▖▗', '▌▚▐', '▌▝▟'],
+    'm': ['▗ ▖', '▞▚▚', '▌ ▐'],
+	'o': ['▗▆▖', '▌ ▋', '▙▃▘'],
+    'p': ['▗━▖', '▌▁▌', '▌  '],
+    'q': ['▗▆▖', '▌ ▋', '▚▃▙'],
+    'r': ['▗━▃', '▌▁▞', '▌ ▚'],
+    's': ['▗━┓', ' ▚▖', '▚▁▞'],
+    't': ['▃▅▆', ' ▉ ', ' ▛ '],
+    'u': ['▗ ▗', '▌ ▐', '▚▃▟'],
+    'v': ['▖ ▗', '▐ ▐', ' ▚▘'],
+    'w': ['▖ ▗', '▌▗▐', '▚▘▚'],
+    'x': ['▖ ▗', '▝▆▘', '▞ ▚'],
+    'y': ['▖ ▖', '▚▞ ', '▟  '],
+    'z': ['▂▃▃', ' ▃▛', '▟▂▂']
+    }
+
 
 @dataclass
 class Question:
@@ -24,13 +76,37 @@ class TexiotyHelper:
         self.txi = txi
         self.helper_commands = {
             "welcome": [self.welcome_message, "Displays a welcoming message.",
-                     {}, "HLPR", s.rgb_to_hex(t.GREEN_YELLOW), s.rgb_to_hex(t.BLACK)],
+                     {}, "HLPR", u.rgb_to_hex(t.GREEN_YELLOW), u.rgb_to_hex(t.BLACK)],
             "help": [self.display_help_message, "Displays a message of helpfulness.",
-                     {}, "HLPR", s.rgb_to_hex(t.GREEN_YELLOW), s.rgb_to_hex(t.BLACK)],
+                     {}, "HLPR", u.rgb_to_hex(t.GREEN_YELLOW), u.rgb_to_hex(t.BLACK)],
             "commands": [self.display_available_commands, "Displays all available commands.",
-                         {}, "HLPR", s.rgb_to_hex(t.GREEN_YELLOW), s.rgb_to_hex(t.BLACK)],
+                         {}, "HLPR", u.rgb_to_hex(t.GREEN_YELLOW), u.rgb_to_hex(t.BLACK)],
         }
 
+    def print_block_font(self, blk_word: str):
+        top_line = ''
+        mid_line = ''
+        bot_line = ''
+        for letter in blk_word:
+            top_line += " " + ALPHA_BLK_DICT[letter][0] + " "
+            mid_line += " " + ALPHA_BLK_DICT[letter][1] + " "
+            bot_line += " " + ALPHA_BLK_DICT[letter][2] + " "
+        self.txo.priont_string(top_line)
+        self.txo.priont_string(mid_line)
+        self.txo.priont_string(bot_line)
+
+    def display_title(self, title_word: str, clear_it=True):
+        """
+        Using the 'block font' displays the title of the current menu.
+        :param title_word: Word for displaying.
+        :param clear_it: If the texoty should be cleared before displaying.
+        :return:
+        """
+        if clear_it:
+            self.txo.clear_no_header()
+        self.txo.priont_string(random.choice('─━═_')*(len(title_word)*5))
+        self.print_block_font(title_word)
+        self.txo.priont_string(random.choice('─━═_')*(len(title_word)*5))
 
     def display_help_message(self, args):
         """
@@ -46,7 +122,7 @@ class TexiotyHelper:
         self.txo.priont_command(self.txo.master.registry.commands["help"])
         self.txo.priont_command(self.txo.master.registry.commands["commands"])
 
-    def display_available_commands(self, args):
+    def display_available_commands(self):
         """Prints out all the commands that are available."""
         self.clear_texoty()
         available_commands = self.txo.master.registry.commands
@@ -72,9 +148,6 @@ class TexiotyHelper:
             datetime.datetime.weekday(today_date)]
         self.txo.priont_string(
             f"⦓⦙ Welcome to Texioty! The date is {today_date} on a {today_day}.")
-
-        # price_dict = get_stock_price('GME')
-        # welcoming_msgs.append(f'<{price_dict["ticker"]}>   {price_dict['name']} is at ${price_dict["price"]} since {price_dict["updated"]}.')
         for msg in welcoming_msgs:
             self.txo.priont_string("⦓⦙ " + msg)
         self.txo.priont_string("\n")

@@ -1,7 +1,6 @@
 import random
 from tkinter import *
 
-import theme
 from tkHyperLinkManager import HyperlinkManager
 import webbrowser
 from functools import partial
@@ -41,6 +40,7 @@ class TEXOTY(Text):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.hyperlink = HyperlinkManager(self)
+        self._tag_cache = set()
 
     def priont_hyperlink(self, tex: str, link: str, line_index=END):
         self.insert(line_index, tex, self.hyperlink.add(partial(webbrowser.open, link)))
@@ -79,11 +79,23 @@ class TEXOTY(Text):
         self.make_text_colored(font_color, primary_color, f"1.{self.texoty_w}", f"1.end")
 
     def make_text_colored(self, fg_color, bg_color, start_index, end_index):
-        print(fg_color, bg_color, start_index, end_index)
-        self.tag_configure(f"{fg_color}_{bg_color}", background=theme.rgb_to_hex(bg_color), foreground=theme.rgb_to_hex(fg_color))
-        self.tag_add(f"{fg_color}_{bg_color}", start_index, end_index)
-        # self.tag_ranges(f'{fg_color}_{bg_color}')
-        # self.tag_delete(f'{fg_color}_{bg_color}', '1.5', END)
+        """Apply a color tag between two indices."""
+        tag_name = f"{fg_color}_{bg_color}"
+        if tag_name not in self._tag_cache:
+            try:
+                self.tag_configure(tag_name, foreground=fg_color, background=bg_color)
+            except Exception:
+                self.tag_configure(tag_name, foreground=str(fg_color), background=str(bg_color))
+            self._tag_cache.add(tag_name)
+        self.tag_add(tag_name, start_index, end_index)
+
+
+    # def make_text_colored(self, fg_color, bg_color, start_index, end_index):
+    #     # print(fg_color, bg_color, start_index, end_index)
+    #     self.tag_configure(f"{fg_color}_{bg_color}", background=theme.rgb_to_hex(bg_color), foreground=theme.rgb_to_hex(fg_color))
+    #     self.tag_add(f"{fg_color}_{bg_color}", start_index, end_index)
+    #     # self.tag_ranges(f'{fg_color}_{bg_color}')
+    #     # self.tag_delete(f'{fg_color}_{bg_color}', '1.5', END)
 
     def create_masterpiece(self, *args):
         """
@@ -259,7 +271,12 @@ class TEXOTY(Text):
         @param text_color: Color for the text.
         """
         tag_name = f'{bg_color}_{text_color}'
-        self.tag_configure(tag_name, foreground=text_color, background=bg_color)
+        if tag_name not in self._tag_cache:
+            try:
+                self.tag_configure(tag_name, foreground=text_color, background=bg_color)
+            except Exception:
+                self.tag_configure(tag_name, foreground=str(text_color), background=str(bg_color))
+            self._tag_cache.add(tag_name)
         start_pos = f'1.0'
         end_pos = f'1.{len(striong)}'
         self.tag_add(tag_name, start_pos, end_pos)

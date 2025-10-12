@@ -1,7 +1,7 @@
 import random
 
 from gaims.base_gaim import BaseGaim
-import theme as t
+from settings import themery as t
 
 PHRASE_LIST = ["You gave Sally a cheese wheel, she buried it under a tree.",
                "You helped Tom move a couch, he burned it on the porch.",
@@ -94,8 +94,8 @@ class HangmanRunner(BaseGaim):
         self.missed_letters = []
         self.correct_letters = []
 
-    def new_game(self, args):
-        super().new_game(args)
+    def new_game(self):
+        super().new_game()
         self.missed_letters = []
         self.correct_letters = []
         self.pick_new_phrase()
@@ -147,7 +147,7 @@ class HangmanRunner(BaseGaim):
         self.display_man()
         self.display_phrase()
 
-    def save_game(self, args):
+    def save_game(self):
         self.game_state = {
             "player_name": self.txo.master.active_profile.username,
             "missed_letters": self.missed_letters,
@@ -155,10 +155,10 @@ class HangmanRunner(BaseGaim):
             "gaim_phrase": self.gaim_phrase,
             "hidden_dict": self.hidden_dict
         }
-        super().save_game([self.game_state])
+        super().save_game()
 
-    def load_game(self, args):
-        self.game_state = super().load_game([self.txo.master.active_profile.username])
+    def load_game(self):
+        self.game_state = super().load_game()
         self.missed_letters = self.game_state['missed_letters']
         self.correct_letters = self.game_state['correct_letters']
         self.gaim_phrase = self.game_state['gaim_phrase']
@@ -201,8 +201,8 @@ class HangmanRunner(BaseGaim):
     def display_help_message(self, args):
         super().display_help_message(args)
 
-    def display_available_commands(self, args):
-        super().display_available_commands(args)
+    def display_available_commands(self):
+        super().display_available_commands()
 
-    def stop_game(self, args):
-        super().stop_game(args)
+    def stop_game(self):
+        super().stop_game()

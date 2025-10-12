@@ -8,7 +8,7 @@ from helpers.gaim_registry import GaimRegistry
 from helpers.prompt_runner import PromptRunner
 from helpers.tex_helper import TexiotyHelper
 from helpers.digiary import Digiary
-from utils import check_file_exists
+from settings.utils import check_file_exists
 
 
 def start_simple_client():

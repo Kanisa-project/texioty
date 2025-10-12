@@ -1,12 +1,12 @@
 import json
+import os.path
 import tkinter as tk
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, Callable
 
 from helpers.digiary import Digiary
 from helpers.gaim_registry import GaimRegistry
-import settings as s
-import theme as t
+from settings import themery as t, utils as u
 from helpers.prompt_runner import PromptRunner
 from helpers.tex_helper import TexiotyHelper
 import texoty
@@ -23,7 +23,13 @@ class CommandRegistry:
         """
         Remove a command from the registry.
         """
-        pass
+        if help_symb in self.commands:
+            del self.commands[help_symb]
+            return
+
+        to_delete = [name for name, cmd in self.commands.items() if getattr(cmd, "helper_symbol", None) == help_symb]
+        for name in to_delete:
+            del self.commands[name]
 
     def add_command(self, name: str, handler: Any, msg: str, p_args: Any, help_symb: Any,
                     t_color: str, b_color: str) -> None:
@@ -54,11 +60,26 @@ class CommandRegistry:
         :return:
         """
         command = self.commands.get(name)
-        if command:
-            # print(command.handler)
-            command.handler(args)
-        else:
+        if not command:
             print(f"Command '{name}' not found.")
+            return
+
+        cmd_handler = command.handler
+        try:
+            if args and isinstance(args[-1], dict) and not isinstance(args[-1], tuple):
+                print("isintstance", args)
+                *pos_args, kwargs = args
+                cmd_handler(*pos_args, **kwargs)
+            else:
+                print("no instantces:", args)
+                cmd_handler(*args)
+        except TypeError as e:
+            try:
+                cmd_handler(args)
+            except Exception as e:
+                print(f"Error executing '{name}': {e}")
+        except Exception as e:
+            print(f"Error executing '{name}': {e}")
 
 
 class Texioty(tk.LabelFrame):
@@ -76,7 +97,7 @@ class Texioty(tk.LabelFrame):
         self.registry = CommandRegistry({})
 
         self.active_helpers = ['TXTY', 'HLPR', 'DIRY', 'GAIM', 'PRUN']
-        self.available_profiles = s.available_profiles
+        self.available_profiles = u.available_profiles
         self.active_profile = self.available_profiles["guest"]
 
         self.texoty = texoty.TEXOTY(int(width) + 16, int(height), master=self)
@@ -98,12 +119,13 @@ class Texioty(tk.LabelFrame):
                                 "GAIM": [self.gaim_registry],
                                 "PRUN": [self.prompt_runner]}
         self.active_helper_dict = self.default_helpers
+        self.deciding_function = None
 
         self.known_commands_dict = {
             "login": [self.log_profile_in, "This logs the user into a profile. ",
-                      self.available_profiles, "TXTY", s.rgb_to_hex(t.DIM_GREY), s.rgb_to_hex(t.BLACK)],
+                      self.available_profiles, "TXTY", u.rgb_to_hex(t.DIM_GREY), u.rgb_to_hex(t.BLACK)],
             "exit": [self.close_program, "Exits Texioty.",
-                     {}, "TXTY", s.rgb_to_hex(t.PURPLE), s.rgb_to_hex(t.BLACK)],
+                     {}, "TXTY", u.rgb_to_hex(t.PURPLE), u.rgb_to_hex(t.BLACK)]
         }
         self.helper_commands = self.active_helper_dict["HLPR"][0].helper_commands|self.known_commands_dict
         self.active_helper_dict['HLPR'][0].welcome_message([])
@@ -142,6 +164,7 @@ class Texioty(tk.LabelFrame):
 
     def default_mode(self):
         self.current_mode = "Texioty"
+        self.texity.no_options()
         self.remove_commands()
         for key, helper in self.default_helpers.items():
             self.add_helper_widget(key, helper[0])
@@ -195,6 +218,12 @@ class Texioty(tk.LabelFrame):
             case "Questionnaire":
                 parsed_input = self.texity.parse_question_response()
                 self.active_helper_dict["PRUN"][0].store_response(parsed_input)
+            case "Decisioning":
+                parsed_input = self.texity.parse_decision()
+                if isinstance(self.deciding_function, Callable):
+                    self.deciding_function(parsed_input)
+                    self.deciding_function = None
+                print("DECISIONED:", parsed_input)
             case "Gaim":
                 parsed_input_list = self.texity.parse_gaim_command()
                 helper_gaim_cmds = self.active_helper_dict["GAIM"][0].current_gaim.gaim_commands|self.active_helper_dict["GAIM"][0].current_gaim.helper_commands
@@ -221,7 +250,6 @@ class Texioty(tk.LabelFrame):
             try:
                 self.registry.execute_command(command, arguments)
             except PermissionError as e:
-                self.texoty.priont_string("Sorry dude, you ain't got hangman.")
                 self.texoty.priont_string(str(e))
             except KeyError as e:
                 self.texoty.priont_string(f"Missing the {e} key or something.")
@@ -232,10 +260,11 @@ class Texioty(tk.LabelFrame):
             # self.display_help_message(arguments)
         self.texity.full_command_list.append(self.texity.command_string_var.get())
         if self.current_mode == "Texioty":
-            self.texoty.priont_string(s.random_loading_phrase())
+            self.texoty.priont_string(u.random_loading_phrase())
 
-    def log_profile_in(self, args):
+    def log_profile_in(self, *args):
         """Check args[0] for a username and args[1] for a password. Logs in a profile if a match."""
+        print("LogIN", args)
         try:
             if args[0] in self.available_profiles:
                 try:
@@ -276,10 +305,20 @@ class Texioty(tk.LabelFrame):
             password = self.active_helper_dict["PRUN"][0].question_prompt_dict['password'][1]
             color_theme = self.active_helper_dict["PRUN"][0].question_prompt_dict['color_theme'][1]
             color_theme = t.DEFAULT_THEMES[color_theme]
-            self.available_profiles[profile_name] = s.TexiotyProfile(profile_name, password, color_theme)
+            self.available_profiles[profile_name] = u.TexiotyProfile(profile_name, password, color_theme)
             save_path = f".profiles/{profile_name}.json"
-            print(save_path)
-            with open(save_path, 'w') as f:
-                f.write(json.dumps({"texioty": self.available_profiles[profile_name].__dict__}, indent=4, sort_keys=True,
-                                   default=lambda o: o.__dict__, ensure_ascii=False))
-            self.texoty.priont_string(f"Profile '{profile_name}' created.")
+            # print(save_path)
+            if not os.path.exists(save_path):
+                with open(save_path, 'w') as f:
+                    f.write(json.dumps({"texioty": self.available_profiles[profile_name].__dict__}, indent=4, sort_keys=True,
+                                       default=lambda o: o.__dict__, ensure_ascii=False))
+                    self.texoty.priont_string(f"Profile '{profile_name}' created.")
+
+            else:
+                self.texoty.priont_string(f"Profile '{profile_name}' already exists, did not create.")
+
+    def dl_youtube_vid(self, args):
+        self.texoty.priont_string("Attempting to download:")
+        self.texoty.priont_string(f"    {args}")
+        u.download_youtube_video(args)
+        self.texoty.priont_string(f"Maybe finished, maybe completed.")

@@ -19,17 +19,31 @@ class TEXITY(tk.Entry):
         """
         Text input for Texioty, it can accept commands and different types of entries.
         """
-        # Set up the command list/cycling and different entry modes.
         self.full_command_list = []
         self.kom_index = 0
         self.command_string_var = tk.StringVar()
         self.isTestingKeys = False
         self.isInPrompt = False
+        self.isDecidingDecision = False
+        self.current_possible_options = []
+        self.current_option_bindings = []
+        self.master = master
         super(TEXITY, self).__init__(master=master, background=master.active_profile.color_theme[1], width=width-5,
                                      textvariable=self.command_string_var)
-        # Bind the up and down arrow keys to cycle through the used command list.
         self.bind('<Up>', lambda e: self.command_list_previous())
         self.bind('<Down>', lambda e: self.command_list_next())
+
+    def no_options(self):
+        for i, option in enumerate(self.current_possible_options):
+            self.unbind(str(i))
+            self.unbind(f"<KP_{i}>")
+
+    def bind_new_options(self, new_options: list):
+        """Bind each number to a possible option."""
+        self.current_possible_options = new_options
+        for i, option in enumerate(new_options):
+            self.current_option_bindings.append(self.bind(str(i), lambda e, option=option: self.command_string_var.set(f" - {option}")))
+            self.current_option_bindings.append(self.bind(f"<KP_{i}>", lambda e, option=option: self.command_string_var.set(f" - {option}")))
 
     def parse_input_command(self) -> list:
         """
@@ -51,6 +65,11 @@ class TEXITY(tk.Entry):
         """
         text_input = self.command_string_var.get().split("›")[-1]
         return text_input
+
+    def parse_decision(self):
+        decision = self.command_string_var.get().split(" - ")[-1]
+        self.master.default_mode()
+        return decision
 
     def parse_gaim_command(self) -> list:
         text_input = self.command_string_var.get()
@@ -77,9 +96,6 @@ class TEXITY(tk.Entry):
         if self.kom_index == 0:
             self.command_string_var.set('')
         self.icursor(tk.END)
-
-    def respond_to_prompt(self):
-        pass
 
 
 

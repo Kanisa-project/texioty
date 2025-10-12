@@ -1,8 +1,7 @@
 import random
 
 from gaims.base_gaim import BaseGaim
-import theme as t
-
+from settings import themery as t
 
 suits = "♠♥♣♦"
 card_vals = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']

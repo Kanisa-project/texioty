@@ -1,6 +1,5 @@
-import settings as s
 from helpers import tex_helper
-import theme as t
+from settings import themery as t, alphanumers as s
 import json
 import os
 import tempfile
@@ -17,27 +16,23 @@ class BaseGaim(tex_helper.TexiotyHelper):
         self.gaim_prefix = ''
         self.gaim_commands = {
             "new": [self.new_game, f"Create a new game of {game_name}.",
-                      {}, "GAIM", s.rgb_to_hex(t.ALICE_BLUE), s.rgb_to_hex(t.BLACK)],
+                      {}, "GAIM", u.rgb_to_hex(t.ALICE_BLUE), u.rgb_to_hex(t.BLACK)],
             "load": [self.load_game, f"Load a {game_name} saved game.",
-                      {}, "GAIM", s.rgb_to_hex(t.ALICE_BLUE), s.rgb_to_hex(t.BLACK)],
+                      {}, "GAIM", u.rgb_to_hex(t.ALICE_BLUE), u.rgb_to_hex(t.BLACK)],
             "save": [self.save_game, f"Save a {game_name} game.",
-                      {}, "GAIM", s.rgb_to_hex(t.ALICE_BLUE), s.rgb_to_hex(t.BLACK)],
+                      {}, "GAIM", u.rgb_to_hex(t.ALICE_BLUE), u.rgb_to_hex(t.BLACK)],
             "stop": [self.stop_game, f"Stop playing {game_name}.",
-                      {}, "GAIM", s.rgb_to_hex(t.ALICE_BLUE), s.rgb_to_hex(t.BLACK)]
+                      {}, "GAIM", u.rgb_to_hex(t.ALICE_BLUE), u.rgb_to_hex(t.BLACK)]
         }
         self.texioty_commands = {}
         self.game_state = {}
 
-    def new_game(self, args):
+    def new_game(self):
         self.txo.priont_string(f"Starting a new {self.game_name} game.")
-        if '--new' in args:
-            pass
-        else:
-            self.txo.priont_string("Are you sure you want to start a new game?")
 
-    def save_game(self, args):
+    def save_game(self):
         """Save this profile progress of this gaim to a file."""
-        game_state = args[0]
+        game_state = self.game_state
         os.makedirs(SAVE_DIR, exist_ok=True)
         filename = f"{sanitize_filename(self.game_name+'_'+game_state['player_name'])}.json"
         path = os.path.join(SAVE_DIR, filename)
@@ -61,8 +56,8 @@ class BaseGaim(tex_helper.TexiotyHelper):
                 os.remove(tmp_path)
         return path
 
-    def load_game(self, args):
-        player_name = args[0]
+    def load_game(self):
+        player_name = self.txo.master.active_profile.username
         filename = f"{self.game_name}_{sanitize_filename(player_name)}.json"
         path = os.path.join(SAVE_DIR, filename)
         if os.path.exists(path):
@@ -84,10 +79,10 @@ class BaseGaim(tex_helper.TexiotyHelper):
         self.txo.priont_string("Using the 'welcome' command will show the welcome message and some directions.")
 
 
-    def display_available_commands(self, args):
-        super().display_available_commands(args)
+    def display_available_commands(self):
+        super().display_available_commands()
 
-    def stop_game(self, args):
+    def stop_game(self):
         txty = self.txo.master
         print("STOPPING")
         txty.default_mode()

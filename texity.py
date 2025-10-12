@@ -71,9 +71,11 @@ class TEXITY(tk.Entry):
         self.master.default_mode()
         return decision
 
-    def parse_gaim_command(self) -> list:
-        text_input = self.command_string_var.get()
-        return text_input.split()
+    def parse_gaim_command(self) -> str|list:
+        list_input = self.command_string_var.get().split()
+        if list_input[0] in ['new', 'load', 'save', 'stop']:
+            return list_input[0]
+        return list_input
 
     def command_list_previous(self):
         """Changes the input box to the previous command in the list."""

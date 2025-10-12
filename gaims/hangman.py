@@ -90,6 +90,7 @@ class HangmanRunner(BaseGaim):
                                        {}, "HMAN", t.rgb_to_hex(t.MUSTARD_YELLOW), t.rgb_to_hex(t.BLACK)]
         self.gaim_prefix = "guess "
         self.gaim_phrase = random.choice(PHRASE_LIST)
+        print(self.gaim_phrase)
         self.hidden_dict = {'t': "◙", 'h': "◙", 'i': "◙", 's': "◙"}
         self.missed_letters = []
         self.correct_letters = []

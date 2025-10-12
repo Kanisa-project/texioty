@@ -225,18 +225,16 @@ class Texioty(tk.LabelFrame):
                     self.deciding_function = None
                 print("DECISIONED:", parsed_input)
             case "Gaim":
-                parsed_input_list = self.texity.parse_gaim_command()
-                helper_gaim_cmds = self.active_helper_dict["GAIM"][0].current_gaim.gaim_commands|self.active_helper_dict["GAIM"][0].current_gaim.helper_commands
-                print(list(helper_gaim_cmds.keys()))
-                if parsed_input_list[0] in list(helper_gaim_cmds.keys()):
-                    # self.texoty.priont_string(f"Found {parsed_input_list[0]}")
-                    self.execute_command(parsed_input_list[0], parsed_input_list[1:])
+                parsed_input = self.texity.parse_gaim_command()
+                if isinstance(parsed_input, str):
+                    self.execute_command(parsed_input, [])
+                else:
+                    self.execute_command(parsed_input[0], parsed_input[1:])
+
                 if self.active_helper_dict["GAIM"][0].current_gaim:
                     prefix = self.active_helper_dict["GAIM"][0].current_gaim.gaim_prefix
         self.texity.command_string_var.set(prefix)
 
-    def execute_gaim_command(self, command, arguments):
-        pass
 
     def execute_command(self, command, arguments):
         """
@@ -246,6 +244,7 @@ class Texioty(tk.LabelFrame):
         :return:
         """
         # self.clear_texoty()
+        print(command, arguments)
         if command in self.registry.commands:
             try:
                 self.registry.execute_command(command, arguments)
@@ -256,8 +255,6 @@ class Texioty(tk.LabelFrame):
                 self.texoty.priont_list(list(e.args))
         else:
             self.texoty.priont_string(f"⦓⦙ Uhh, I don't recognize '{command}'")
-            # self.texoty.priont_string(f"⦓⦙ Uhh, I don't recognize '{command}'. Try one of these instead:")
-            # self.display_help_message(arguments)
         self.texity.full_command_list.append(self.texity.command_string_var.get())
         if self.current_mode == "Texioty":
             self.texoty.priont_string(u.random_loading_phrase())

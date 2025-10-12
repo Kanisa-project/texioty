@@ -23,10 +23,13 @@ class GaimRegistry(TexiotyHelper):
         }
         self.current_gaim = None
 
-    def start_game(self, *args):
-        if args[0] in list(self.available_games.keys()) and self.current_gaim is None:
+    def start_game(self, args):
+        print('start_args', args)
+        if args in list(self.available_games.keys()) and self.current_gaim is None:
             self.in_game = True
-            self.current_gaim = self.available_games[args[0]](self.txo, self.txi)
+            print('in_game', self.in_game, self.current_gaim)
+            self.current_gaim = self.available_games[args](self.txo, self.txi)
+            print('current_gaim', self.current_gaim)
             self.current_gaim.new_game()
             # help_symb = self.available_games[args[0]][1]
             self.txo.master.change_current_mode("Gaim",

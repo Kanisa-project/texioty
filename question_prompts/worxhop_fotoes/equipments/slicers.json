@@ -1,0 +1,51 @@
+{
+  "turkey": {
+    "iterations": 4,
+    "slice_numbers": {
+      "num_tuple": [9, 9]
+    },
+    "solid_splice":  {
+      "chance": 0.333,
+      "shuffled": false,
+      "color": [
+        118,
+        6,
+        215
+      ]
+    }
+  },
+  "ham": {
+    "iterations": 4,
+    "slice_size": {
+      "size_tuple": [75, 75]
+    },
+    "solid_splice":  {
+      "chance": 0.2,
+      "shuffled": true,
+      "color": [
+        118,
+        6,
+        215
+      ]
+    }
+  },
+  "maxed": {
+    "iterations": 4,
+    "slice_numbers": {
+      "num_tuple": [2, 2],
+      "shuffled": false
+    },
+    "slice_size": {
+      "size_tuple": [128, 128],
+      "shuffled":  true
+    },
+    "solid_splice":  {
+      "chance": 0.5,
+      "color": [
+        118,
+        6,
+        215
+      ]
+    }
+  }
+}

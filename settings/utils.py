@@ -218,3 +218,12 @@ def plan_angled_line(x, y, angle, length, width, color, img_size):
             clamp(endx, 0, img_size[0]),
             clamp(endy, 0, img_size[1])), width, color
 
+def retrieve_lab_profiles(lab_to_get: str) -> dict:
+    with open(f'question_prompts/tcg_lab/lab_profiles/{lab_to_get}.json') as labbed_tcg:
+        data = json.load(labbed_tcg)
+        return data
+
+def retrieve_worx_profiles(equipment: str) -> dict:
+    with open(f'question_prompts/worxhop_fotoes/equipments/{equipment}.json') as json_equip:
+        data = json.load(json_equip)
+        return data

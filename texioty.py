@@ -7,7 +7,7 @@ from typing import Dict, Any, Callable
 from helpers.digiary import Digiary
 from helpers.gaim_registry import GaimRegistry
 from settings import themery as t, utils as u
-from helpers.prompt_runner import PromptRunner
+from helpers.prompt_registry import PromptRegistry
 from helpers.tex_helper import TexiotyHelper
 import texoty
 import texity
@@ -112,7 +112,7 @@ class Texioty(tk.LabelFrame):
         self.base_helper = TexiotyHelper(self.texoty, self.texity)
         self.digiary = Digiary(self.texoty, self.texity)
         self.gaim_registry = GaimRegistry(self.texoty, self.texity)
-        self.prompt_runner = PromptRunner(self.texoty, self.texity)
+        self.prompt_runner = PromptRegistry(self.texoty, self.texity)
         self.default_helpers = {"TXTY": [self],
                                 "HLPR": [self.base_helper],
                                 "DIRY": [self.digiary],
@@ -220,10 +220,13 @@ class Texioty(tk.LabelFrame):
                 self.active_helper_dict["PRUN"][0].store_response(parsed_input)
             case "Decisioning":
                 parsed_input = self.texity.parse_decision()
+                print("DECISIONED:", parsed_input, self.deciding_function)
                 if isinstance(self.deciding_function, Callable):
                     self.deciding_function(parsed_input)
-                    self.deciding_function = None
-                print("DECISIONED:", parsed_input)
+                    # self.deciding_function = None
+                else:
+                    self.texoty.priont_string(f"Deciding function not set. {self.deciding_function}")
+
             case "Gaim":
                 parsed_input = self.texity.parse_gaim_command()
                 if isinstance(parsed_input, str):

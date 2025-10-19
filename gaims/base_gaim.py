@@ -1,4 +1,4 @@
-from helpers import tex_helper
+from helpers.tex_helper import TexiotyHelper
 from settings import themery as t, alphanumers as a, utils as u
 import json
 import os
@@ -7,7 +7,7 @@ from datetime import datetime
 
 SAVE_DIR = "gaims/gaim_saves"
 
-class BaseGaim(tex_helper.TexiotyHelper):
+class BaseGaim(TexiotyHelper):
     def __init__(self, txo, txi, game_name: str):
         super().__init__(txo, txi)
         self.txo = txo

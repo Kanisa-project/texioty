@@ -5,7 +5,7 @@ import subprocess
 import threading
 
 from helpers.gaim_registry import GaimRegistry
-from helpers.prompt_runner import PromptRunner
+from helpers.prompt_registry import PromptRegistry
 from helpers.tex_helper import TexiotyHelper
 from helpers.digiary import Digiary
 from settings.utils import check_file_exists
@@ -26,12 +26,10 @@ class Application(tk.Frame):
         self.txty = texioty.Texioty(width=screen_w//3, height=screen_h*.93)
         base_helper = TexiotyHelper(self.txty.texoty, self.txty.texity)
         digiary = Digiary(self.txty.texoty, self.txty.texity)
-        # spell_depicter = SpellDepicter(self.txty.texoty, self.txty.texity)
-        prompt_runner = PromptRunner(self.txty.texoty, self.txty.texity)
+        prompt_runner = PromptRegistry(self.txty.texoty, self.txty.texity)
         gaim_registry = GaimRegistry(self.txty.texoty, self.txty.texity)
         self.txty.add_helper_widget("HLPR", base_helper)
         self.txty.add_helper_widget("DIRY", digiary)
-        # self.txty.add_helper_widget("DPCT", spell_depicter)
         self.txty.add_helper_widget("PRUN", prompt_runner)
         self.txty.add_helper_widget("GAIM", gaim_registry)
 

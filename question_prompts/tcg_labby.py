@@ -1,12 +1,85 @@
+import glob
 import math
+from typing import Callable
+
 from mtgsdk import Card
 from PIL import Image, ImageDraw
 import random
+
+from helpers.tex_helper import TexiotyHelper
+from question_prompts.base_prompt import BasePrompt
 from settings import themery as t, alphanumers as s, utils as u
-import tex_helper
+from settings.utils import available_profiles
+
+TCG_OPTIONS = ['Magic the Gathering',
+               'Pokemon',
+               'Lorcana',
+               'Yu-Gi-Oh',
+               'Digimon',
+               'All']
+
+class TCGLabratory(BasePrompt):
+    def __init__(self, txo, txi):
+        super().__init__(txo, txi)
+        self.current_tcg = None
+        self.opts_to_profs_map = {
+            'Magic the Gathering': 'magics',
+            'Pokemon': 'pokemons',
+            'Lorcana': 'lorcanas',
+            'Yu-Gi-Oh': 'yugiohs',
+            'Digimon': 'digimons'
+        }
+
+    def laboratory(self, lab_funcs: str):
+        match lab_funcs:
+            case 'Depictinator{}':
+                self.decide_decision("Which card game to depict with", TCG_OPTIONS, 'depict')
+                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+                    self.txo.master.deciding_function = self.depictinator
+                    self.txo.priont_string(f"Now depicting {self.txo.master.deciding_function}")
+            case 'Card%Puzzler()':
+                self.decide_decision("Which card game to puzzle with", TCG_OPTIONS, 'puzzler')
+                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+                    print("Now puzzling")
+                    self.txo.master.deciding_function = self.card_puzzler
+            case 'TC-Blender 690':
+                pass
+            case 'Card-0wn1oad3r':
+                pass
+            case 'RanDexter-2110':
+                pass
+
+    def depictinator(self, tcg_choice: str):
+        """
+        Depicts an abstract artistical image from the tcg_choice.
+        :param tcg_choice: TCG_OPTIONS
+        """
+        self.current_tcg = tcg_choice
+        depiction_profiles = u.retrieve_lab_profiles('depicters')
+        print("depiction_profs", depiction_profiles)
+        self.decide_decision(f"Which profile to use for depiction", list(depiction_profiles.keys()), tcg_choice.lower())
+        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+            print("Creating depicting")
+            self.txo.master.deciding_function = self.create_depiction
+
+    def card_puzzler(self, tcg_choice: str):
+        puzzler_profiles = u.retrieve_lab_profiles('puzzlers')
+        self.decide_decision(f"Which profile to make a puzzle with", list(puzzler_profiles.keys()), tcg_choice.lower())
+        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+            self.txo.master.deciding_function = self.create_puzzle
+        if self.current_tcg is None:
+            self.current_tcg = tcg_choice
 
 
-class SpellDepicter(tex_helper.TexiotyHelper):
+    def create_depiction(self, profile_name: str):
+        self.txo.priont_string(f"Depicting a {self.current_tcg} {profile_name}..")
+
+    def create_puzzle(self, profile_name: str):
+        self.txo.priont_string(f"Puzzling a {self.current_tcg} {profile_name}....")
+
+
+
+class SpellDepicter(TexiotyHelper):
     def __init__(self, txo, txi):
         super().__init__(txo, txi)
         self.txo = None

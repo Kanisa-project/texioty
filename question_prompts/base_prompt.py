@@ -1,96 +1,21 @@
-import os
-import random
-import tkinter as tk
-from typing import Callable
-
-from helpers import tex_helper
 import texity
 import texoty
-from settings import themery as t, utils as u
-
-MAIN_OPTIONS = ["launcher>Gaim",
-                "Discord.botty",
-                "laser%tag$RUN",
-                "TCG__[labrat]",
-                "foto(FUNCS{})",
-                "Profile/-make"]
-
-GAIM_OPTIONS = ['PyLanes', 'kPaint', 'ThurBo', 'Othaido', 'spaceDits']
-KBOT_OPTIONS = ['Config', 'Launch']
-LASERTAG_OPTIONS = ['Start lobby', 'Edit config']
-TCG_OPTIONS = ['Magic the Gathering', 'Pokemon', 'Lorcana', 'Yu-Gi-Oh', 'Digimon', 'All']
-
-LAB_OPTIONS = ['Depictinator{}',
-               'Card%Puzzler()',
-               'TC-Blender 690',
-               'Card-0wn1oad3r',
-               'RanDexter-2110']
-
-FUNCFOTO_OPTIONS = ['Flatop_XT 2200',
-                    'S/p/licer R0T8',
-                    'Deep-friar 420',
-                    'Pixtruderer V3']
-
-PROFILE_OPTIONS = ['kanisa',
-                   'texioty',
-                   'laser_tag',
-                   'view_profiles']
+from helpers.tex_helper import TexiotyHelper
+from tkinter import END
 
 
-
-class PromptRunner(tex_helper.TexiotyHelper):
-    def __init__(self, txo: texoty.TEXOTY, txi: texity.TEXITY):
+class BasePrompt(TexiotyHelper):
+    def __init__(self, txo: texoty.TEXOTY, txi: texity.TEXITY, prompt_name: str = "BasePrompt"):
         super().__init__(txo, txi)
+        self.in_questionnaire_mode = None
+        self.in_decisioning_mode = None
         self.txo = txo
         self.txi = txi
-        self.in_questionnaire_mode = False
-        self.in_decisioning_mode = False
+        self.prompt_name = prompt_name
         self.question_prompt_dict = {}
         self.response_dict = {}
         self.question_keys = []
         self.current_question_index = 0
-        self.helper_commands = {
-            "tcg_lab": [self.tcg_lab_functions, "Enter the TCG lab.",
-                        {}, "PRUN", u.rgb_to_hex(t.KHAKI), u.rgb_to_hex(t.BLACK)],
-            "foto_worx": [self.foto_worxhop, "Work in the foto hop.",
-                          {}, "PRUN", u.rgb_to_hex(t.KHAKI), u.rgb_to_hex(t.BLACK)],
-            "profile_make": [self.profile_maker, "Make some type of profile.",
-                             {}, "PRUN", u.rgb_to_hex(t.KHAKI), u.rgb_to_hex(t.BLACK)]}
-
-    def tcg_lab_functions(self):
-        self.decide_decision("What lab would you like to work in", LAB_OPTIONS, 'tcg_lab')
-        if self.txo.master.deciding_function is None:
-            self.txo.master.deciding_function = self.laboratory
-
-    def laboratory(self, lab_funcs: str):
-        self.decide_decision("Which TCG for experimenting", TCG_OPTIONS, lab_funcs.lower())
-        match lab_funcs:
-            case 'Depictinator{}':
-                self.decide_decision("Which profile to depict with ", TCG_OPTIONS, 'depict')
-                if self.txo.master.deciding_function is None:
-                    self.txo.master.deciding_function = self.depictinator
-            case 'Card%Puzzler()':
-                pass
-            case 'TC-Blender 690':
-                pass
-            case 'Card-0wn1oad3r':
-                pass
-            case 'RanDexter-2110':
-                pass
-
-    def depictinator(self, tcg_choice: str):
-        self.decide_decision(f"Which profile to use for depiction", [], tcg_choice)
-        if self.txo.master.deciding_function is None:
-            self.txo.master.deciding_function = self.create_depiction
-
-    def create_depiction(self, profile_dict: dict):
-        pass
-
-    def foto_worxhop(self):
-        self.decide_decision("What lab would you like to work in", FUNCFOTO_OPTIONS, 'foto_worxhop')
-
-    def profile_maker(self):
-        self.display_title('profile_make')
 
     def start_question_prompt(self, question_dict: dict, clear_txo=False):
         """
@@ -138,10 +63,10 @@ class PromptRunner(tex_helper.TexiotyHelper):
             question = self.question_prompt_dict[question_key][0]
             for i in range(self.txo.texoty_h-3):
                 self.txo.priont_string(' -')
-            self.txo.insert(tk.END, question)
+            self.txo.insert(END, question)
             self.txo.priont_string(f"[{self.question_prompt_dict[question_key][2]}]")
             # self.txi.command_string_var.set(f"[{self.question_prompt_dict[question_key][2]}]  ›")
-            self.txi.icursor(tk.END)
+            self.txi.icursor(END)
         else:
             self.end_question_prompt(self.response_dict)
             self.txo.master.default_mode()
@@ -169,15 +94,6 @@ class PromptRunner(tex_helper.TexiotyHelper):
         self.current_question_index += 1
         self.display_question()
 
-    def prompt_texioty_profile(self):
-        self.txo.master.change_current_mode("Questionnaire", self.helper_commands)
-        self.start_question_prompt(
-                {"profile_name": [f"What to name the profile?", "", os.getcwd().split('/')[2]],
-                 "password": [f"What to use for password?", "", str(random.randint(1000, 9999))],
-                 "color_theme": ["Which color theme to use?", "", random.choice(['bluebrrryy dark', 'bluebrrryy light',
-                                                                                 'nulbrrryyy dark', 'nulbrrryyy light'])],
-                 "confirming_function": ["Does this look good?", "", random.choice(['yes', 'no']), self.txo.master.create_profile]},
-                clear_txo=True)
 
     def decide_decision(self, input_question: str, possible_options: list, titled='basic'):
         """

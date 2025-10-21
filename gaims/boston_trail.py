@@ -49,10 +49,9 @@ class HuntableAnimal:
         self.pelt_size = pelt + " pelt"
 
 class PartyMember:
-    def __init__(self, name, age, gender, occupation, status, hunger, thirst):
+    def __init__(self, name, age, occupation, status, hunger, thirst):
         self.name = name
         self.age = age
-        self.gender = gender
         self.occupation = occupation
         self.status = status
         self.hunger_level = hunger
@@ -62,7 +61,6 @@ class PartyMember:
         return {
             "name": self.name,
             "age": self.age,
-            "gender": self.gender,
             "occupation": self.occupation,
             "status": self.status,
             "hunger_level": self.hunger_level,
@@ -87,6 +85,14 @@ class PartyMember:
         else:
             self.status = "healthy"
 
+    def rest_action(self):
+        self.hunger_level -= random.randint(1, 3)
+        self.thirst_level -= random.randint(1, 3)
+        if self.hunger_level < 0:
+            self.hunger_level = 0
+        if self.thirst_level < 0:
+            self.thirst_level = 0
+
 class BostonTrail(BaseGaim):
     def __init__(self, txo, txi):
         super().__init__(txo, txi, "BostonTrail")
@@ -97,13 +103,13 @@ class BostonTrail(BaseGaim):
         self.party_members = []
         self.party_inventory = []
         self.gaim_commands["travel"] = [self.travel_farther, "Travel farther, possibly encounter an event.",
-                                        {}, "BTRL", t.rgb_to_hex(t.CONTINENTAL_BLUE), t.rgb_to_hex(t.BLACK)]
+                                        {'distance': 'How many miles to travel.'}, "BTRL", t.rgb_to_hex(t.CONTINENTAL_BLUE), t.rgb_to_hex(t.BLACK)]
         self.gaim_commands["hunt"] = [self.animal_hunt, "Hunt animals, possibly encounter an event.",
-                                      {}, "BTRL", t.rgb_to_hex(t.CONTINENTAL_BLUE), t.rgb_to_hex(t.BLACK)]
+                                      {'animal': 'Animal for hunting.'}, "BTRL", t.rgb_to_hex(t.CONTINENTAL_BLUE), t.rgb_to_hex(t.BLACK)]
         self.gaim_commands["gather"] = [self.gather_stuff, "Gather things, possibly encounter an event.",
-                                        {}, "BTRL", t.rgb_to_hex(t.CONTINENTAL_BLUE), t.rgb_to_hex(t.BLACK)]
-        self.gaim_commands["rest"] = [self.party_rest(), "Allow the party to rest/eat.",
-                                      {}, "BTRL", t.rgb_to_hex(t.CONTINENTAL_BLUE), t.rgb_to_hex(t.BLACK)]
+                                        {'item': 'Item to search and gather.'}, "BTRL", t.rgb_to_hex(t.CONTINENTAL_BLUE), t.rgb_to_hex(t.BLACK)]
+        self.gaim_commands["rest"] = [self.party_rest, "Allow the party to rest/eat.",
+                                      {'time': 'Length of time to rest.'}, "BTRL", t.rgb_to_hex(t.CONTINENTAL_BLUE), t.rgb_to_hex(t.BLACK)]
 
     def new_game(self):
         super().new_game()
@@ -112,7 +118,6 @@ class BostonTrail(BaseGaim):
         for i in range(4):
             self.party_members.append(PartyMember(random.choice(first_names) + " " + random.choice(last_names),
                                                   random.randint(18, 35),
-                                                  random.choice(["male", "female"]),
                                                   random.choice(OCCUPATIONS),
                                                   "healthy", 0, 0))
         self.display_party_members()
@@ -139,7 +144,7 @@ class BostonTrail(BaseGaim):
         self.party_members = []
         for member in list(self.game_state["party_members"].values()):
             self.party_members.append(PartyMember(
-                member["name"], member["age"], member["gender"], member["occupation"],
+                member["name"], member["age"], member["occupation"],
                 member["status"], member["hunger_level"], member["thirst_level"]
             ))
         self.party_inventory = self.game_state["party_inventory"]
@@ -225,4 +230,5 @@ class BostonTrail(BaseGaim):
         self.txo.priont_string(f"You have traveled {self.miles_traveled} miles in {self.hours_traveled} hours.")
 
     def party_rest(self):
-        pass
+        for member in self.party_members:
+            member.rest_action()

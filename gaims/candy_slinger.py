@@ -7,8 +7,8 @@ INSTRUCTIONS = {'objective': 'Main point of this game is to buy candy cheap and 
                      'controls': 'You\'ll have an inventory to manage, along with money.',
                      'scoring': 'Different locations have different candies available at different prices.'}
 BUY_WIDTH = 25
-PLAYER_CHOICES = ["move", "buy", "sell", "save"]
-USER_CHOICES = ["new game", "load game", "settings", "exit"]
+# PLAYER_CHOICES = ["move", "buy", "sell", "save"]
+# USER_CHOICES = ["new game", "load game", "settings", "exit"]
 LOCATIONS = {
         'laundromat': {
             'price_mod': 3,
@@ -41,11 +41,13 @@ class CandySlingerRunner(BaseGaim):
     def __init__(self, txo, txi):
         super().__init__(txo, txi, "CandySlinger")
         self.gaim_commands["move"] = [self.move_location, "Move to a new location in the city.",
-                                       {}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
+                                       {'location': 'Destination to move to.'}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
         self.gaim_commands["buy"] = [self.buy_candy, "Buy some candy from your location.",
-                                       {}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
+                                       {'amount': 'Amount of candy to buy.',
+                                        'candy': 'Candy name to buy.'}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
         self.gaim_commands["sell"] = [self.sell_candy, "Sell some candy where you are.",
-                                       {}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
+                                      {'amount': 'Amount of candy to sell.',
+                                       'candy': 'Candy name to sell.'}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
         self.player = Player(self.txo.master.active_profile.username)
         self.world = World(self.player)
 
@@ -124,6 +126,16 @@ class CandySlingerRunner(BaseGaim):
             candy_buy_line = f"{buy_avail} {candy.title()} {'┄'*(invo_width-len(candy)-len(buy_price)-len(buy_avail)-3)} {buy_price}"
             self.txo.priont_string(f"│{candy_buy_line}{' '*(len(location_line)-len(candy_buy_line))}║")
         self.txo.priont_string(f"╘{'═'*(len(location_line))}╝\n")
+
+    def display_help_message(self):
+        self.txo.clear_add_header("Candy Slinger Help")
+        self.txo.priont_string("Type 'move <location>' to move to a new location. i.e. 'move park' or 'move library'.")
+        self.txo.priont_list(list(LOCATIONS.keys()), parent_key="   List of possible locations:")
+        self.txo.priont_string("\nType 'buy <amount> <candy>' to buy some candy.")
+        self.txo.priont_string("Type 'sell <amount> <candy>' to sell some candy.")
+        self.txo.priont_string("i.e. 'buy 12 skittle' or 'sell 8 dumdum'.")
+        self.txo.priont_list(list(CANDIES.keys()), parent_key="   List of possible candies:")
+        self.txo.priont_string("\nType 'save' to save your progress.")
 
     def welcome_message(self, welcoming_msgs):
         super().welcome_message([])

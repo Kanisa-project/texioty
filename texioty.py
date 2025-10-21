@@ -3,7 +3,7 @@ import os.path
 import tkinter as tk
 from dataclasses import dataclass
 from typing import Dict, Any, Callable
-
+import inspect
 from helpers.digiary import Digiary
 from helpers.gaim_registry import GaimRegistry
 from settings import themery as t, utils as u
@@ -52,7 +52,7 @@ class CommandRegistry:
                                              text_color=t_color,
                                              bg_color=b_color)
 
-    def execute_command(self, name: str, args: tuple|None) -> None:
+    def execute_command(self, name: str, exec_args: tuple) -> None:
         """
         Executes the command being used in Texity.
         :param name: Name of the command being executed.
@@ -65,13 +65,15 @@ class CommandRegistry:
             return
 
         cmd_handler = command.handler
+        required_args = inspect.getfullargspec(cmd_handler).args
+        print("Inspecting", name, required_args)
         try:
-            if args:
-                cmd_handler(*args)
+            if exec_args:
+                cmd_handler(*exec_args)
             else:
                 cmd_handler()
         except Exception as e:
-            print(f"Error executing '{name}': {e}", args)
+            print(f"Error executing '{name}': {e}", exec_args)
 
 
 class Texioty(tk.LabelFrame):
@@ -161,7 +163,6 @@ class Texioty(tk.LabelFrame):
         for key, helper in self.default_helpers.items():
             self.add_helper_widget(key, helper[0])
 
-
     def close_program(self, args):
         """
         Literally just close the whole application.
@@ -201,15 +202,18 @@ class Texioty(tk.LabelFrame):
                 command = parsed_input[0]
                 arguments = parsed_input[1:]
                 self.execute_command(command, arguments)
+
             case "Diary":
                 if self.texity.parse_diary_line() != "/until_next_time":
                     parsed_input = self.texity.parse_diary_line()
                     self.active_helper_dict["DIRY"][0].add_diary_line(parsed_input)
                 else:
                     self.execute_command("/until_next_time", [])
+
             case "Questionnaire":
                 parsed_input = self.texity.parse_question_response()
                 self.active_helper_dict["PRUN"][0].store_response(parsed_input)
+
             case "Decisioning":
                 parsed_input = self.texity.parse_decision()
                 print("DECISIONED:", parsed_input, self.deciding_function)

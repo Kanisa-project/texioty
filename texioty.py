@@ -52,7 +52,7 @@ class CommandRegistry:
                                              text_color=t_color,
                                              bg_color=b_color)
 
-    def execute_command(self, name: str, args: tuple) -> None:
+    def execute_command(self, name: str, args: tuple|None) -> None:
         """
         Executes the command being used in Texity.
         :param name: Name of the command being executed.
@@ -66,20 +66,12 @@ class CommandRegistry:
 
         cmd_handler = command.handler
         try:
-            if args and isinstance(args[-1], dict) and not isinstance(args[-1], tuple):
-                print("isintstance", args)
-                *pos_args, kwargs = args
-                cmd_handler(*pos_args, **kwargs)
-            else:
-                print("no instantces:", args)
+            if args:
                 cmd_handler(*args)
-        except TypeError as e:
-            try:
-                cmd_handler(args)
-            except Exception as e:
-                print(f"Error executing '{name}': {e}")
+            else:
+                cmd_handler()
         except Exception as e:
-            print(f"Error executing '{name}': {e}")
+            print(f"Error executing '{name}': {e}", args)
 
 
 class Texioty(tk.LabelFrame):
@@ -247,7 +239,7 @@ class Texioty(tk.LabelFrame):
         :return:
         """
         # self.clear_texoty()
-        print(command, arguments)
+        print("cmd args", command, arguments)
         if command in self.registry.commands:
             try:
                 self.registry.execute_command(command, arguments)

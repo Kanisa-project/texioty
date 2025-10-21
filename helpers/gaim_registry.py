@@ -5,6 +5,7 @@ from helpers.tex_helper import TexiotyHelper
 from gaims.hangman import HangmanRunner
 from gaims.casino import CasinoRunner
 from gaims.candy_slinger import CandySlingerRunner
+from gaims.boston_trail import BostonTrail
 
 
 class GaimRegistry(TexiotyHelper):
@@ -15,7 +16,8 @@ class GaimRegistry(TexiotyHelper):
         self.in_game = False
         self.available_games = {"hangman": HangmanRunner,
                                 "casino": CasinoRunner,
-                                "slinger": CandySlingerRunner}
+                                "slinger": CandySlingerRunner,
+                                "trailin": BostonTrail}
         self.helper_commands = {
             "start": [self.start_game, "Start a text based game.",
                       self.available_games, "GAIM",

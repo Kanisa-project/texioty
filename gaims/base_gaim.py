@@ -34,7 +34,8 @@ class BaseGaim(TexiotyHelper):
         """Save this profile progress of this gaim to a file."""
         game_state = self.game_state
         os.makedirs(SAVE_DIR, exist_ok=True)
-        filename = f"{sanitize_filename(self.game_name+'_'+game_state['player_name'])}.json"
+        # filename = f"{sanitize_filename(self.game_name+'_'+game_state['player_name'])}.json"
+        filename = f"{self.game_name+'_'+game_state['player_name']}.json"
         path = os.path.join(SAVE_DIR, filename)
 
         payload = {
@@ -68,12 +69,12 @@ class BaseGaim(TexiotyHelper):
             self.txo.priont_string(f"No saved game found for {player_name}.")
             return None
 
-    def welcome_message(self, args):
+    def welcome_message(self, welcoming_msgs: list):
         """Generic welcoming message."""
         self.txo.clear_add_header(f"{self.game_name}")
         self.txo.priont_string(f'Welcome to {self.game_name}!')
 
-    def display_help_message(self, args):
+    def display_help_message(self):
         """Generic help message."""
         self.txo.priont_string("Using the 'commands' command will display a list of available commands.")
         self.txo.priont_string("Using the 'welcome' command will show the welcome message and some directions.")
@@ -84,7 +85,7 @@ class BaseGaim(TexiotyHelper):
 
     def stop_game(self):
         txty = self.txo.master
-        print("STOPPING")
+        print("STOPPING", self.game_name)
         txty.default_mode()
         txty.active_helper_dict['GAIM'][0].current_gaim = None
 

@@ -109,7 +109,7 @@ class TexiotyHelper:
         self.print_block_font(title_word)
         self.txo.priont_string(random.choice('─━═_')*(len(title_word)*5))
 
-    def display_help_message(self, args):
+    def display_help_message(self):
         """
         Print the available commands for use with a header added to the top.
         :param args:

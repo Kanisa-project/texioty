@@ -138,8 +138,8 @@ class HangmanRunner(BaseGaim):
                 c += c[0]
             self.hidden_dict[c] = hide_it
 
-    def welcome_message(self, args):
-        super().welcome_message(args)
+    def welcome_message(self, welcoming_msgs):
+        super().welcome_message([])
         self.txo.priont_string("")
         self.txo.priont_string("Hangman is where you guess a single letter at a time, in an attempt to solve a hidden phrase.")
         self.txo.priont_string("Every wrongly guessed letter will add another body part to the man being hanged.")
@@ -199,8 +199,8 @@ class HangmanRunner(BaseGaim):
                 if self.hidden_dict[checked_letter * (i + 1)] == "◙":
                     self.hidden_dict[checked_letter * (i + 1)] = checked_letter
 
-    def display_help_message(self, args):
-        super().display_help_message(args)
+    def display_help_message(self):
+        super().display_help_message()
 
     def display_available_commands(self):
         super().display_available_commands()

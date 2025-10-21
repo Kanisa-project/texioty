@@ -162,16 +162,17 @@ class TEXOTY(Text):
         :param dioct: Dictionary to iterate through.
         """
         for key, value in dioct.items():
-            if parent_key:
-                prefix = " " * (len(parent_key) - 1) + "▐"
-            else:
-                prefix = ""
-            self.priont_string(f'{prefix}▐{key}┐')
+            # if parent_key:
+            #     prefix = " " * (len(parent_key) - 1) + "▐"
+            # else:
+            #     prefix = ""
+            prefix = ''
+            self.priont_string(f'{prefix}{key}┐')
 
             if isinstance(dioct[key], str):  # STRING
                 self.priont_string(f'{" " * (len(key) + 1)}└{dioct[key]}')
             elif isinstance(dioct[key], list):  # LIST
-                self.priont_list(dioct[key], parent_key=key)
+                self.priont_list(dioct[key], list_key=key)
             elif isinstance(dioct[key], int):  # INT
                 self.priont_int(key, dioct[key])
             elif isinstance(dioct[key], float):  # FLOAT

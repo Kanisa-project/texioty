@@ -83,17 +83,21 @@ class CandySlingerRunner(BaseGaim):
         if self.world.buying_prices[args[1]][1] < int(args[0]):
             self.txo.priont_string(f"Sorry, but there's not enough {args[1]} to buy.")
             return
-        self.player.buy_candy(candy=args[1],
+        if self.player.buy_candy(candy=args[1],
                               purchase_amt=int(args[0]),
-                              candy_price_ea=self.world.buying_prices[args[1]][0])
-        self.world.buying_prices[args[1]][1] -= int(args[0])
+                              candy_price_ea=self.world.buying_prices[args[1]][0]):
+            self.world.buying_prices[args[1]][1] -= int(args[0])
         self.welcome_message([])
         self.display_player_invo()
 
     def sell_candy(self, *args):
-        self.player.sell_candy(candy=args[1],
+        if self.world.selling_prices[args[1]][1] < int(args[0]):
+            self.txo.priont_string(f"Sorry, but you don't have enough {args[1]} to sell.")
+            return
+        if self.player.sell_candy(candy=args[1],
                                sale_amt=int(args[0]),
-                               candy_price_ea=self.world.selling_prices[args[1]][0])
+                               candy_price_ea=self.world.selling_prices[args[1]][0]):
+            self.world.buying_prices[args[1]][1] += int(args[0])
         self.welcome_message([])
         self.display_player_invo()
 
@@ -121,8 +125,8 @@ class CandySlingerRunner(BaseGaim):
             self.txo.priont_string(f"│{candy_buy_line}{' '*(len(location_line)-len(candy_buy_line))}║")
         self.txo.priont_string(f"╘{'═'*(len(location_line))}╝\n")
 
-    def welcome_message(self, args):
-        super().welcome_message(args)
+    def welcome_message(self, welcoming_msgs):
+        super().welcome_message([])
         self.txo.priont_string("")
         self.txo.priont_string("Candy Slinger is as simple as the market should be.")
         self.txo.priont_string("Buy what you can low, sell what you have high.")
@@ -149,16 +153,20 @@ class Player:
             "location": self.location
         }
 
-    def buy_candy(self, candy: str, purchase_amt: int, candy_price_ea: int):
+    def buy_candy(self, candy: str, purchase_amt: int, candy_price_ea: int) -> bool:
         if self.money >= purchase_amt * candy_price_ea:
             self.inventory[candy]['inventory'] += purchase_amt
             self.inventory[candy]['last_price'] = candy_price_ea
             self.money -= purchase_amt * candy_price_ea
+            return True
+        return False
 
-    def sell_candy(self, candy: str, sale_amt: int, candy_price_ea: int):
+    def sell_candy(self, candy: str, sale_amt: int, candy_price_ea: int) -> bool:
         if self.inventory[candy]['inventory'] >= sale_amt:
             self.inventory[candy]['inventory'] -= sale_amt
             self.money += sale_amt * candy_price_ea
+            return True
+        return False
 
 
 class World:

@@ -76,30 +76,30 @@ class CandySlingerRunner(BaseGaim):
         }
         super().save_game()
 
-    def move_location(self, *args):
-        self.world.update_new_location(args[0])
+    def move_location(self, new_location: str):
+        self.world.update_new_location(new_location)
         self.welcome_message([])
         self.display_player_invo()
 
-    def buy_candy(self, *args):
-        if self.world.buying_prices[args[1]][1] < int(args[0]):
-            self.txo.priont_string(f"Sorry, but there's not enough {args[1]} to buy.")
+    def buy_candy(self, amount: int, candy: str):
+        if self.world.buying_prices[candy][1] < int(amount):
+            self.txo.priont_string(f"Sorry, but there's not enough {candy} to buy.")
             return
-        if self.player.buy_candy(candy=args[1],
-                              purchase_amt=int(args[0]),
-                              candy_price_ea=self.world.buying_prices[args[1]][0]):
-            self.world.buying_prices[args[1]][1] -= int(args[0])
+        if self.player.buy_candy(candy=candy,
+                              purchase_amt=int(amount),
+                              candy_price_ea=self.world.buying_prices[candy][0]):
+            self.world.buying_prices[candy][1] -= int(amount)
         self.welcome_message([])
         self.display_player_invo()
 
-    def sell_candy(self, *args):
-        if self.world.selling_prices[args[1]][1] < int(args[0]):
-            self.txo.priont_string(f"Sorry, but you don't have enough {args[1]} to sell.")
+    def sell_candy(self, amount: int, candy: str):
+        if self.player.inventory[candy]["inventory"] > int(amount):
+            self.txo.priont_string(f"Sorry, but you don't have enough {candy} to sell.")
             return
-        if self.player.sell_candy(candy=args[1],
-                               sale_amt=int(args[0]),
-                               candy_price_ea=self.world.selling_prices[args[1]][0]):
-            self.world.buying_prices[args[1]][1] += int(args[0])
+        if self.player.sell_candy(candy=candy,
+                               sale_amt=int(amount),
+                               candy_price_ea=self.world.selling_prices[candy][0]):
+            self.world.buying_prices[candy][1] += int(amount)
         self.welcome_message([])
         self.display_player_invo()
 
@@ -158,12 +158,12 @@ class Player:
             self.inventory[candy]['inventory'] = random.randint(0, 2) * random.randint(CANDIES[candy]['inventory_range'][0], CANDIES[candy]['inventory_range'][1])
             self.inventory[candy]['last_price'] = 1
         self.location = random.choice(list(LOCATIONS.keys()))
-        self.data = {
-            "player_name": self.player_name,
-            "money": self.money,
-            "inventory": self.inventory,
-            "location": self.location
-        }
+        # self.data = {
+        #     "player_name": self.player_name,
+        #     "money": self.money,
+        #     "inventory": self.inventory,
+        #     "location": self.location
+        # }
 
     def buy_candy(self, candy: str, purchase_amt: int, candy_price_ea: int) -> bool:
         if self.money >= purchase_amt * candy_price_ea:
@@ -210,59 +210,8 @@ class World:
             avail_amnt = random.randint(cndy_avail_range[0] * avail_mod, cndy_avail_range[1] * avail_mod)
             self.buying_prices[candy] = [cndy_price, avail_amnt]
 
-    def gather_selling_choice(self):
-        candy_sold = input(" -Whater ye sellin? ")
-        while candy_sold not in list(self.selling_prices.keys()):
-            if candy_sold == 'nvm':
-                return ''
-            candy_sold = input("'nvm' to exit or type a candy to sell: ")
-        if candy_sold in list(CANDIES.keys()):
-            return candy_sold
-        return None
-
-    def gather_buying_choice(self):
-        candy_bought = input(" -Wutar ya buyin? ")
-        while candy_bought not in list(self.buying_prices.keys()):
-            if candy_bought == 'nvm':
-                return ""
-            candy_bought = input("'nvm' to exit or type a candy to buy: ")
-        if candy_bought in list(CANDIES.keys()):
-            return candy_bought
-        return None
-
-    def player_move_location(self):
-        for i, location in enumerate(LOCATIONS):
-            if location == self.player_location:
-                print(f" -{location}")
-            else:
-                print(f"{location}")
-        new_location = input("Where ya movin to? ")
-        while new_location not in LOCATIONS:
-            new_location = input("Type where you're going: ")
-        if new_location in LOCATIONS:
-            self.player_location = new_location
-            return new_location
-        else:
-            self.player_location = "park"
-            return "park"
-
     def update_new_location(self, new_location):
         self.player_location = new_location
         self.player.location = new_location
         self.new_buying_prices()
         self.new_selling_prices()
-
-    def save_progress(self, player_data):
-        json_object = json.dumps(player_data, indent=4)
-        with open(f"{self.player.player_name}.json", "w") as saved_json:
-            saved_json.write(json_object)
-
-    def load_player(self, player_data):
-        yesorno_load = input(f"Load {player_data['player_name']} with ${player_data['money']}, at {player_data['location']} (y/n)? ")
-        if yesorno_load.startswith("y"):
-            self.player.player_name = player_data['player_name']
-            self.player.money = player_data['money']
-            self.player.inventory = player_data['inventory']
-            self.player.location = player_data['location']
-        else:
-            return

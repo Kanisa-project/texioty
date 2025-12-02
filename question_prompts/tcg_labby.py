@@ -18,6 +18,7 @@ TCG_OPTIONS = ['Magic the Gathering',
                'Digimon',
                'All']
 
+
 class TCGLabratory(BasePrompt):
     def __init__(self, txo, txi):
         super().__init__(txo, txi)
@@ -70,31 +71,21 @@ class TCGLabratory(BasePrompt):
         if self.current_tcg is None:
             self.current_tcg = tcg_choice
 
-
     def create_depiction(self, profile_name: str):
         self.txo.priont_string(f"Depicting a {self.current_tcg} {profile_name}..")
+        match profile_name:
+            case "playmat":
+                playmat_depiction(profile_name)
 
     def create_puzzle(self, profile_name: str):
         self.txo.priont_string(f"Puzzling a {self.current_tcg} {profile_name}....")
-
-
-
-class SpellDepicter(TexiotyHelper):
-    def __init__(self, txo, txi):
-        super().__init__(txo, txi)
-        self.txo = None
-        self.texioty_commands = {
-            "depict_spell": [self.depict_mtg_spell, "Depicts a spell from MTG.",
-                             {}, [], u.rgb_to_hex(t.INDIAN_RED), u.rgb_to_hex(t.BLACK)], }
-
-    def depict_mtg_spell(self, args):
-        self.txo.priont_string(f"Depicting the '{args[0].title()}' spell.")
-        spell_card = Card.where(name=args[0].title()).all()[0]
-        spell_dict = build_spell_dict(spell_card)
-        new_spell_img = Image.new("RGBA", (960, 960), (127, 127, 127))
-        depict_spell(new_spell_img, spell_dict)
-        new_spell_img.save(f"depictions/{spell_card.name}.png")
-
+        match profile_name:
+            case "word_search":
+                pass
+            case "fill_in":
+                self.txo.priont_string("┌─┐")
+                self.txo.priont_string("│a│")
+                self.txo.priont_string("└─┘")
 
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
@@ -275,6 +266,29 @@ def depict_cmc(spell_cmc: int) -> list:
     return cmc_pointlist
 
 
+def build_card_info_dict(tcg: str, card_info) -> dict:
+    match tcg:
+        case "Magic the Gathering":
+            pass
+        case "Pokemon":
+            pass
+        case "Lorcana":
+            pass
+        case "Digimon":
+            pass
+        case "YuGiOh":
+            pass
+    return {}
+
+
+def build_mtg_card_dict(card: Card):
+    return {"card_name": card.name,
+            "card_cmc": card.cmc,
+            "card_type": card.type.replace('\u2014', '-'),
+            "card_colors": card.colors,
+            "card_mana_cost": card.mana_cost[::-1]}
+
+
 def build_spell_dict(spell_card):
     if isinstance(spell_card, Card):
         return {"spell_name": spell_card.name,
@@ -291,6 +305,7 @@ def build_spell_dict(spell_card):
                                     "spell_colors": spell.colors,
                                     "spell_mana_cost": spell.mana_cost})
         return spell_dict_list
+    return None
 
 
 def create_depiction(img: Image.Image, spell_dict: dict):
@@ -302,18 +317,27 @@ def create_depiction(img: Image.Image, spell_dict: dict):
     img.save(save_path)
 
 
+def playmat_depiction(profile_name: str):
+    prof_dict = u.retrieve_lab_profiles('depicters')[profile_name]
+    img_size = prof_dict['image_size']
+    bg_color = prof_dict['background']
+    color_list = prof_dict['palette']
+    new_img = Image.new('RGBA', img_size, tuple(bg_color))
+    print(prof_dict)
+    create_depiction(new_img, prof_dict['spell_dict'])
+
 
 class TcgDepicter:
     def __init__(self, config_dict: dict):
         self.select_choices = ["Name a card.", "Random card.", "Cards batch."]
 
         self.single_card_queries = {"name": 'What name would you like to find? ',
-                             "type": 'What type of card is it? ',
-                             "coloring": 'What colors are the card? '}
+                                    "type": 'What type of card is it? ',
+                                    "coloring": 'What colors are the card? '}
 
         self.batch_cards_queries = {"set_code": 'What is the setcode for the batch? ',
-                            "batch_size": 'How many cards to batch? ',
-                            "batch_types": 'What type is each card in the batch? '}
+                                    "batch_size": 'How many cards to batch? ',
+                                    "batch_types": 'What type is each card in the batch? '}
         self.card_datadict = {}
         self.config = config_dict
 
@@ -371,11 +395,13 @@ class TcgDepicter:
         image_size = self.config['image_size']
         planned_name_lines = []
         for x in range(0, image_size[0], 3):
-            planned_name_lines.append(u.plan_angled_line(x, 0, 90, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
+            planned_name_lines.append(
+                u.plan_angled_line(x, 0, 90, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
             planned_name_lines.append(
                 u.plan_angled_line(x, image_size[1], 270, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
         for y in range(0, image_size[1], 3):
-            planned_name_lines.append(u.plan_angled_line(0, y, 0, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
+            planned_name_lines.append(
+                u.plan_angled_line(0, y, 0, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
             planned_name_lines.append(
                 u.plan_angled_line(image_size[0], y, 180, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
         return planned_name_lines
@@ -403,4 +429,3 @@ class TcgDepicter:
         coloring_lstring = lsystem_string_maker(card_coloring, s.MORSE_CODE_AXIOMS, 2)
         lsystem_points = u.lsystem_morse_coder(coloring_lstring)
         return lsystem_points
-

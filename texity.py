@@ -1,6 +1,7 @@
 import tkinter as tk
 from dataclasses import dataclass
 from typing import Any
+from settings.utils import clamp
 
 
 @dataclass
@@ -9,7 +10,7 @@ class Command:
     handler: Any
     help_message: str
     possible_args: dict
-    helper_symbol: str
+    helper_tag: str
     text_color: str
     bg_color: str
 
@@ -34,7 +35,7 @@ class TEXITY(tk.Entry):
         self.bind('<Down>', lambda e: self.command_list_next())
 
     def no_options(self):
-        for i, option in enumerate(self.current_possible_options):
+        for i in range(len(self.current_possible_options)):
             self.unbind(str(i))
             self.unbind(f"<KP_{i}>")
 
@@ -60,7 +61,7 @@ class TEXITY(tk.Entry):
 
     def parse_question_response(self) -> str:
         """
-        Returns the questions response as a string, including the entire Texity input.
+        Returns the question response as a string, including the entire Texity input.
         :return: entire string from Texity
         """
         text_input = self.command_string_var.get().split("›")[-1]
@@ -99,7 +100,3 @@ class TEXITY(tk.Entry):
             self.command_string_var.set('')
         self.icursor(tk.END)
 
-
-
-def clamp(n, minn, maxn) -> int:
-    return max(min(maxn, n), minn)

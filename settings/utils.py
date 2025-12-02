@@ -5,13 +5,16 @@ import glob
 import random
 from dataclasses import dataclass
 
-from pytube import YouTube
+# from pytube import YouTube
 
 import requests
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from settings import themery as t, alphanumers as a
 
-load_dotenv()
+# load_dotenv()
+
+PRO_TIPS = ["Double click the click-commands to bring focus back to Texity.",
+            "'welcome' 'commands' 'help' are three helpful commands to welcome a user."]
 
 
 def check_file_exists(path: str) -> bool:
@@ -163,10 +166,10 @@ for profile in glob.glob(".profiles/*.json"):
              profile_data['texioty']["color_theme"]["accent"])
         )
 
-def download_youtube_video(url, resolution='1080p', quality='hd'):
-    yt = YouTube(url)
-    stream = yt.streams.order_by(resolution).filter(progressive=True, file_extension="mp4").first()
-    stream.download()
+# def download_youtube_video(url, resolution='1080p', quality='hd'):
+#     yt = YouTube(url)
+#     stream = yt.streams.order_by(resolution).filter(progressive=True, file_extension="mp4").first()
+#     stream.download()
 
 def string_to_morse(reg_str: str) -> str:
     morse_str = ''

@@ -46,6 +46,11 @@ class TEXOTY(Text):
         self.insert(line_index, tex, self.hyperlink.add(partial(webbrowser.open, link)))
         self.yview(END)
 
+    def priont_click_command(self, tex: str, link: str, line_index=END):
+        self.insert(line_index, tex, self.hyperlink.add_cmd(partial(self.master.set_texity_input, link)))
+        self.priont_string('')
+
+
     def set_header(self, msg="Welcome to Texioty"):
         """
         Set a heading with a message and interesting looking lines
@@ -90,13 +95,6 @@ class TEXOTY(Text):
         self.tag_add(tag_name, start_index, end_index)
 
 
-    # def make_text_colored(self, fg_color, bg_color, start_index, end_index):
-    #     # print(fg_color, bg_color, start_index, end_index)
-    #     self.tag_configure(f"{fg_color}_{bg_color}", background=theme.rgb_to_hex(bg_color), foreground=theme.rgb_to_hex(fg_color))
-    #     self.tag_add(f"{fg_color}_{bg_color}", start_index, end_index)
-    #     # self.tag_ranges(f'{fg_color}_{bg_color}')
-    #     # self.tag_delete(f'{fg_color}_{bg_color}', '1.5', END)
-
     def create_masterpiece(self, *args):
         """
         Adds an artistic frame around the Texoty textuality.
@@ -113,10 +111,10 @@ class TEXOTY(Text):
             elif th + 1 == self.texoty_h:
                 self.priont_string(f"{'╚'}{'═' * (self.texoty_w - 2)}{'╝'}")
             elif mstrpc_h >= th >= self.texoty_h - mstrpc_h:
-                mstrpc_a += 1
-                mstrpc_str = self.artay_method_dict[random.choice(*args)](mstrpc_w, mstrpc_a)
+                # mstrpc_a += 1
+                # mstrpc_str = self.artay_method_dict[random.choice(*args)](mstrpc_w, mstrpc_a)
                 self.priont_string(
-                    f"{'║'}{' ' * (((self.texoty_w - mstrpc_w) // 2) - 1)}{mstrpc_str}{' ' * (((self.texoty_w - mstrpc_w) // 2) - 2)}{'║'}")
+                    f"{'║'}{' ' * (((self.texoty_w - mstrpc_w) // 2) - 1)}{' ' * (((self.texoty_w - mstrpc_w) // 2) - 2)}{'║'}")
             else:
                 self.priont_string(f"{'║'}{' ' * (self.texoty_w - 2)}{'║'}")
 
@@ -125,73 +123,60 @@ class TEXOTY(Text):
         self.delete("0.0", 'end')
         self.set_header()
 
-    def clear_no_header(self):
+    def clear_no_header(self, fillIt=False, fill_space=" "):
         """ Clear Texoty display and do not replace the header. """
         self.delete("0.0", 'end')
+        if fillIt:
+            for h in range(self.texoty_h):
+                self.insert(END, fill_space * self.texoty_w)
 
-    def priont_kre8dict(self, kre8dict: dict, indent=0):
-        """
-        Print and display the full kre8dict in Texoty.
-        :param kre8dict: 
-        :param indent: 
-        :return: 
-        """
-        print(kre8dict)
-        for key, value in kre8dict.items():
-            self.priont_string(f'▐{key}╕')
-            if isinstance(value, str):  # STRING
-                self.priont_string(f'{" " * (len(key) + 1)}└{value}')
-            elif isinstance(value, list):  # LIST
-                self.priont_list(items=value, list_key=key)
-            elif isinstance(value, int):  # INT
-                self.priont_int(key, value)
-            elif isinstance(value, float):  # FLOAT
-                self.priont_float(key, value)
-            elif isinstance(value, dict):  # DICT
-                if indent == 1:
-                    self.priont_dict(value, parent_key=key, indent=indent + 1)
-                else:
-                    self.priont_dict(value, parent_key=key, indent=indent + 1)
-
-    def priont_dict(self, dioct: dict, parent_key=None, indent=0):
+    def priont_dict(self, dioct: dict, parent_key=None):
         """
         Iterate through a dictionary and display each key/value pair.
 
-        :param indent: How much front spacing.
         :param parent_key: The parent key in a nested dictionary.
         :param dioct: Dictionary to iterate through.
         """
         for key, value in dioct.items():
-            # if parent_key:
-            #     prefix = " " * (len(parent_key) - 1) + "▐"
-            # else:
-            #     prefix = ""
-            prefix = ''
+            if parent_key:
+                prefix = (" " * len(parent_key)) + "▐"
+                whole_key = parent_key+"."+key
+            else:
+                prefix = ''
+                whole_key = key
             self.priont_string(f'{prefix}{key}┐')
 
-            if isinstance(dioct[key], str):  # STRING
-                self.priont_string(f'{" " * (len(key) + 1)}└{dioct[key]}')
-            elif isinstance(dioct[key], list):  # LIST
-                self.priont_list(dioct[key], list_key=key)
-            elif isinstance(dioct[key], int):  # INT
-                self.priont_int(key, dioct[key])
-            elif isinstance(dioct[key], float):  # FLOAT
-                self.priont_float(key, dioct[key])
+            if isinstance(dioct[key], list):  # LIST
+                self.priont_list(dioct[key], parent_key=whole_key)
             elif isinstance(dioct[key], texity.Command):  # COMMAND
-                self.priont_command(dioct[key])
+                self.priont_command_lite(dioct[key])
             elif isinstance(dioct[key], dict):  # DICT
-                if indent == 1:
-                    self.priont_dict(dioct[key], parent_key=key, indent=indent + 1)
-                else:
-                    self.priont_dict(dioct[key], parent_key=key, indent=indent + 1)
+                self.priont_dict(dioct[key], parent_key=whole_key)
+            else:
+                self.priont_string(f'{" " * len(whole_key)}└{dioct[key]}')
 
-    def priont_command(self, command: texity.Command):
+    def priont_command_lite(self, command: texity.Command):
         """
         Display a command on Texoty in a stylized and slightly complicated fashion.
         :param command:
         :return:
         """
-        # self.command_group_break(command.helper_symbol)
+        self.priont_command_colorized(f'\n{command.name}╕', command.text_color, command.bg_color)
+        help_message_text = f'{" "*len(command.name)}╘► {command.help_message}'
+        self.priont_command_colorized(help_message_text, command.text_color, command.bg_color)
+        # if command.possible_args:
+        #     poss_key = random.choice(list(command.possible_args.keys()))
+        #     self.priont_click_command(command.name, f'{command.name} {poss_key}')
+        # else:
+        #     self.priont_click_command(command.name, command.name)
+        self.yview(END)
+
+    def priont_command_full(self, command: texity.Command):
+        """
+        Display a command on Texoty in a stylized and slightly complicated fashion.
+        :param command:
+        :return:
+        """
         self.priont_command_colorized(f'{command.name}╕', command.text_color, command.bg_color)
         if not command.possible_args:
             help_message_text = f'{" " * len(command.name)}╘► {command.help_message}'
@@ -219,7 +204,7 @@ class TEXOTY(Text):
             break_line += random.choice('┉┅')
         self.insert(END, f"\n╫{break_line}╫", 'break_line')
 
-    def command_group_break(self, helper_symbol: str):
+    def helper_tag_break(self, helper_tag: str):
         """
         Adds a break line in Texoty with style.
         :return:
@@ -234,7 +219,8 @@ class TEXOTY(Text):
         self.tag_configure('break_line', foreground=fg, background=bg)
         for _ in range(self.texoty_w - 28):
             break_line += random.choice('┉┅')
-        self.insert(END, f"\n╫{help_shade}{helper_symbol} {break_line}╫", 'break_line')
+        self.insert(END, f"\n╫{help_shade}{helper_tag} {break_line}╫", 'break_line')
+
 
     def priont_string(self, striong: str, line_index=END):
         """
@@ -285,25 +271,27 @@ class TEXOTY(Text):
         self.insert(END, '\n')
         self.yview(END)
 
-    def priont_float(self, key_of_float: str, flioat: float):
+    def priont_int(self, iont: int, parent_key=None):
+        """
+        Display an integer on texoty.
+        :param parent_key: If the integer is from a dictionary.
+        :param iont: Integer for displaying.
+        :return:
+        """
+        leading_spaces = " " * len(parent_key)
+        self.priont_string(f'{leading_spaces}└{iont}')
+
+    def priont_float(self, flioat: float, parent_key=None):
         """
         Display a float.
-        :param key_of_float: If the float is in a dictionary.
+        :param parent_key: If the float is in a dictionary.
         :param flioat: The float to display.
         :return:
         """
-        leading_spaces = " " * (len(key_of_float) + 1)
+        leading_spaces = " " * len(parent_key)
         self.priont_string(f'{leading_spaces}└{flioat}')
 
-    def priont_number_list(self, number_list: list):
-        """
-        Display the number list from kre8dict.
-        :param number_list: The list of numbers in numerical order.
-        :return:
-        """
-        self.priont_string(str(number_list))
-
-    def priont_list(self, items: list, list_key=None, parent_key=None, numbered=False):
+    def priont_list(self, items: list, parent_key=None, numbered=False):
         """
         Display a list of items on texoty, each item in the list on its own line.
 
@@ -313,17 +301,13 @@ class TEXOTY(Text):
         @param numbered:
         """
 
-        if list_key:
-            leading_spaces = " " * (len(list_key) + 1)
-        elif parent_key:
-            leading_spaces = " " * (len(parent_key) + 1)
+        if parent_key:
+            leading_spaces = " " * len(parent_key)
         else:
-            leading_spaces = " "
+            leading_spaces = ""
 
-        if list_key == "number_list":
-            self.priont_string(str(f'{leading_spaces}└{items}'))
-        elif parent_key:
-            self.priont_string(parent_key + "┐")
+        if parent_key:
+            # self.priont_string(parent_key + "┐")
             for item in items:
                 prefix = "└" if items.index(item) == len(items) - 1 else "├"
                 if numbered:
@@ -331,24 +315,17 @@ class TEXOTY(Text):
                 if isinstance(item, str) and item.startswith('http'):
                     self.priont_hyperlink("Click Me", item)
                 else:
-                    self.priont_string(f'{leading_spaces[len(str(items.index(item))) + 1:]}{prefix}{item}')
+                    self.priont_string(f'{leading_spaces}{prefix}{item}')
         else:
             for item in items:
                 prefix = "└" if items.index(item) == len(items) - 1 else "├"
+                if numbered:
+                    prefix = str(items.index(item)) + prefix
                 if isinstance(item, str) and item.startswith('http'):
                     self.priont_hyperlink("Click Me", item)
                 else:
                     self.priont_string(f'{leading_spaces}{prefix}{item}')
 
-    def priont_int(self, key_of_int: str, iont: int):
-        """
-        Display an integer on texoty.
-        :param key_of_int: If the integer is from a dictionary.
-        :param iont: Integer for displaying.
-        :return:
-        """
-        leading_spaces = " " * (len(key_of_int) + 1)
-        self.priont_string(f'{leading_spaces}└{iont}')
 
     def set_text_on_line(self, line_number: int, text: str):
         """
@@ -362,3 +339,11 @@ class TEXOTY(Text):
 
     def set_char_on_line(self, x_loc, y_loc, char="┐"):
         self.insert(f"{x_loc}.{y_loc}", char)
+
+    def priont_bool(self, boiol: bool, parent_key=None):
+        pass
+
+
+    def priont(self, text: str, y_loc: int, x_loc: int):
+        insert_index = f"{y_loc}.{x_loc}"
+        self.insert(float(insert_index), text)

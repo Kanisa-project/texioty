@@ -69,12 +69,12 @@ class BaseGaim(TexiotyHelper):
             self.txo.priont_string(f"No saved game found for {player_name}.")
             return None
 
-    def welcome_message(self, welcoming_msgs: list):
+    def welcome_message(self):
         """Generic welcoming message."""
         self.txo.clear_add_header(f"{self.game_name}")
         self.txo.priont_string(f'Welcome to {self.game_name}!')
 
-    def display_help_message(self):
+    def display_help_message(self, helper_tag: str = None):
         """Generic help message."""
         self.txo.priont_string("Using the 'commands' command will display a list of available commands.")
         self.txo.priont_string("Using the 'welcome' command will show the welcome message and some directions.")

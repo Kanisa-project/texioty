@@ -1,5 +1,7 @@
 import json
 import os.path
+import random
+import time
 import tkinter as tk
 from dataclasses import dataclass
 from typing import Dict, Any, Callable
@@ -9,6 +11,7 @@ from helpers.gaim_registry import GaimRegistry
 from settings import themery as t, utils as u
 from helpers.prompt_registry import PromptRegistry
 from helpers.tex_helper import TexiotyHelper
+from settings import themery as t, alphanumers as a
 import texoty
 import texity
 
@@ -27,7 +30,7 @@ class CommandRegistry:
             del self.commands[help_symb]
             return
 
-        to_delete = [name for name, cmd in self.commands.items() if getattr(cmd, "helper_symbol", None) == help_symb]
+        to_delete = [name for name, cmd in self.commands.items() if getattr(cmd, "helper_tag", None) == help_symb]
         for name in to_delete:
             del self.commands[name]
 
@@ -48,7 +51,7 @@ class CommandRegistry:
                                              handler=handler,
                                              help_message=msg,
                                              possible_args=p_args,
-                                             helper_symbol=help_symb,
+                                             helper_tag=help_symb,
                                              text_color=t_color,
                                              bg_color=b_color)
 
@@ -65,13 +68,17 @@ class CommandRegistry:
             return
 
         cmd_handler = command.handler
-        required_args = inspect.getfullargspec(cmd_handler).args
-        print("Inspecting", name, required_args)
+        print("Inspecting", name, inspect.getfullargspec(cmd_handler).annotations)
         try:
-            if exec_args:
-                cmd_handler(*exec_args)
-            else:
+            if len(inspect.getfullargspec(cmd_handler).args) == 1:
                 cmd_handler()
+            else:
+                cmd_handler(*exec_args)
+        # try:
+        #     if exec_args:
+        #         cmd_handler(*exec_args)
+        #     else:
+        #         cmd_handler()
         except Exception as e:
             print(f"Error executing '{name}': {e}", exec_args)
 
@@ -119,10 +126,12 @@ class Texioty(tk.LabelFrame):
             "login": [self.log_profile_in, "This logs the user into a profile. ",
                       self.available_profiles, "TXTY", u.rgb_to_hex(t.DIM_GREY), u.rgb_to_hex(t.BLACK)],
             "exit": [self.close_program, "Exits Texioty.",
-                     {}, "TXTY", u.rgb_to_hex(t.PURPLE), u.rgb_to_hex(t.BLACK)]
+                     {}, "TXTY", u.rgb_to_hex(t.PURPLE), u.rgb_to_hex(t.BLACK)],
+            "dictest": [self.priont_test, "Prionts a test dictionary.",
+                          {}, "TXTY", u.rgb_to_hex(t.PURPLE), u.rgb_to_hex(t.BLACK)],
         }
         self.helper_commands = self.active_helper_dict["HLPR"][0].helper_commands|self.known_commands_dict
-        self.active_helper_dict['HLPR'][0].welcome_message([])
+        self.active_helper_dict['HLPR'][0].welcome_message()
         self.add_command_dict(self.known_commands_dict)
 
     def add_command_dict(self, command_dict: dict):
@@ -163,25 +172,25 @@ class Texioty(tk.LabelFrame):
         for key, helper in self.default_helpers.items():
             self.add_helper_widget(key, helper[0])
 
-    def close_program(self, args):
+    def close_program(self):
         """
         Literally just close the whole application.
         :param args:
         :return:
         """
-        self.master.destroy()
+        self.master.quit()
 
-    def add_helper_widget(self, helper_symbol: str, helper_widget):
+    def add_helper_widget(self, helper_tag: str, helper_widget):
         """
         Add a helper widget and all of its commands to texioty while supplying access to texoty.
-        :param helper_symbol: Symbol of helper (e.g. TXTY GAIM DIRY)
+        :param helper_tag: Symbol of helper (e.g. TXTY GAIM DIRY)
         :param helper_widget:
         :return:
         """
         # helper_widget.txo = self.texoty
         if len(helper_widget.helper_commands) > 0:
             self.add_command_dict(helper_widget.helper_commands)
-        self.active_helper_dict[helper_symbol] = [helper_widget]
+        self.active_helper_dict[helper_tag] = [helper_widget]
 
     def clear_texoty(self):
         """Clear all the text from texoty and replace the header."""
@@ -234,6 +243,9 @@ class Texioty(tk.LabelFrame):
                     prefix = self.active_helper_dict["GAIM"][0].current_gaim.gaim_prefix
         self.texity.command_string_var.set(prefix)
 
+    def set_texity_input(self, new_input):
+        self.texity.command_string_var.set(new_input)
+        self.texity.focus_set()
 
     def execute_command(self, command, arguments):
         """
@@ -258,15 +270,15 @@ class Texioty(tk.LabelFrame):
         if self.current_mode == "Texioty":
             self.texoty.priont_string(u.random_loading_phrase())
 
-    def log_profile_in(self, *args):
+    def log_profile_in(self, prof_name: str, prof_pass: str):
         """Check args[0] for a username and args[1] for a password. Logs in a profile if a match."""
-        print("LogIN", args)
+        print("LogIN", prof_name, prof_pass)
         try:
-            if args[0] in self.available_profiles:
+            if prof_name in self.available_profiles:
                 try:
-                    if args[1] == self.available_profiles[args[0]].password:
-                        self.texoty.priont_string(f"⦓⦙ Welcome, {args[0]}!")
-                        self.active_profile = self.available_profiles[args[0]]
+                    if prof_pass == self.available_profiles[prof_name].password:
+                        self.texoty.priont_string(f"⦓⦙ Welcome, {prof_name}!")
+                        self.active_profile = self.available_profiles[prof_name]
                         self.texoty.set_header_theme(self.active_profile.color_theme[0],
                                                      self.active_profile.color_theme[1],
                                                      16,
@@ -276,7 +288,7 @@ class Texioty(tk.LabelFrame):
                 except IndexError:
                     self.texoty.priont_string(f"⦓⦙ Don't forget to type a password.")
             else:
-                self.texoty.priont_string(f"⦓⦙ I don't recognize '{args[0]}' as profile username.")
+                self.texoty.priont_string(f"⦓⦙ I don't recognize '{prof_name}' as profile username.")
                 self.active_helper_dict['PRUN'][0].prompt_texioty_profile()
         except IndexError:
             self.texoty.priont_string("⦓⦙ What username to login to?")
@@ -318,3 +330,21 @@ class Texioty(tk.LabelFrame):
         self.texoty.priont_string(f"    {args}")
         u.download_youtube_video(args)
         self.texoty.priont_string(f"Maybe finished, maybe completed.")
+
+    def priont_test(self):
+        self.texoty.priont_dict({
+            "Striong": "This is a string",
+            "Iont": 3456123978,
+            "Flioat": 1.236978,
+            "List": ["one", 2, "tree", 45, 6.7],
+            "Dict": {
+                "INT": 654,
+                "STiroRn": "StRiNg",
+                "FLoooatT": 3.21,
+                "LT": [0, "1", 3],
+                "DCT": {'BOOL': True,
+                        "Dict22": {
+                            "this": "one2"
+                        }}
+            }
+        })

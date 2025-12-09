@@ -139,7 +139,7 @@ class TEXOTY(Text):
         """
         for key, value in dioct.items():
             if parent_key:
-                prefix = (" " * len(parent_key)) + "▐"
+                prefix = (" " * len(parent_key)) + "⠈⠘⠸⡇"[parent_key.count(".") % 5]
                 whole_key = parent_key+"."+key
             else:
                 prefix = ''
@@ -161,9 +161,9 @@ class TEXOTY(Text):
         :param command:
         :return:
         """
-        self.priont_command_colorized(f'\n{command.name}╕', command.text_color, command.bg_color)
-        help_message_text = f'{" "*len(command.name)}╘► {command.help_message}'
-        self.priont_command_colorized(help_message_text, command.text_color, command.bg_color)
+        self.priont_command_colorized(f'\n{command.name}╕', command.font_color, command.back_color)
+        help_message_text = f'{" "*len(command.name)}╘► {command.lite_desc}'
+        self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
         # if command.possible_args:
         #     poss_key = random.choice(list(command.possible_args.keys()))
         #     self.priont_click_command(command.name, f'{command.name} {poss_key}')
@@ -177,18 +177,16 @@ class TEXOTY(Text):
         :param command:
         :return:
         """
-        self.priont_command_colorized(f'{command.name}╕', command.text_color, command.bg_color)
-        if not command.possible_args:
-            help_message_text = f'{" " * len(command.name)}╘► {command.help_message}'
-            self.priont_command_colorized(help_message_text, command.text_color, command.bg_color)
-        else:
-            help_message_text = f'{" " * len(command.name)}╞► {command.help_message}'
-            self.priont_command_colorized(help_message_text, command.text_color, command.bg_color)
-            for p_arg_i, p_arg_k in enumerate(command.possible_args):
-                prefix = " " * len(command.name)
-                prefix += "└" if p_arg_i == len(command.possible_args) - 1 else "├"
-                self.priont_command_colorized(prefix + p_arg_k + f"» {command.possible_args[p_arg_k]}",
-                                              text_color=command.text_color, bg_color=command.bg_color)
+        self.priont_command_colorized(f'{command.name}╕', command.font_color, command.back_color)
+        help_message_text = f'{" " * len(command.name)}└► {command.lite_desc}'
+        self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
+        usage_message_text = f'\nHow to use─►  {command.usage}'
+        self.priont_command_colorized(usage_message_text, command.back_color, command.font_color)
+        for p_arg_i, p_arg_k in enumerate(command.possible_args):
+            prefix = " " * len(command.name)
+            prefix += "└" if p_arg_i == len(command.possible_args) - 1 else "├"
+            self.priont_command_colorized(prefix + p_arg_k + f"» {command.possible_args[p_arg_k]}",
+                                          text_color=command.font_color, bg_color=command.back_color)
         self.yview(END)
 
     def priont_break_line(self):
@@ -204,7 +202,7 @@ class TEXOTY(Text):
             break_line += random.choice('┉┅')
         self.insert(END, f"\n╫{break_line}╫", 'break_line')
 
-    def helper_tag_break(self, helper_tag: str):
+    def helper_tag_break(self, group_tag: str):
         """
         Adds a break line in Texoty with style.
         :return:
@@ -219,7 +217,7 @@ class TEXOTY(Text):
         self.tag_configure('break_line', foreground=fg, background=bg)
         for _ in range(self.texoty_w - 28):
             break_line += random.choice('┉┅')
-        self.insert(END, f"\n╫{help_shade}{helper_tag} {break_line}╫", 'break_line')
+        self.insert(END, f"\n╫{help_shade}{group_tag} {break_line}╫", 'break_line')
 
 
     def priont_string(self, striong: str, line_index=END):

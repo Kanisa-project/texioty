@@ -76,12 +76,50 @@ class TexiotyHelper:
         self.txo = txo
         self.txi = txi
         self.helper_commands = {
-            "welcome": [self.welcome_message, "Displays a welcoming message.",
-                     {}, "HLPR", u.rgb_to_hex(t.GREEN_YELLOW), u.rgb_to_hex(t.BLACK)],
-            "commands": [self.display_available_commands, "Displays all available commands.",
-                         {}, "HLPR", u.rgb_to_hex(t.GREEN_YELLOW), u.rgb_to_hex(t.BLACK)],
-            "help": [self.display_help_message, "Displays a message of helpfulness.",
-                     {}, "HLPR", u.rgb_to_hex(t.GREEN_YELLOW), u.rgb_to_hex(t.BLACK)],
+            "welcome": {
+                'name': 'welcome',
+                'usage': '"welcome"',
+                'call_func': self.welcome_message,
+                'lite_desc': 'Displays a welcoming message.',
+                'full_desc': ['Displays a welcoming message with a few commands to get started.',
+                              'Available at any point using the system.'],
+                'possible_args': {' - ': 'No arguments available.'},
+                'args_desc': {' - ': 'No arguments available.'},
+                'examples': ['welcome'],
+                'group_tag': 'HLPR',
+                'font_color': u.rgb_to_hex(t.GREEN_YELLOW),
+                'back_color': u.rgb_to_hex(t.BLACK)
+            },
+            "commands": {
+                'name': 'commands',
+                'usage': '"commands"',
+                'call_func': self.display_available_commands,
+                'lite_desc': 'Displays available commands.',
+                'full_desc': ['Displays all commands available to use in the active Texioty mode.',
+                              'Available at any point using the system.'],
+                'possible_args': {' - ': 'No arguments available.'},
+                'args_desc': {' - ': 'No arguments available.'},
+                'examples': ['commands'],
+                'group_tag': 'HLPR',
+                'font_color': u.rgb_to_hex(t.GREEN_YELLOW),
+                'back_color': u.rgb_to_hex(t.BLACK)
+            },
+            "help": {
+                'name': 'help',
+                'usage': '"help (GROUP_TAG) (COMMAND_NAME)"',
+                'call_func': self.display_help_message,
+                'lite_desc': 'Displays a helpful message.',
+                'full_desc': ['Displays some helpful tips and info based on the active Texioty mode.',
+                              'Available at any point using the system.'],
+                'possible_args': {'(GROUP_TAG)': self.txo.master.active_helpers,
+                                  '(COMMAND_NAME)': list(self.txo.master.registry.commands.keys())},
+                'args_desc': {'(GROUP_TAG)': 'Group tag for getting help with.',
+                              '(COMMAND_NAME)': 'Name of the command to get help with.'},
+                'examples': ['help help', 'help', 'help HLPR', 'help commands'],
+                'group_tag': 'HLPR',
+                'font_color': u.rgb_to_hex(t.GREEN_YELLOW),
+                'back_color': u.rgb_to_hex(t.BLACK)
+            }
         }
 
     def print_block_font(self, blk_word: str):
@@ -109,31 +147,32 @@ class TexiotyHelper:
         self.print_block_font(title_word)
         self.txo.priont_string(random.choice('─━═_')*(len(title_word)*5))
 
-    def display_help_message(self, helper_tag: Optional[str] = None):
+    def display_help_message(self, group_tag: Optional[str] = None):
         """
         Print the available commands for use with a header added to the top.
-        :param helper_tag:
+        :param group_tag:
         :param args:
         :return:
         """
         self.txo.clear_add_header()
-        if helper_tag:
-            if helper_tag in self.txo.master.active_helpers:
-                self.txo.helper_tag_break(helper_tag)
+        print(group_tag, "HELPER_TAGE")
+        if group_tag:
+            if group_tag in self.txo.master.active_helpers:
+                self.txo.helper_tag_break(group_tag)
                 available_commands = self.txo.master.registry.commands
                 for command in available_commands:
-                    if available_commands[command].helper_tag == helper_tag:
+                    if available_commands[command].group_tag == group_tag:
                         self.txo.priont_command_full(self.txo.master.registry.commands[command])
 
-            elif helper_tag in self.txo.master.registry.commands:
-                self.txo.priont_command_full(self.txo.master.registry.commands[helper_tag])
-            else:    # Wrong helper_tag provided.
-                self.txo.priont_string(f"Sorry, I don't recognize '{helper_tag}' as a helper tag or any commands.")
+            elif group_tag in self.txo.master.registry.commands:
+                self.txo.priont_command_full(self.txo.master.registry.commands[group_tag])
+            else:    # Wrong group_tag provided.
+                self.txo.priont_string(f"Sorry, I don't recognize '{group_tag}' as a helper tag or any commands.")
                 self.txo.priont_string("⦓⦙ Here are a list of different helper tags:")
                 self.txo.priont_list(self.txo.master.active_helpers, "Helper Tags:")
                 self.txo.priont_string("⦓⦙ Here are a list of different commands:")
                 self.txo.priont_list(random.sample(sorted(self.txo.master.registry.commands), 3), "Commands:")
-        else:    # No helper_tag provided.
+        else:    # No group_tag provided.
             self.txo.priont_string("⦓⦙ Seems like you might need help, good luck!")
             self.txo.priont_string("   Anything that can be done in this program can be")
             self.txo.priont_string("   done through this Texioty widget.")
@@ -147,7 +186,7 @@ class TexiotyHelper:
         for helper_group in self.txo.master.active_helpers:
             self.txo.helper_tag_break(helper_group)
             for command in available_commands:
-                if available_commands[command].helper_tag == helper_group:
+                if available_commands[command].group_tag == helper_group:
                     self.txo.priont_command_lite(self.txo.master.registry.commands[command])
 
     def clear_texoty(self):

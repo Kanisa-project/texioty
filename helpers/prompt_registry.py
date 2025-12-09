@@ -38,12 +38,40 @@ class PromptRegistry(TexiotyHelper):
         self.foto_worx = FotoWorxHop(txo, txi)
         self.profilemake = Profilizer(txo, txi)
         self.helper_commands = {
-            "tcg_lab": [self.tcg_lab_prompt, "Enter the TCG lab.",
-                        {}, "PRUN", u.rgb_to_hex(t.KHAKI), u.rgb_to_hex(t.BLACK)],
-            "foto_worx": [self.worxhop_prompt, "Work in the foto hop.",
-                          {}, "PRUN", u.rgb_to_hex(t.KHAKI), u.rgb_to_hex(t.BLACK)],
-            "profile_make": [self.profiler_prompt, "Make some type of profile.",
-                             {}, "PRUN", u.rgb_to_hex(t.KHAKI), u.rgb_to_hex(t.BLACK)]}
+            "tcg_lab": {"name": "tcg_lab",
+                        "usage": '"tcg_lab"',
+                        "call_func": self.tcg_lab_prompt,
+                        "lite_desc": "Enter the TCG lab.",
+                        "full_desc": ["Enter the TCG lab.",
+                                      "Can be used in Texioty mode only."],
+                        "possible_args": {' - ': 'No arguments available.'},
+                        "args_desc": {' - ': 'No arguments available.'},
+                        "examples": ['tcg_lab'],
+                        "group_tag": "PRUN",
+                        "font_color": u.rgb_to_hex(t.KHAKI),
+                        "back_color": u.rgb_to_hex(t.BLACK)},
+            "foto_worx": {"name": "foto_worx",
+                          "usage": '"foto_worx"',
+                          "call_func": self.worxhop_prompt,
+                          "lite_desc": "Work in the foto hop.",
+                          "full_desc": ["Work in the foto hop.",],
+                          "possible_args": {' - ': 'No arguments available.'},
+                          "args_desc": {' - ': 'No arguments available.'},
+                          "examples": ['foto_worx'],
+                          "group_tag": "PRUN",
+                          "font_color": u.rgb_to_hex(t.KHAKI),
+                          "back_color": u.rgb_to_hex(t.BLACK)},
+            "profile_make": {"name": "profile_make",
+                             "usage": '"profile_make"',
+                             "call_func": self.profiler_prompt,
+                             "lite_desc": "Make some type of profile.",
+                             "full_desc": ["Make some type of profile.",],
+                             "possible_args": {' - ': 'No arguments available.'},
+                             "args_desc": {' - ': 'No arguments available.'},
+                             "examples": ['profile_make'],
+                             "group_tag": "PRUN",
+                             "font_color": u.rgb_to_hex(t.KHAKI),
+                             "back_color": u.rgb_to_hex(t.BLACK)}}
 
     def tcg_lab_prompt(self):
         self.tcg_lab.decide_decision("What lab would you like to work in", LAB_OPTIONS, 'tcg_lab')

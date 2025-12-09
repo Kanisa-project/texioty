@@ -39,7 +39,7 @@ title_msg = "A game where you can buy and sell candy all around town."
 
 class CandySlingerRunner(BaseGaim):
     def __init__(self, txo, txi):
-        super().__init__(txo, txi, "CandySlinger")
+        super().__init__(txo, txi, "candy_slinger")
         self.gaim_commands["move"] = [self.move_location, "Move to a new location in the city.",
                                        {'location': 'Destination to move to.'}, "CNDY", t.rgb_to_hex(t.LIGHT_SEA_GREEN), t.rgb_to_hex(t.BLACK)]
         self.gaim_commands["buy"] = [self.buy_candy, "Buy some candy from your location.",
@@ -93,7 +93,7 @@ class CandySlingerRunner(BaseGaim):
         self.display_player_invo()
 
     def sell_candy(self, amount: int, candy: str):
-        if self.player.inventory[candy]["inventory"] > int(amount):
+        if self.player.inventory[candy]["inventory"] < int(amount):
             self.txo.priont_string(f"Sorry, but you don't have enough {candy} to sell.")
             return
         if self.player.sell_candy(candy=candy,
@@ -127,17 +127,18 @@ class CandySlingerRunner(BaseGaim):
             self.txo.priont_string(f"│{candy_buy_line}{' '*(len(location_line)-len(candy_buy_line))}║")
         self.txo.priont_string(f"╘{'═'*(len(location_line))}╝\n")
 
-    def display_help_message(self):
+    def display_help_message(self, group_tag=None):
         self.txo.clear_add_header("Candy Slinger Help")
-        self.txo.priont_string("Type 'move <location>' to move to a new location. i.e. 'move park' or 'move library'.")
+        self.txo.priont_string("Type 'move <location>' to move to a new location.")
+        self.txo.priont_string(f" i.e. 'move {random.choice(list(LOCATIONS.keys()))}' or 'move {random.choice(list(LOCATIONS.keys()))}'.")
         self.txo.priont_list(list(LOCATIONS.keys()), parent_key="   List of possible locations:")
         self.txo.priont_string("\nType 'buy <amount> <candy>' to buy some candy.")
         self.txo.priont_string("Type 'sell <amount> <candy>' to sell some candy.")
-        self.txo.priont_string("i.e. 'buy 12 skittle' or 'sell 8 dumdum'.")
+        self.txo.priont_string(f"i.e. 'buy 12 skittle' or 'sell 8 dumdum'.")
         self.txo.priont_list(list(CANDIES.keys()), parent_key="   List of possible candies:")
         self.txo.priont_string("\nType 'save' to save your progress.")
 
-    def welcome_message(self, welcoming_msgs):
+    def welcome_message(self, welcoming_msgs=None):
         super().welcome_message([])
         self.txo.priont_string("")
         self.txo.priont_string("Candy Slinger is as simple as the market should be.")

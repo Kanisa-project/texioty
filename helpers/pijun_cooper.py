@@ -3,6 +3,7 @@ import socket
 import subprocess
 import threading
 import time
+from typing import Optional
 
 from texioty import texoty, texity
 from .tex_helper import TexiotyHelper
@@ -11,14 +12,28 @@ from settings import themery as t
 POLL_INTERVAL = 1.0
 
 FULL_HELP = {
-    "coop": {"deep_desc": ["Is a type of server that accepts pijuns and other messengers of flight."],
-             "usage": "'coop ###.###.###.###'"},
-    "pijun": {"deep_desc": ["Basically like a ping, but with a string of information.", "A simple message from a simple bird."],
-              "usage": ""},
-    "enter": {"deep_desc": ["Enter a coop server."],
-              "usage": ""},
-    "leave": {"deep_desc": ["Leave a coop server."],
-              "usage": ""},
+    "coop": {"usage": "'coop [0-255] [GAIM_ENGINE]'",
+             "arg_desc": {"coop": "A coop server can host a gaim.",
+                          "[0-255]": "The \"coop number\", so pijuns can join and play.",
+                          "[GAIM_ENGINE]": "Gaim engine to run in the coop server."},
+             "examples": ["coop 0 trailin", "coop 132 slinger", "coop 67 thurbo", "coop 255 k_paint"]
+             },
+    "pijun": {"usage": "'pijun [0-255] [enter/leave] (0-255)'",
+              "arg_desc": {"pijun": "A pijun acts as a player in a coop server.",
+                           "[0-255]": "A number to assign to a pijun entering a coop.",
+                           "[enter/leave]": "Enter or leave a coop server.",
+                           "(0-255)": "Only needed if entering a coop."},
+              "examples": ["pijun 241 enter 41", "pijun 147 leave", "pijun 16 enter 213"]
+              },
+    # "enter": {"usage": "'enter [0-255]'",
+    #           "arg_desc": {"enter": "Enter a coop server to play a gaim.",
+    #                        "[0-255]": "The \"coop number\" to join."},
+    #           "examples": ["enter 132", "enter 2", "enter 67"]
+    #           },
+    # "leave": {"usage": "'leave'",
+    #           "arg_desc": ["Leave a coop server."],
+    #           "examples": ["leave"]
+    #           },
 }
 
 def list_interfaces():
@@ -118,7 +133,7 @@ class CoopWatcher(threading.Thread):
         self._stop.set()
 
 
-class PijunCoop(TexiotyHelper):
+class PijunCooper(TexiotyHelper):
     def __init__(self, txo: texoty.TEXOTY, txi: texity.TEXITY, host='127.0.0.1', port=8008):
         super().__init__(txo, txi)
         self.buff_size = 1024
@@ -130,15 +145,39 @@ class PijunCoop(TexiotyHelper):
         self.pijuns = {}
         self.pijun_addresses = {}
         self.watcher = CoopWatcher(self.on_pijun_change, poll_interval=POLL_INTERVAL)
-        self.watcher.start()
-        self.helper_commands['coop'] = [self.host_dovecot, "Host a coop server for pijuns.",
-                                         {}, "PIJN", t.rgb_to_hex(t.PIGEON_GREY), t.rgb_to_hex(t.BLACK)]
-        self.helper_commands['pijun'] = [self.send_pijun, "Find a pijun to send.",
-                                         {}, "PIJN", t.rgb_to_hex(t.PIGEON_GREY), t.rgb_to_hex(t.BLACK)]
-        self.helper_commands['enter'] = [self.enter_dovecot, "Enter a pijun coop.",
-                                         {}, "PIJN", t.rgb_to_hex(t.PIGEON_GREY), t.rgb_to_hex(t.BLACK)]
-        self.helper_commands['leave'] = [self.leave_dovecot, "Leave the pijun coop.",
-                                         {}, "PIJN", t.rgb_to_hex(t.PIGEON_GREY), t.rgb_to_hex(t.BLACK)]
+        # self.watcher.start()
+        self.helper_commands['coop'] = {"name": "coop",
+                                        "usage": "'coop [0-255] [GAIM_ENGINE]'",
+                                        "call_func": self.host_dovecot,
+                                        "lite_desc": "Host a coop server for pijuns.",
+                                        "full_desc": ["Host a coop server for pijuns to play and poop in."],
+                                        "possible_args": {},
+                                        "args_desc": {'[0-255]': 'The coop number.',
+                                                      '[GAIM_ENGINE]': 'The gaim engine to run in the coop.'},
+                                        'examples': ['coop 42 trailin', 'coop 84 slinger'],
+                                        "group_tag": "PIJN",
+                                        "font_color": t.rgb_to_hex(t.PIGEON_GREY),
+                                        "back_color": t.rgb_to_hex(t.BLACK)}
+        self.helper_commands['pijun'] = {"name": "pijun",
+                                         "usage": "'pijun [0-255] [enter/leave] (0-255)'",
+                                         "call_func": self.send_pijun,
+                                         "lite_desc": "Find a pijun to send.",
+                                         "full_desc": ["Find a pijun to send.", "(0-255) is only for entering a coop."],
+                                         "possible_args": {},
+                                         "args_desc": {'[0-255]': 'The pijun number.',
+                                                       '[enter/leave]': 'Enter or leave a coop.',
+                                                       '(0-255)': 'The coop number to join.'},
+                                         'examples': ['pijun 74 enter 42', 'pijun 121 leave'],
+                                         "group_tag": "PIJN",
+                                         "font_color": t.rgb_to_hex(t.PIGEON_GREY),
+                                         "back_color": t.rgb_to_hex(t.BLACK)}
+        # self.helper_commands['enter'] = [self.enter_dovecot, "Enter a pijun coop.",
+        #                                  {}, "PIJN", t.rgb_to_hex(t.PIGEON_GREY), t.rgb_to_hex(t.BLACK)]
+        # self.helper_commands['leave'] = [self.leave_dovecot, "Leave the pijun coop.",
+        #                                  {}, "PIJN", t.rgb_to_hex(t.PIGEON_GREY), t.rgb_to_hex(t.BLACK)]
+
+    def display_help_message(self, group_tag: Optional[str] = None):
+        super().display_help_message(group_tag)
 
     def enter_dovecot(self, host: str, port: str):
         print(f"trying to enter to {host} {port}")
@@ -202,15 +241,25 @@ class PijunCoop(TexiotyHelper):
         except Exception as e:
             print(f"Error unassigning {self.coop_address}: {e}")
 
-    def host_dovecot(self, host: str, port: str):
-        try:
-            port = int(port)
-        except ValueError:
-            port = 8008
-        address = (host, port)
+    def host_dovecot(self, coop_num: str, gaim_engine: str):
+        address = (f"7.41.241.{coop_num}", 8080)
         print(f"trying to bind to {address}")
-        self.coop_socket.bind(address)
-        self.txo.priont_string(f"coop socket bound to {address}")
-        coop_thread = threading.Thread(target=self.coop_receive_data)
-        coop_thread.start()
+        self.txo.priont_string(f"coop socket bound to {address} for playing {gaim_engine}")
         self.txo.priont_string("coop_thread_started")
+
+
+    def start_slinger_coop(self):
+        self.txo.master.gaim_registry.start_game('slinger')
+
+    # def host_dovecot(self, host: str, port: str):
+    #     try:
+    #         port = int(port)
+    #     except ValueError:
+    #         port = 8008
+    #     address = (host, port)
+    #     print(f"trying to bind to {address}")
+    #     self.coop_socket.bind(address)
+    #     self.txo.priont_string(f"coop socket bound to {address}")
+    #     coop_thread = threading.Thread(target=self.coop_receive_data)
+    #     coop_thread.start()
+    #     self.txo.priont_string("coop_thread_started")

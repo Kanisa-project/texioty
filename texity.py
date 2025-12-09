@@ -1,18 +1,22 @@
 import tkinter as tk
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, List
 from settings.utils import clamp
 
 
 @dataclass
 class Command:
     name: str
+    usage: str
     handler: Any
-    help_message: str
+    lite_desc: str
+    full_desc: List[str]
     possible_args: dict
-    helper_tag: str
-    text_color: str
-    bg_color: str
+    args_desc: dict
+    examples: List[str]
+    group_tag: str
+    font_color: str
+    back_color: str
 
 
 class TEXITY(tk.Entry):

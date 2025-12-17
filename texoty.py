@@ -164,11 +164,12 @@ class TEXOTY(Text):
         self.priont_command_colorized(f'\n{command.name}╕', command.font_color, command.back_color)
         help_message_text = f'{" "*len(command.name)}╘► {command.lite_desc}'
         self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
-        # if command.possible_args:
-        #     poss_key = random.choice(list(command.possible_args.keys()))
-        #     self.priont_click_command(command.name, f'{command.name} {poss_key}')
-        # else:
-        #     self.priont_click_command(command.name, command.name)
+        self.yview(END)
+
+    def priont_command_midd(self, command: texity.Command):
+        self.priont_command_colorized(f'\n{command.name}╕', command.font_color, command.back_color)
+        help_message_text = f'{" "*len(command.name)}╘► {command.lite_desc}'
+        self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
         self.yview(END)
 
     def priont_command_full(self, command: texity.Command):
@@ -181,12 +182,15 @@ class TEXOTY(Text):
         help_message_text = f'{" " * len(command.name)}└► {command.lite_desc}'
         self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
         usage_message_text = f'\nHow to use─►  {command.usage}'
-        self.priont_command_colorized(usage_message_text, command.back_color, command.font_color)
-        for p_arg_i, p_arg_k in enumerate(command.possible_args):
-            prefix = " " * len(command.name)
-            prefix += "└" if p_arg_i == len(command.possible_args) - 1 else "├"
-            self.priont_command_colorized(prefix + p_arg_k + f"» {command.possible_args[p_arg_k]}",
-                                          text_color=command.font_color, bg_color=command.back_color)
+        self.priont_colorized_string(usage_message_text, command.back_color, command.font_color)
+        for p_arg_i, p_arg_k in enumerate(command.args_desc):
+            # prefix = " " * p_arg_i
+            # prefix += "└" if p_arg_i == len(command.possible_args) - 1 else "├"
+            self.priont_string(f"Possible {p_arg_k}:")
+            self.priont_list(list(command.possible_args.keys()))
+            # self.priont_colorized_string(prefix + p_arg_k + f"» {command.possible_args[p_arg_k]}",
+            #                               text_color=command.font_color, back_color=command.back_color)
+        self.priont_break_line()
         self.yview(END)
 
     def priont_break_line(self):
@@ -230,22 +234,37 @@ class TEXOTY(Text):
         self.insert(line_index, "\n" + striong)
         self.yview(END)
 
-    def priont_echo(self, striong: str, text_color='', bg_color=''):
-        """
-        Display a striong on texoty in the color of font_color.
-
-        @param striong:
-        @param bg_color:
-        @param text_color:
-        """
-        tag_name = f'{bg_color}_{text_color}'
-        self.tag_configure(tag_name, foreground=text_color, background=bg_color)
+    def priont_colorized_string(self, striong: str, text_color='', back_color=''):
+        tag_name = f'{back_color}_{text_color}'
+        if tag_name not in self._tag_cache:
+            try:
+                self.tag_configure(tag_name, foreground=text_color, background=back_color)
+            except Exception:
+                self.tag_configure(tag_name, foreground=str(text_color), background=str(bg_color))
+            self._tag_cache.add(tag_name)
         start_pos = f'1.0'
         end_pos = f'1.{len(striong)}'
         self.tag_add(tag_name, start_pos, end_pos)
         self.insert(END, striong, tag_name)
         self.insert(END, '\n')
         self.yview(END)
+
+    # def priont_echo(self, striong: str, text_color='', bg_color=''):
+    #     """
+    #     Display a striong on texoty in the color of font_color.
+    #
+    #     @param striong:
+    #     @param bg_color:
+    #     @param text_color:
+    #     """
+    #     tag_name = f'{bg_color}_{text_color}'
+    #     self.tag_configure(tag_name, foreground=text_color, background=bg_color)
+    #     start_pos = f'1.0'
+    #     end_pos = f'1.{len(striong)}'
+    #     self.tag_add(tag_name, start_pos, end_pos)
+    #     self.insert(END, striong, tag_name)
+    #     self.insert(END, '\n')
+    #     self.yview(END)
 
     def priont_command_colorized(self, striong: str, text_color='', bg_color=''):
         """

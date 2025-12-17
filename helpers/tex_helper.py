@@ -147,27 +147,27 @@ class TexiotyHelper:
         self.print_block_font(title_word)
         self.txo.priont_string(random.choice('─━═_')*(len(title_word)*5))
 
-    def display_help_message(self, group_tag: Optional[str] = None):
+    def display_help_message(self, help_topic: Optional[str] = None):
         """
         Print the available commands for use with a header added to the top.
-        :param group_tag:
+        :param help_topic:
         :param args:
         :return:
         """
         self.txo.clear_add_header()
-        print(group_tag, "HELPER_TAGE")
-        if group_tag:
-            if group_tag in self.txo.master.active_helpers:
-                self.txo.helper_tag_break(group_tag)
+        print(help_topic, "HELPER_TAGE")
+        if help_topic:
+            if help_topic in self.txo.master.active_helpers:
+                self.txo.helper_tag_break(help_topic)
                 available_commands = self.txo.master.registry.commands
                 for command in available_commands:
-                    if available_commands[command].group_tag == group_tag:
-                        self.txo.priont_command_full(self.txo.master.registry.commands[command])
+                    if available_commands[command].group_tag == help_topic:
+                        self.txo.priont_command_midd(self.txo.master.registry.commands[command])
 
-            elif group_tag in self.txo.master.registry.commands:
-                self.txo.priont_command_full(self.txo.master.registry.commands[group_tag])
-            else:    # Wrong group_tag provided.
-                self.txo.priont_string(f"Sorry, I don't recognize '{group_tag}' as a helper tag or any commands.")
+            elif help_topic in self.txo.master.registry.commands:
+                self.txo.priont_command_full(self.txo.master.registry.commands[help_topic])
+            else:    # Wrong help_topic provided.
+                self.txo.priont_string(f"Sorry, I don't recognize '{help_topic}' as a helper tag or any commands.")
                 self.txo.priont_string("⦓⦙ Here are a list of different helper tags:")
                 self.txo.priont_list(self.txo.master.active_helpers, "Helper Tags:")
                 self.txo.priont_string("⦓⦙ Here are a list of different commands:")

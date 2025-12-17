@@ -5,6 +5,7 @@ from typing import Callable
 
 import texity
 import texoty
+from helpers.arc_api import ArcApi
 from helpers.tex_helper import TexiotyHelper
 from settings import themery as t, utils as u
 from question_prompts.tcg_labby import TCGLabratory
@@ -27,6 +28,10 @@ PROFILIZER_OPTIONS = ['texioty',
                       'fotofuncs',
                       'tcg_lab']
 
+ARC_API_OPTIONS = ['items',
+                   'quests',
+                   'enemies']
+
 class PromptRegistry(TexiotyHelper):
     def __init__(self, txo: texoty.TEXOTY, txi: texity.TEXITY):
         super().__init__(txo, txi)
@@ -37,6 +42,7 @@ class PromptRegistry(TexiotyHelper):
         self.tcg_lab = TCGLabratory(txo, txi)
         self.foto_worx = FotoWorxHop(txo, txi)
         self.profilemake = Profilizer(txo, txi)
+        self.arc_api = ArcApi(txo, txi)
         self.helper_commands = {
             "tcg_lab": {"name": "tcg_lab",
                         "usage": '"tcg_lab"',
@@ -71,7 +77,18 @@ class PromptRegistry(TexiotyHelper):
                              "examples": ['profile_make'],
                              "group_tag": "PRUN",
                              "font_color": u.rgb_to_hex(t.KHAKI),
-                             "back_color": u.rgb_to_hex(t.BLACK)}}
+                             "back_color": u.rgb_to_hex(t.BLACK)},
+            "get_arc": {"name": "get_arc",
+                        "usage": '"get_arc"',
+                        "call_func": self.get_arc_prompt,
+                        "lite_desc": "Get some data from the arc api.",
+                        "full_desc": ["Get some data from the arc api.",],
+                        "possible_args": {' - ': 'No arguments available.'},
+                        "args_desc": {' - ': 'No arguments available.'},
+                        "examples": ['get_arc'],
+                        "group_tag": "PRUN",
+                        "font_color": u.rgb_to_hex(t.KHAKI),
+                        "back_color": u.rgb_to_hex(t.BLACK)}}
 
     def tcg_lab_prompt(self):
         self.tcg_lab.decide_decision("What lab would you like to work in", LAB_OPTIONS, 'tcg_lab')
@@ -85,3 +102,9 @@ class PromptRegistry(TexiotyHelper):
 
     def profiler_prompt(self):
         self.display_title('profile_make')
+
+    def get_arc_prompt(self):
+        self.display_title('get_arc')
+        self.arc_api.decide_decision("What are you looking for, raider?", ARC_API_OPTIONS, "arc_api")
+        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+            self.txo.master.deciding_function = self.arc_api.get_random_arc

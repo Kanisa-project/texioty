@@ -161,7 +161,7 @@ class PijunCooper(TexiotyHelper):
         self.helper_commands['pijun'] = {"name": "pijun",
                                          "usage": "'pijun [0-255] [enter/leave] (0-255)'",
                                          "call_func": self.send_pijun,
-                                         "lite_desc": "Find a pijun to send.",
+                                         "lite_desc": "Send a pijun to a coop server.",
                                          "full_desc": ["Find a pijun to send.", "(0-255) is only for entering a coop."],
                                          "possible_args": {},
                                          "args_desc": {'[0-255]': 'The pijun number.',
@@ -171,10 +171,6 @@ class PijunCooper(TexiotyHelper):
                                          "group_tag": "PIJN",
                                          "font_color": t.rgb_to_hex(t.PIGEON_GREY),
                                          "back_color": t.rgb_to_hex(t.BLACK)}
-        # self.helper_commands['enter'] = [self.enter_dovecot, "Enter a pijun coop.",
-        #                                  {}, "PIJN", t.rgb_to_hex(t.PIGEON_GREY), t.rgb_to_hex(t.BLACK)]
-        # self.helper_commands['leave'] = [self.leave_dovecot, "Leave the pijun coop.",
-        #                                  {}, "PIJN", t.rgb_to_hex(t.PIGEON_GREY), t.rgb_to_hex(t.BLACK)]
 
     def display_help_message(self, group_tag: Optional[str] = None):
         super().display_help_message(group_tag)

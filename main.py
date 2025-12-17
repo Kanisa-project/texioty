@@ -4,6 +4,7 @@ import texioty
 import subprocess
 import threading
 
+from helpers.arc_api import ArcApi
 from helpers.gaim_registry import GaimRegistry
 from helpers.pijun_cooper import PijunCooper
 from helpers.prompt_registry import PromptRegistry
@@ -27,6 +28,7 @@ class Application(tk.Frame):
         self.txty = texioty.Texioty(width=screen_w//3, height=screen_h*.93)
         base_helper = TexiotyHelper(self.txty.texoty, self.txty.texity)
         prompt_runner = PromptRegistry(self.txty.texoty, self.txty.texity)
+        arcapi = ArcApi(self.txty.texoty, self.txty.texity)
         gaim_registry = GaimRegistry(self.txty.texoty, self.txty.texity)
         digiary = Digiary(self.txty.texoty, self.txty.texity)
         pijun_cooper = PijunCooper(self.txty.texoty, self.txty.texity)
@@ -35,6 +37,7 @@ class Application(tk.Frame):
         self.txty.add_helper_widget("GAIM", gaim_registry)
         self.txty.add_helper_widget("DIRY", digiary)
         self.txty.add_helper_widget("PIJN", pijun_cooper)
+        self.txty.add_helper_widget("ARCA", arcapi)
 
         self.txty.grid()
         # Get the user from the OS and attempt to log them into Texioty.

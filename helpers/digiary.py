@@ -95,7 +95,7 @@ class Digiary(TexiotyHelper):
         return end_now
 
     def select_diary_entry_date(self):
-        self.txo.master.prompt_runner.tcg_lab.decide_decision("wat even am i?", glob.glob('.diary/*.txt'))
+        self.txo.master.prompt_runner.tcg_lab.decide_decision("What date to read?", glob.glob('.diary/*.txt'))
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
             self.txo.master.deciding_function = self.priont_date_entry
 
@@ -104,6 +104,7 @@ class Digiary(TexiotyHelper):
             lines = dentry.readlines()
             for line in lines:
                 self.txo.priont_string(line)
+        self.txo.master.default_mode()
 
     def display_help_message(self, group_tag: Optional[str] = None):
         super().display_help_message(group_tag)

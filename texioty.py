@@ -127,6 +127,8 @@ class Texioty(tk.LabelFrame):
                                 "HLPR": [self.base_helper],
                                 "GAIM": [self.gaim_registry],
                                 "PRUN": [self.prompt_runner],
+                                "ARCA": [self.prompt_runner.arc_api],
+                                "KWAL": [self.prompt_runner.k_wallet],
                                 "DIRY": [self.digiary]}
         self.active_helper_dict = self.default_helpers
         self.deciding_function = None

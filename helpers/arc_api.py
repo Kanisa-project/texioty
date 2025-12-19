@@ -24,10 +24,28 @@ class ArcApi(BasePrompt, BaseAPIHelper):
                               "[id]": "The id of the object or quest you want to find."},
             "args_desc": {'[items/quests/enemies]': 'The type of arc info to find.'},
             'examples': ['arc items', 'arc quests', 'arc enemies'],
-            "group_tag": "PRUN",
-            'font_color': u.rgb_to_hex(t.KHAKI),
-            'back_color': u.rgb_to_hex(t.BLACK)
-        }
+            "group_tag": "ARCA",
+            'font_color': u.rgb_to_hex(t.ARC_BLUE),
+            'back_color': u.rgb_to_hex(t.BLACK)}
+        self.helper_commands["get_arc"] = {
+            "name": "get_arc",
+            "usage": '"get_arc"',
+            "call_func": self.get_arc_prompt,
+            "lite_desc": "Get some data from the arc api.",
+            "full_desc": ["Get some data from the arc api.",],
+            "possible_args": {' - ': 'No arguments available.'},
+            "args_desc": {' - ': 'No arguments available.'},
+            "examples": ['get_arc'],
+            "group_tag": "ARCA",
+            "font_color": u.rgb_to_hex(t.KHAKI),
+            "back_color": u.rgb_to_hex(t.BLACK)}
+
+    def get_arc_prompt(self):
+        self.display_title('get_arc')
+        self.decide_decision("What are you looking for, raider?", list(self.endpoint_names.keys()), "arc_api")
+        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+            self.txo.master.deciding_function = self.get_random_arc
+
 
     def find_arc_id(self, desired_info: str, desired_id: str):
         self.txo.priont_string(f"Finding {desired_info} with id {desired_id}...")

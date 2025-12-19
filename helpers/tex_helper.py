@@ -168,7 +168,7 @@ class TexiotyHelper:
                 self.txo.priont_command_full(self.txo.master.registry.commands[help_topic])
             else:    # Wrong help_topic provided.
                 self.txo.priont_string(f"Sorry, I don't recognize '{help_topic}' as a helper tag or any commands.")
-                self.txo.priont_string("⦓⦙ Here are a list of different helper tags:")
+                self.txo.priont_string("⦓⦙ Here are a list of the active helpers:")
                 self.txo.priont_list(self.txo.master.active_helpers, "Helper Tags:")
                 self.txo.priont_string("⦓⦙ Here are a list of different commands:")
                 self.txo.priont_list(random.sample(sorted(self.txo.master.registry.commands), 3), "Commands:")
@@ -176,7 +176,7 @@ class TexiotyHelper:
             self.txo.priont_string("⦓⦙ Seems like you might need help, good luck!")
             self.txo.priont_string("   Anything that can be done in this program can be")
             self.txo.priont_string("   done through this Texioty widget.")
-            self.txo.priont_string("⦓⦙ Here are a list of different helper tags:")
+            self.txo.priont_string("⦓⦙ Here are a list of the active helpers:")
             self.txo.priont_list(self.txo.master.active_helpers, parent_key="Helper Tags:")
 
     def display_available_commands(self):

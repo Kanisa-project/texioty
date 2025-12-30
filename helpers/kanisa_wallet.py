@@ -1,11 +1,10 @@
 import os
-import random
 from typing import Optional
 
 import requests
 
-from helpers.api_helper import BaseAPIHelper
-from question_prompts.base_prompt import BasePrompt
+from helpers.apis.api_helper import BaseAPIHelper
+from helpers.promptaires.prompt_helper import BasePrompt
 from settings import utils as u, themery as t
 
 class KanisaWallet(BasePrompt, BaseAPIHelper):

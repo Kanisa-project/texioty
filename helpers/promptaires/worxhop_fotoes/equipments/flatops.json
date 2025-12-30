@@ -1,0 +1,26 @@
+{
+  "maxed": {
+    "iterations": 3,
+    "spatula_slide": {
+      "direction": [3, 1.5],
+      "box_size_percent": [0.2, 0.2]
+    },
+    "spatula_press": {
+      "start_box_percents": [0.40, 0.0, 0.72, 0.2],
+      "strength": 9,
+      "jiggle_amount": 0.815
+    },
+    "steam_lid": true,
+    "bordered": {
+      "edge_depth": "22x22"
+    }
+  },
+  "smash_burger": {
+    "iterations": 4,
+    "spatula_slide": {
+      "direction": [4, 1],
+      "droppings": 7,
+      "box_size_percents": [0.2, 0.2, 0.7, 0.9]
+    }
+  }
+}

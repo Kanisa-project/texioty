@@ -154,7 +154,9 @@ available_profiles = {
                                  rgb_to_hex(t.LIGHT_SLATE_BLUE),
                                  rgb_to_hex(t.GHOST_WHITE)))
 }
-for profile in glob.glob(".profiles/*.json"):
+for profile in glob.glob("filesOutput/.profiles/*.json"):
+    if "trevor2" in profile:
+        continue
     with open(profile, "r") as f:
         profile_data = json.load(f)
         print(profile_data)
@@ -165,11 +167,6 @@ for profile in glob.glob(".profiles/*.json"):
              profile_data['texioty']["color_theme"]["foreground"],
              profile_data['texioty']["color_theme"]["accent"])
         )
-
-# def download_youtube_video(url, resolution='1080p', quality='hd'):
-#     yt = YouTube(url)
-#     stream = yt.streams.order_by(resolution).filter(progressive=True, file_extension="mp4").first()
-#     stream.download()
 
 def string_to_morse(reg_str: str) -> str:
     morse_str = ''
@@ -222,11 +219,16 @@ def plan_angled_line(x, y, angle, length, width, color, img_size):
             clamp(endy, 0, img_size[1])), width, color
 
 def retrieve_lab_profiles(lab_to_get: str) -> dict:
-    with open(f'question_prompts/tcg_lab/lab_profiles/{lab_to_get}.json') as labbed_tcg:
+    with open(f'helpers/promptaires/tcg_lab/lab_profiles/{lab_to_get}.json') as labbed_tcg:
+        data = json.load(labbed_tcg)
+        return data
+
+def retrieve_tcg_profiles(tcg_to_get: str) -> dict:
+    with open(f'helpers/promptaires/tcg_lab/tcg_profiles/{tcg_to_get}.json') as labbed_tcg:
         data = json.load(labbed_tcg)
         return data
 
 def retrieve_worx_profiles(equipment: str) -> dict:
-    with open(f'question_prompts/worxhop_fotoes/equipments/{equipment}.json') as json_equip:
+    with open(f'helpers/promptaires/worxhop_fotoes/equipments/{equipment}.json') as json_equip:
         data = json.load(json_equip)
         return data

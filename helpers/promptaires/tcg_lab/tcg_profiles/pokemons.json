@@ -1,0 +1,54 @@
+{
+  "snorlax_playmat_wordsearch": {
+    "card_criteria": {
+      "name": "Snorlax",
+      "rarity": "Common"
+    },
+    "puzzlery": {
+      "difficulty": 1,
+      "puzzle_type": "wordsearch"
+    },
+    "depictionary": {
+      "size": "playmat",
+      "base_shape": "heptagon"
+    }
+  },
+  "brock_dexr_sticker": {
+    "card_criteria": {
+      "name": "Brock"
+    },
+    "deckster": {
+      "deck_size": 60,
+      "primary_resource": "Fighting Energy"
+    },
+    "depictionary": {
+      "size": "sticker",
+      "base_shape": "triangle"
+    }
+  },
+  "blastoise_sticker_wordsearch": {
+    "card_criteria": {
+      "name": "Blastoise"
+    },
+    "puzzlery": {
+      "difficulty": 8,
+      "puzzle_type": "wordsearch"
+    },
+    "depictionary": {
+      "size": "sticker",
+      "base_shape": "circle"
+    }
+  },
+
+  "stadium_sleeves": {
+    "card_criteria": {
+      "type": "Stadium",
+      "rarity": "Rare",
+      "set": "ZEN"
+    },
+    "depictionary": {
+      "size": "sleeves",
+      "base_shape": "circle"
+    }
+  }
+}

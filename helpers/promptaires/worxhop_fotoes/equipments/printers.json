@@ -1,0 +1,26 @@
+{
+  "maxed": {
+    "iterations": 5,
+    "single_word": {
+      "word": "GameStop",
+      "direction": [0, 1],
+      "font_size": 32,
+      "num_of_fonts": 1
+    },
+    "short_phrase": {
+      "phrase": "Power to the Players",
+      "direction": [1, 0],
+      "font_size": 24,
+      "num_of_fonts":  7
+    }
+  },
+  "4-top": {
+    "iterations": 4,
+    "single_word": {
+      "word": "GameStop",
+      "direction": [0, 1],
+      "font_size": 32,
+      "num_of_fonts": 1
+    }
+  }
+}

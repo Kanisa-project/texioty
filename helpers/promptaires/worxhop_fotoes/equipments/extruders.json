@@ -1,0 +1,50 @@
+{
+  "maxed": {
+    "iterations": 4,
+    "sorted": {
+      "dark_left": false
+    },
+    "raindrops": {
+      "direction": [0, 3],
+      "length": 31,
+      "amount": 182
+    },
+    "encircled": {
+      "amount": 123,
+      "size": 22
+    },
+    "bordered": {
+      "edge_depth": "22x22"
+    }
+  },
+  "spaghetti": {
+    "iterations": 4,
+    "bordered": {
+      "edge_depth": "22x22"
+    }
+  },
+  "macaroni": {
+    "iterations": 4,
+    "raindrops": {
+      "direction":  [1, -1],
+      "length": 6,
+      "amount": 741
+    },
+    "sorted": {
+      "dark_left": false
+    }
+  },
+  "rigatoni": {
+    "iterations": 4,
+    "raindrops": {
+      "direction": [0, 3],
+      "length": 3,
+      "amount": 182
+    },
+    "encircled": {
+      "amount": 123,
+      "size": 22
+    },
+    "sorted": false
+  }
+}

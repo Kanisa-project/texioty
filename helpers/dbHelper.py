@@ -1,7 +1,7 @@
 import random
 import sqlite3
 import sqlite3 as sq3
-from utils import dummyHelper
+# from helpers import dummyHelper
 from mtgsdk import Card
 
 
@@ -69,38 +69,38 @@ class DatabaseHelper:
         self.connection = None
         self.connect()
         self.cursor = None
-        self.create_tcg_tables()
+        # self.create_tcg_tables()
 
     def create_tables_from_templates(self, table_templates: dict):
         for table_name, template in table_templates.items():
             create_sql = create_table_statement_maker(table_name, list(template.keys()))[0]
             self.execute_query(create_sql)
 
-    def create_tcg_tables(self):
-        """
-        Create each of the TCG tables.
-        :return:
-        """
-        tcg_templates = {
-            'all_cards': dummyHelper.all_card_template,
-            'pokemon_cards': dummyHelper.pokemon_card_template,
-            'magic_cards': dummyHelper.mtg_card_template,
-            'digimon_cards': dummyHelper.digimon_card_template,
-            'lorcana_cards': dummyHelper.lorcana_card_template,
-            'yugioh_cards': dummyHelper.yugioh_card_template
-        }
-        self.create_tables_from_templates(tcg_templates)
+    # def create_tcg_tables(self):
+    #     """
+    #     Create each of the TCG tables.
+    #     :return:
+    #     """
+    #     tcg_templates = {
+    #         'all_cards': dummyHelper.all_card_template,
+    #         'pokemon_cards': dummyHelper.pokemon_card_template,
+    #         'magic_cards': dummyHelper.mtg_card_template,
+    #         'digimon_cards': dummyHelper.digimon_card_template,
+    #         'lorcana_cards': dummyHelper.lorcana_card_template,
+    #         'yugioh_cards': dummyHelper.yugioh_card_template
+    #     }
+    #     self.create_tables_from_templates(tcg_templates)
 
-    def create_gaim_tables(self):
-        """Create necessary starting tables and populate the columns."""
-        gaim_templates = {
-            'all_gaims': dummyHelper.all_gaim_template,
-            'candy_gaim': dummyHelper.candy_slinger_template,
-            'kpaint_gaim': dummyHelper.k_paint_template,
-            'pylane_gaim': dummyHelper.pylanes_template,
-            'othaido_gaim': dummyHelper.othaido_template
-        }
-        self.create_tables_from_templates(gaim_templates)
+    # def create_gaim_tables(self):
+    #     """Create necessary starting tables and populate the columns."""
+    #     gaim_templates = {
+    #         'all_gaims': dummyHelper.all_gaim_template,
+    #         'candy_gaim': dummyHelper.candy_slinger_template,
+    #         'kpaint_gaim': dummyHelper.k_paint_template,
+    #         'pylane_gaim': dummyHelper.pylanes_template,
+    #         'othaido_gaim': dummyHelper.othaido_template
+    #     }
+    #     self.create_tables_from_templates(gaim_templates)
 
     def init_databases(self):
         """Create necessary starting tables and populate the columns."""

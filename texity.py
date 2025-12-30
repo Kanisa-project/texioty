@@ -24,7 +24,7 @@ class TEXITY(tk.Entry):
         """
         Text input for Texioty, it can accept commands and different types of entries.
         """
-        self.full_command_list = []
+        self.full_command_list = ['test_tags']
         self.kom_index = 0
         self.command_string_var = tk.StringVar()
         self.isTestingKeys = False
@@ -33,7 +33,9 @@ class TEXITY(tk.Entry):
         self.current_possible_options = []
         self.current_option_bindings = []
         self.master = master
-        super(TEXITY, self).__init__(master=master, background=master.active_profile.color_theme[1], width=width-5,
+        super(TEXITY, self).__init__(master=master,
+                                     background=master.active_profile.color_theme[1],
+                                     width=width,
                                      textvariable=self.command_string_var)
         self.bind('<Up>', lambda e: self.command_list_previous())
         self.bind('<Down>', lambda e: self.command_list_next())

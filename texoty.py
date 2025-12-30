@@ -121,7 +121,7 @@ class TEXOTY(Text):
     def clear_add_header(self, header_msg=""):
         """ Clear Texoty display and replace the header. """
         self.delete("0.0", 'end')
-        self.set_header()
+        self.set_header(header_msg)
 
     def clear_no_header(self, fillIt=False, fill_space=" "):
         """ Clear Texoty display and do not replace the header. """
@@ -170,6 +170,10 @@ class TEXOTY(Text):
         self.priont_command_colorized(f'\n{command.name}╕', command.font_color, command.back_color)
         help_message_text = f'{" "*len(command.name)}╘► {command.lite_desc}'
         self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
+        self.priont_full_command_desc(command.full_desc)
+        rando_examp = random.choice(command.examples)
+        self.priont_string('\nClickable examples ➤  ')
+        self.priont_click_command(rando_examp, rando_examp)
         self.yview(END)
 
     def priont_command_full(self, command: texity.Command):
@@ -183,13 +187,14 @@ class TEXOTY(Text):
         self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
         usage_message_text = f'\nHow to use─►  {command.usage}'
         self.priont_colorized_string(usage_message_text, command.back_color, command.font_color)
-        for p_arg_i, p_arg_k in enumerate(command.args_desc):
-            # prefix = " " * p_arg_i
-            # prefix += "└" if p_arg_i == len(command.possible_args) - 1 else "├"
-            self.priont_string(f"Possible {p_arg_k}:")
-            self.priont_list(list(command.possible_args.keys()))
-            # self.priont_colorized_string(prefix + p_arg_k + f"» {command.possible_args[p_arg_k]}",
-            #                               text_color=command.font_color, back_color=command.back_color)
+        self.priont_string('')
+        rando_examp = random.choice(command.examples)
+        self.priont_click_command(rando_examp, rando_examp)
+        self.priont_dict(command.possible_args)
+        self.priont_dict(command.args_desc)
+        # for p_arg_i, p_arg_k in enumerate(command.args_desc):
+        #     self.priont_string(f" {p_arg_k}")
+        #     self.priont_list(list(command.possible_args.items()), parent_key=p_arg_k)
         self.priont_break_line()
         self.yview(END)
 
@@ -231,20 +236,25 @@ class TEXOTY(Text):
         @param line_index: Index of where on the line to insert text.
         @param striong: String to display.
         """
-        self.insert(line_index, "\n" + striong)
+        self.insert(line_index, striong + "\n")
         self.yview(END)
 
-    def priont_colorized_string(self, striong: str, text_color='', back_color=''):
-        tag_name = f'{back_color}_{text_color}'
+    def tag_area(self, fore_color: str, back_color: str, start_pos: str, end_pos: str):
+        tag_name = f'{fore_color}_{random.randint(0, 9999)}'
+        self.tag_configure(tag_name, foreground=fore_color, background=back_color)
+        self.tag_add(tag_name, start_pos, end_pos)
+
+    def priont_colorized_string(self, striong: str, text_color='', back_color='', start_pos = f'1.0', end_pos='end'):
+        tag_name = f'{back_color}_{text_color}_{start_pos}_{end_pos}'
         if tag_name not in self._tag_cache:
             try:
                 self.tag_configure(tag_name, foreground=text_color, background=back_color)
             except Exception:
-                self.tag_configure(tag_name, foreground=str(text_color), background=str(bg_color))
+                self.tag_configure(tag_name, foreground=str(text_color), background=str(back_color))
             self._tag_cache.add(tag_name)
-        start_pos = f'1.0'
-        end_pos = f'1.{len(striong)}'
-        self.tag_add(tag_name, start_pos, end_pos)
+        # start_pos = f'1.0'
+        # end_pos = f'1.{len(striong)}'
+        # self.tag_add(tag_name, start_pos, end_pos)
         self.insert(END, striong, tag_name)
         self.insert(END, '\n')
         self.yview(END)
@@ -307,6 +317,10 @@ class TEXOTY(Text):
         """
         leading_spaces = " " * len(parent_key)
         self.priont_string(f'{leading_spaces}└{flioat}')
+
+    def priont_full_command_desc(self, desc_list: list):
+        for item in desc_list:
+            self.priont_string(f' -{item}')
 
     def priont_list(self, items: list, parent_key=None, numbered=False):
         """

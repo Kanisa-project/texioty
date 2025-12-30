@@ -1,0 +1,31 @@
+{
+  "maxed": {
+    "iterations": 3,
+    "rgb_ranges": {
+      "red": [42, 100],
+      "green": [42, 100],
+      "blue": [42, 100]
+    },
+    "hsb_ranges": {
+      "hue": [42, 100],
+      "saturation": [42, 100],
+      "brightness": [42, 100]
+    }
+  },
+  "chicken_strips": {
+    "iterations": 4,
+    "rgb_ranges": {
+      "red": [10, 100],
+      "green": [10, 100],
+      "blue": [10, 100]
+    }
+  },
+  "french_fries": {
+    "iterations": 3,
+    "hsb_ranges": {
+      "hue": [10, 100],
+      "saturation": [10, 100],
+      "brightness": [10, 100]
+    }
+  }
+}

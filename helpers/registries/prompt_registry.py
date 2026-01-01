@@ -102,7 +102,7 @@ class PromptRegistry(TexiotyHelper):
     def profiler_prompt(self):
         self.profilemake.decide_decision("What kind of profile to make", PROFILIZER_OPTIONS, "profilizer")
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-            # self.txo.master.deciding_function = self.profilemake
+            self.txo.master.deciding_function = self.profilemake
             pass
 
     # def get_arc_prompt(self):

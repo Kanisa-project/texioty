@@ -1,3 +1,4 @@
+import os
 import random
 from helpers.promptaires.prompt_helper import BasePrompt
 
@@ -5,6 +6,7 @@ from helpers.promptaires.prompt_helper import BasePrompt
 class Profilizer(BasePrompt):
     def __init__(self, txo, txi):
         super().__init__(txo, txi)
+        self.profile_to_make = "Texioty"
 
 
     def prompt_texioty_profile(self):

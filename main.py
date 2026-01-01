@@ -43,7 +43,7 @@ class Application(tk.Frame):
             # self.txty.log_profile_in([linux_user, "1631"])
             pass
         else:
-            self.txty.active_helper_dict["PRUN"][0].prompt_texioty_profile()
+            self.txty.active_helper_dict["PRUN"][0].profilemake.prompt_texioty_profile()
 
 
 if __name__ == '__main__':

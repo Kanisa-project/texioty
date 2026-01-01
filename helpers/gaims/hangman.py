@@ -227,13 +227,13 @@ class HangmanRunner(BaseGaim):
             if upper * (i + 1) in self.hidden_dict:
                 if self.hidden_dict[upper * (i + 1)] == "◙":
                     self.hidden_dict[upper * (i + 1)] = upper
-            elif lower * (i + 1) in self.hidden_dict:
+            if lower * (i + 1) in self.hidden_dict:
                 if self.hidden_dict[lower * (i + 1)] == "◙":
                     self.hidden_dict[lower * (i + 1)] = lower
 
     def display_help_message(self, group_tag: Optional[str] = None):
         super().display_help_message(group_tag)
-        self.txo.priont_string("Using the 'guess' command will allow you to guess a single letter at a time.")
+        # self.txo.priont_string("Using the 'guess' command will allow you to guess a single letter at a time.")
 
 
     def display_available_commands(self):

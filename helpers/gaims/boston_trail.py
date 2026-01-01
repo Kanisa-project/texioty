@@ -190,12 +190,13 @@ class BostonTrail(BaseGaim):
         self.display_inventory_distance()
 
     def display_help_message(self, group_tag=None):
-        self.clear_texoty()
-        self.txo.priont_string("Type 'travel <distance>' to travel further, where <distance> is a number of miles.\n")
-        self.txo.priont_string("Type 'hunt <animal>' to hunt an animal.")
-        self.txo.priont_list(HUNTABLE_ANIMALS, parent_key='  Replace <animal> with one of the following:')
-        self.txo.priont_string("\nType 'gather <category>' to gather an item.\n")
-        self.txo.priont_list(['herb', 'fruit', 'vegetable', 'mushroom'], parent_key="  Replace <category> with one of the following:")
+        super().display_help_message(group_tag)
+        # self.clear_texoty()
+        # self.txo.priont_string("Type 'travel <distance>' to travel further, where <distance> is a number of miles.\n")
+        # self.txo.priont_string("Type 'hunt <animal>' to hunt an animal.")
+        # self.txo.priont_list(HUNTABLE_ANIMALS, parent_key='  Replace <animal> with one of the following:')
+        # self.txo.priont_string("\nType 'gather <category>' to gather an item.\n")
+        # self.txo.priont_list(['herb', 'fruit', 'vegetable', 'mushroom'], parent_key="  Replace <category> with one of the following:")
 
     def load_game(self):
         self.game_state = super().load_game()

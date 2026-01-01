@@ -165,15 +165,16 @@ class CandySlingerRunner(BaseGaim):
         self.txo.priont_string(f"╘{'═'*(len(location_line))}╝\n")
 
     def display_help_message(self, group_tag=None):
-        self.txo.clear_add_header("Candy Slinger Help")
-        self.txo.priont_string("Type 'move <location>' to move to a new location.")
-        self.txo.priont_string(f" i.e. 'move {random.choice(list(LOCATIONS.keys()))}' or 'move {random.choice(list(LOCATIONS.keys()))}'.")
-        self.txo.priont_list(list(LOCATIONS.keys()), parent_key="   List of possible locations:")
-        self.txo.priont_string("\nType 'buy <amount> <candy>' to buy some candy.")
-        self.txo.priont_string("Type 'sell <amount> <candy>' to sell some candy.")
-        self.txo.priont_string(f"i.e. 'buy 12 skittle' or 'sell 8 dumdum'.")
-        self.txo.priont_list(list(CANDIES.keys()), parent_key="   List of possible candies:")
-        self.txo.priont_string("\nType 'save' to save your progress.")
+        super().display_help_message(group_tag)
+        # self.txo.clear_add_header("Candy Slinger Help")
+        # self.txo.priont_string("Type 'move <location>' to move to a new location.")
+        # self.txo.priont_string(f" i.e. 'move {random.choice(list(LOCATIONS.keys()))}' or 'move {random.choice(list(LOCATIONS.keys()))}'.")
+        # self.txo.priont_list(list(LOCATIONS.keys()), parent_key="   List of possible locations:")
+        # self.txo.priont_string("\nType 'buy <amount> <candy>' to buy some candy.")
+        # self.txo.priont_string("Type 'sell <amount> <candy>' to sell some candy.")
+        # self.txo.priont_string(f"i.e. 'buy 12 skittle' or 'sell 8 dumdum'.")
+        # self.txo.priont_list(list(CANDIES.keys()), parent_key="   List of possible candies:")
+        # self.txo.priont_string("\nType 'save' to save your progress.")
 
     def welcome_message(self, welcoming_msgs=None):
         super().welcome_message([])

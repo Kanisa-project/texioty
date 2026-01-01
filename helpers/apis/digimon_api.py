@@ -35,7 +35,7 @@ class DigimonAPIHelper(TCGAPI):
             self.add_card_database(card)
             # print(f"{card['attribute']}    {card['id']}")
             if card['id'] is not None:
-                img_data = requests.get(f'https://images.digimoncard.io/images/cards/{card['id']}.jpg').content
+                img_data = requests.get(f"https://images.digimoncard.io/images/cards/{card['id']}.jpg").content
                 save_name = f"{card['id']}_" + card['name'].replace(" ", "_")
                 with open(f'/home/trevor/Documents/PycharmProjects/KanisaBot/fotoes/cardsDigimon/{save_name}.jpg',
                           'wb') as handler:

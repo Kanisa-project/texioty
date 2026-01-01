@@ -62,7 +62,7 @@ class Digiary(TexiotyHelper):
         """Begin a diary entry and add a timestamp line to the beginning of the entry."""
         start_now = datetime.datetime.now()
         self.txo.master.current_mode = "Diary"
-        self.txo.priont_string(f"\n┎Entering diary mode─⸦ {start_now}")
+        self.txo.priont_string(f"\n┎Entering diary mode⸦🮞{start_now}")
         opening_line = timestamp_line_entry(start_now, 'dear_sys,', lead_line='ts',
                                             follow_line=' ' * (self.diary_line_length - len('dear_sys,')))
         self.diarySentenceList = [opening_line]
@@ -79,7 +79,7 @@ class Digiary(TexiotyHelper):
         """End a diary entry and save the entry to a file."""
         end_now = datetime.datetime.now()
         self.txo.master.current_mode = "Texioty"
-        self.txo.priont_string(f"┖Exiting diary mode─⸦ {end_now}\n")
+        self.txo.priont_string(f"┖Exiting diary mode─⸦🮝{end_now}\n")
         ending_line = timestamp_line_entry(end_now, '/until_next_time', lead_line='ts',
                                            follow_line=' ' * (self.diary_line_length - len('/until_next_time')))
         self.diarySentenceList.append(ending_line)

@@ -155,11 +155,26 @@ class Texioty(tk.LabelFrame):
                 'examples': ['test_tags'],
                 'group_tag': "TXTY",
                 'font_color': u.rgb_to_hex(t.PURPLE),
+                'back_color': u.rgb_to_hex(t.BLACK)},
+            "konfig": {
+                'name': 'konfig',
+                'usage': '"konfig"',
+                'call_func': self.priont_test_tags,
+                'lite_desc': "Prints some tags for testing.",
+                'full_desc': ['Prints some tags for testing.'],
+                'possible_args':{' - ': 'No arguments available.'},
+                'args_desc': {' - ': ['No arguments available.', None]},
+                'examples': ['konfig'],
+                'group_tag': "TXTY",
+                'font_color': u.rgb_to_hex(t.PURPLE),
                 'back_color': u.rgb_to_hex(t.BLACK)}
         }
         # self.helper_commands = self.active_helper_dict["HLPR"][0].helper_commands|self.known_commands_dict
         # self.active_helper_dict['HLPR'][0].welcome_message()
         self.add_command_group(self.helper_commands_dict)
+
+    def display_konfig_settings(self):
+        pass
 
     def priont_test_tags(self):
         self.texoty.clear_add_header("Testing tags")
@@ -268,7 +283,7 @@ class Texioty(tk.LabelFrame):
 
             case "Questionnaire":
                 parsed_input = self.texity.parse_question_response()
-                self.active_helper_dict["PRUN"][0].store_response(parsed_input)
+                self.active_helper_dict["PRUN"][0].profilemake.store_response(parsed_input)
 
             case "Decisioning":
                 parsed_input = self.texity.parse_decision()
@@ -357,12 +372,12 @@ class Texioty(tk.LabelFrame):
         """Create a new profile."""
         if "yes" in args:
             self.texoty.priont_string("Creating a new profile...")
-            profile_name = self.active_helper_dict["PRUN"][0].question_prompt_dict['profile_name'][1]
-            password = self.active_helper_dict["PRUN"][0].question_prompt_dict['password'][1]
-            color_theme = self.active_helper_dict["PRUN"][0].question_prompt_dict['color_theme'][1]
+            profile_name = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['profile_name'][1]
+            password = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['password'][1]
+            color_theme = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['color_theme'][1]
             color_theme = t.DEFAULT_THEMES[color_theme]
             self.available_profiles[profile_name] = u.TexiotyProfile(profile_name, password, color_theme)
-            save_path = f".profiles/{profile_name}.json"
+            save_path = f"filesOutput/.profiles/{profile_name}.json"
             # print(save_path)
             if not os.path.exists(save_path):
                 with open(save_path, 'w') as f:

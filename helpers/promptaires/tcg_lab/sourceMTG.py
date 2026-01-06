@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw
 import random
 
 from helpers import dbHelper
-from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper
+from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper, TCGAPIHelper
 from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
 from settings.alphanumers import MORSE_CODE_RULES
 from settings.utils import clamp
@@ -449,17 +449,17 @@ def build_spell_dict(spell_card):
 #     depicted_spell.save(save_path)
 
 
-def run_depicter_from_script(depict_config_dict: dict):
-    depicter = MtgDepicter(depict_config_dict)
-    rando_card = random.choice(Card.where(name="Ultimatum").all())
-    card_datadict = depicter.build_card_datadict(rando_card)
-    depicted_card = depicter.depict_card(card_datadict)
-    save_name = depicter.card_datadict['name'].replace(' ', '_')
-    depicted_card.save(f"depictions/{save_name}.png")
-    print(f"Saved {save_name}")
+# def run_depicter_from_script(depict_config_dict: dict):
+#     depicter = MtgDepicter(depict_config_dict)
+#     rando_card = random.choice(Card.where(name="Ultimatum").all())
+#     card_datadict = depicter.build_card_datadict(rando_card)
+#     depicted_card = depicter.depict_card(card_datadict)
+#     save_name = depicter.card_datadict['name'].replace(' ', '_')
+#     depicted_card.save(f"depictions/{save_name}.png")
+#     print(f"Saved {save_name}")
 
 
-class MagicAPIHelper(BaseAPIHelper):
+class MagicAPIHelper(TCGAPIHelper):
     def __init__(self):
         super().__init__()
         self.tcg_title_name = 'magic'
@@ -519,20 +519,19 @@ class MagicAPIHelper(BaseAPIHelper):
         pass
 
 
-class MtgDepicter(TcgDepicter):
-    def __init__(self, depict_settings: dict):
-        super().__init__(depict_settings)
-
-    def build_card_datadict(self, card_data) -> dict:
-        card_datadict = {
-            'name': card_data.name,
-            'type': card_data.type,
-            'rarity': card_data.rarity,
-            'id': f"{card_data.set}-{card_data.number}"
-        }
-        self.card_datadict = card_datadict
-        return card_datadict
-
-
-def run_puzzler_from_script(param):
-    return None
+# class MtgDepicter(TcgDepicter):
+#     def __init__(self, depict_settings: dict):
+#         super().__init__(depict_settings)
+#
+#     def build_card_datadict(self, card_data) -> dict:
+#         card_datadict = {
+#             'name': card_data.name,
+#             'type': card_data.type,
+#             'rarity': card_data.rarity,
+#             'id': f"{card_data.set}-{card_data.number}"
+#         }
+#         self.card_datadict = card_datadict
+#         return card_datadict
+#
+# def run_puzzler_from_script(param):
+#     return None

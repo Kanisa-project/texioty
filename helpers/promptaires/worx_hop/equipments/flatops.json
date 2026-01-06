@@ -1,0 +1,12 @@
+{
+  "smash_burger": {
+    "spatula_slide": [0.3, 0.2],
+    "grill_weight": [0.3, 0.1, 0.6, 0.9],
+    "steam_lid": true
+  },
+  "sausage_patty": {
+    "spatula_slide": [0.1, 0.28],
+    "grill_weight": [0.2, 0.6, 0.3, 0.8],
+    "steam_lid": false
+  }
+}

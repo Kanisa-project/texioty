@@ -192,9 +192,6 @@ class TEXOTY(Text):
         self.priont_click_command(rando_examp, rando_examp)
         self.priont_dict(command.possible_args)
         self.priont_dict(command.args_desc)
-        # for p_arg_i, p_arg_k in enumerate(command.args_desc):
-        #     self.priont_string(f" {p_arg_k}")
-        #     self.priont_list(list(command.possible_args.items()), parent_key=p_arg_k)
         self.priont_break_line()
         self.yview(END)
 

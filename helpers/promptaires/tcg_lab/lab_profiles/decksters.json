@@ -1,0 +1,47 @@
+{
+  "default": {
+    "number_of_cards": 60,
+    "resource_portion": 25,
+    "creature_portion": 25,
+    "permanent_portion": 25,
+    "temporary_portion": 25,
+    "permanents_split": {
+      "malevolent_percent": 50,
+      "benevolent_percent": 50
+    },
+    "temporarys_split": {
+      "malevolent_percent": 50,
+      "benevolent_percent": 50
+    }
+  },
+  "heavy_aggro": {
+    "number_of_cards": 60,
+    "resource_portion": 33,
+    "creature_portion": 45,
+    "permanent_portion": 17,
+    "temporary_portion": 5,
+    "permanents_split": {
+      "malevolent_percent": 50,
+      "benevolent_percent": 50
+    },
+    "temporarys_split": {
+      "malevolent_percent": 50,
+      "benevolent_percent": 50
+    }
+  },
+  "mega_control": {
+    "number_of_cards": 60,
+    "resource_portion": 35,
+    "creature_portion": 15,
+    "permanent_portion": 15,
+    "temporary_portion": 35,
+    "permanents_split": {
+      "malevolent_percent": 35,
+      "benevolent_percent": 65
+    },
+    "temporarys_split": {
+      "malevolent_percent": 65,
+      "benevolent_percent": 35
+    }
+  }
+}

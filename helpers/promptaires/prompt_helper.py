@@ -56,7 +56,7 @@ class BasePrompt(TexiotyHelper):
         self.txi.bind_new_options(avail_options)
         return 0
 
-    def display_question(self, options=()):
+    def display_question(self):
         """Displays a question from the loaded questionnaire prompt dictionary."""
         if self.current_question_index < len(self.question_keys):
             question_key = self.question_keys[self.current_question_index]

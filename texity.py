@@ -49,6 +49,8 @@ class TEXITY(tk.Entry):
         """Bind each number to a possible option."""
         self.current_possible_options = new_options
         for i, option in enumerate(new_options):
+            if i >= 10:
+                i = 0
             self.current_option_bindings.append(self.bind(str(i), lambda e, option=option: self.command_string_var.set(f" - {option}")))
             self.current_option_bindings.append(self.bind(f"<KP_{i}>", lambda e, option=option: self.command_string_var.set(f" - {option}")))
 

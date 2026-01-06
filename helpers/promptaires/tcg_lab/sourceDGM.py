@@ -2,7 +2,7 @@ import requests
 import random
 
 from helpers import dbHelper
-from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper
+from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper, TCGAPIHelper
 from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
 
 # from question_prompts.spell_depicter import TcgDepicter
@@ -10,7 +10,7 @@ from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
 
 base_url = "https://digimoncard.io/api-public/"
 
-class DigimonAPIHelper(BaseAPIHelper):
+class DigimonAPIHelper(TCGAPIHelper):
     def __init__(self):
         super().__init__()
         self.tcg_title_name = 'digimon'

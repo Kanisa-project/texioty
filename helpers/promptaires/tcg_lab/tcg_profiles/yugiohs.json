@@ -1,0 +1,45 @@
+{
+  "slimetoad_playmat_fillin_sleeves": {
+    "card_criteria": {
+      "name": "Slime Toad"
+    },
+    "fillin": {
+      "difficulty": 4,
+      "number_of_words": 32
+    },
+    "playmat": {
+      "image_size": [1920, 1120],
+      "background": [217, 27, 148, 50],
+      "base_shape": "circle"
+    },
+    "sleeves": {
+      "image_size": [400, 560],
+      "background": [217, 24, 227, 220],
+      "base_shape": "pentagon"
+    }
+  },
+  "gem-knightgarnet_playmat": {
+    "card_criteria": {
+      "name": "Gem-knight Garnet"
+    },
+    "playmat": {
+      "image_size": [1920, 1120],
+      "background": [217, 27, 148, 50],
+      "base_shape": "circle"
+    }
+  },
+  "mysticalshineball_sticker_hangman": {
+    "card_criteria": {
+      "name": "Mystical Shine Ball"
+    },
+    "sticker": {
+      "background": [127, 127, 127, 20],
+      "image_size": [420, 420],
+      "base_shape": "hexagon"
+    },
+    "hangman": {
+      "difficulty": 6,
+      "number_of_words": 10
+    }
+  }
+}

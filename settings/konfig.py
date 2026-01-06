@@ -6,3 +6,5 @@ TEXOTY_H_MODIFIER = 1
 TEXITY_W_MODIFIER = 0.067
 TEXITY_H_MODIFIER = 1
 UNLOCKED_HELPERS = ['TXTY', 'DIRY', 'GAIM', 'PRUN', 'HLPR', 'HAPI']
+UNLOCKED_DEPICTIONS = ['sticker', 'playmat', 'sleeves', 'default']
+UNLOCKED_PUZZLERS = ['wordsearch', 'fillin', 'hangman', 'crossword']

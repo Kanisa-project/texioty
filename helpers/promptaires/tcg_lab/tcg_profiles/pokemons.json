@@ -4,38 +4,52 @@
       "name": "Snorlax",
       "rarity": "Common"
     },
-    "puzzlery": {
+    "wordsearch": {
       "difficulty": 1,
-      "puzzle_type": "wordsearch"
+      "number_of_words": 4
     },
-    "depictionary": {
-      "size": "playmat",
+    "playmat": {
+      "background": [127, 197, 107, 20],
+      "image_size": [1920, 1120],
       "base_shape": "heptagon"
+    }
+  },
+  "jigglypuff_sticker": {
+    "card_specific": {
+      "name": "Jigglypuff",
+      "rarity": "Common",
+      "type": "Pokemon",
+      "set_id": "Jungle_54",
+      "artist": "Kagemaru Himeno"
     }
   },
   "brock_dexr_sticker": {
     "card_criteria": {
       "name": "Brock"
     },
-    "deckster": {
+    "dexr": {
       "deck_size": 60,
       "primary_resource": "Fighting Energy"
     },
-    "depictionary": {
-      "size": "sticker",
+    "sticker": {
+      "background": [127, 127, 127, 20],
+      "image_size": [420, 420],
       "base_shape": "triangle"
     }
   },
   "blastoise_sticker_wordsearch": {
     "card_criteria": {
-      "name": "Blastoise"
+      "name": "Blastoise",
+      "number_of_cards": 1,
+      "is_random": true
     },
-    "puzzlery": {
+    "wordsearch": {
       "difficulty": 8,
-      "puzzle_type": "wordsearch"
+      "number_of_words": 8
     },
-    "depictionary": {
-      "size": "sticker",
+    "sticker": {
+      "background": [127, 127, 127, 20],
+      "image_size": [420, 420],
       "base_shape": "circle"
     }
   },
@@ -44,10 +58,11 @@
     "card_criteria": {
       "type": "Stadium",
       "rarity": "Rare",
-      "set": "ZEN"
+      "set": "GYM"
     },
-    "depictionary": {
-      "size": "sleeves",
+    "sleeves": {
+      "background": [217, 24, 227, 220],
+      "image_size": [400, 560],
       "base_shape": "circle"
     }
   }

@@ -1,0 +1,23 @@
+{
+  "cheese": {
+    "slice_item": "cheddar",
+    "slice_direction": [1, 0.5],
+    "thickness": 0.75,
+    "amount": 7,
+    "portion_amount": 1.4
+  },
+  "turkey": {
+    "slice_item": "\uD83E\uDD83\uD83E\uDD83",
+    "slice_direction": [0.5, 0.5],
+    "thickness": 0.25,
+    "amount": 8,
+    "portion_amount": 1.9
+  },
+  "ham": {
+    "slice_item": "OINKoinkOINK",
+    "slice_direction": [0, 1],
+    "thickness": 0.569,
+    "amount": 2,
+    "portion_amount": 2.2
+  }
+}

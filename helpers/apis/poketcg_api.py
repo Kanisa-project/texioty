@@ -127,12 +127,12 @@ class PokeAPIHelper(TCGAPI):
                 continue
 
             save_name = f"{(set_id or 'UNK').upper()}_" + card.name.replace(" ", "_")
-            out_path = os.path.join('/worxhop_fotoes/cardsPokemon', f'{save_name}.png')
+            out_path = os.path.join('/worx_hop/cardsPokemon', f'{save_name}.png')
             try:
                 os.makedirs(os.path.dirname(out_path), exist_ok=True)
                 with open(out_path, 'wb') as handler:
                     handler.write(img_data)
-                print(f"✓  Downloaded {save_name} into /worxhop_fotoes/cardsPokemon")
+                print(f"✓  Downloaded {save_name} into /worx_hop/cardsPokemon")
             except Exception as e:
                 print(f"Failed to write image to {out_path}: {e}")
 
@@ -149,7 +149,7 @@ def download_snorlaxes():
         if card.image is not None:
             img_data = requests.get(f'{card.image}/high.png').content
             save_name = f"{card.set.id.upper()}_" + card.name.replace(" ", "_")
-            with open(f'/worxhop_fotoes/cardsPokemon/{save_name}.png',
+            with open(f'/worx_hop/cardsPokemon/{save_name}.png',
                       'wb') as handler:
                 handler.write(img_data)
             print(f"Downloaded {save_name}")

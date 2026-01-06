@@ -2,13 +2,15 @@ import os
 import requests
 import random
 from dotenv import load_dotenv
-from src.utils import dbHelper
+from helpers import dbHelper
+from helpers.apis.api_helper import BaseAPIHelper
 
 load_dotenv()
 
 
-class BaseAPIHelper:
+class TCGAPIHelper(BaseAPIHelper):
     def __init__(self):
+        super().__init__()
         self.db_helper = dbHelper.DatabaseHelper('utils/tcg_cards.db')
         self.base_url = 'https://api.psacard.com/publicapi/'
         self.previous_endpoint = ''
@@ -74,6 +76,6 @@ class BaseAPIHelper:
         """
         pass
 
-if __name__ == "__main__":
-    based_helper = BaseAPIHelper()
-    print(based_helper.get_random_psa_cert())
+# if __name__ == "__main__":
+#     based_helper = BaseAPIHelper()
+#     print(based_helper.get_random_psa_cert())

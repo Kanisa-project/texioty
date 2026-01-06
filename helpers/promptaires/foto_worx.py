@@ -4,7 +4,7 @@ from math import ceil
 from typing import Callable
 
 from helpers.promptaires.prompt_helper import BasePrompt
-from settings import utils as u
+from settings import utils as u, themery as t
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -15,46 +15,61 @@ class FotoWorxHop(BasePrompt):
         self.foto_profile_dict = None
         self.equipt_saved_name = None
         self.equipment_func = None
+        self.cook_image = None
 
-    def worxhop(self, equipment: str):
+    def worxhop_stations(self, equipment: str):
         match equipment:
             case 'Flatop_XT 2200':
                 self.current_equipment = "flatops"
                 self.equipt_saved_name = "flatopped"
-                self.decide_decision("What's going on the flat top", list(u.retrieve_worx_profiles("flatops").keys()), equipment.lower())
-                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-                    self.txo.master.deciding_function = self.set_foto_profile_dict
+        #         self.decide_decision("What's going on the flat top", list(u.retrieve_worx_profiles("flatops").keys()), equipment.lower())
+        #         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+        #             self.txo.master.deciding_function = self.set_foto_profile_dict
             case 'S/p/licer R0T8':
                 self.current_equipment = "slicers"
                 self.equipt_saved_name = "pliced"
-                self.decide_decision("What are we slicing", list(u.retrieve_worx_profiles("slicers").keys()), equipment.lower())
-                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-                    self.txo.master.deciding_function = self.set_foto_profile_dict
+        #         self.decide_decision("What are we slicing", list(u.retrieve_worx_profiles("slicers").keys()), equipment.lower())
+        #         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+        #             self.txo.master.deciding_function = self.set_foto_profile_dict
             case 'Deep-friar 420':
                 self.current_equipment = "friars"
                 self.equipt_saved_name = "fried"
-                self.decide_decision("What kind of deep fry", list(u.retrieve_worx_profiles("friars").keys()), equipment.lower())
-                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-                    self.txo.master.deciding_function = self.set_foto_profile_dict
+        #         self.decide_decision("What kind of deep fry", list(u.retrieve_worx_profiles("friars").keys()), equipment.lower())
+        #         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+        #             self.txo.master.deciding_function = self.set_foto_profile_dict
             case 'Pixtruderer V3':
                 self.current_equipment = "extruders"
                 self.equipt_saved_name = "truded"
-                self.decide_decision("What to extrude pixel-wise", list(u.retrieve_worx_profiles("extruders").keys()), equipment.lower())
-                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-                    self.txo.master.deciding_function = self.set_foto_profile_dict
+        #         self.decide_decision("What to extrude pixel-wise", list(u.retrieve_worx_profiles("extruders").keys()), equipment.lower())
+        #         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+        #             self.txo.master.deciding_function = self.set_foto_profile_dict
             case 'Tix>Prit C.R.1':
                 self.current_equipment = "printers"
                 self.equipt_saved_name = "ticked"
-                self.decide_decision("What to ticket print", list(u.retrieve_worx_profiles("printers").keys()), equipment.lower())
-                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-                    self.txo.master.deciding_function = self.set_foto_profile_dict
+        #         self.decide_decision("What to ticket print", list(u.retrieve_worx_profiles("printers").keys()), equipment.lower())
+        #         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+        #             self.txo.master.deciding_function = self.set_foto_profile_dict
+        self.image_to_cook_with()
 
+    def image_to_cook_with(self):
+        self.decide_decision("What image to cook with", glob.glob('helpers/promptaires/worx_hop/fotoes/base_img*.jpeg'))
+        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+            self.txo.master.deciding_function = self.image_to_station
+
+
+    def image_to_station(self, image_path):
+        self.cook_image = Image.open(image_path)
+        self.decide_decision("At the station", list(u.retrieve_worx_profiles(self.current_equipment).keys()))
+        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+            self.txo.master.deciding_function = self.set_foto_profile_dict
 
     def set_foto_profile_dict(self, profile_name: str) -> None:
         """Set the foto profile dict."""
         self.foto_profile_dict = u.retrieve_worx_profiles(self.current_equipment)[profile_name]
-        self.txo.priont_string(f"foto_profile_dict is now..")
-        self.txo.priont_dict(self.foto_profile_dict)
+        # self.image_to_cook_with()
+        # self.txo.priont_string(f"foto_profile_dict is now..")
+        # self.txo.priont_dict(self.foto_profile_dict)
+
         match self.current_equipment:
             case "flatops":
                 self.create_foto_iterations(flatop_foto)
@@ -68,11 +83,10 @@ class FotoWorxHop(BasePrompt):
                 self.create_foto_iterations(ticket_print_foto)
 
     def create_foto_iterations(self, equipment_func: Callable):
-        for i in range(self.foto_profile_dict["iterations"]):
+        for i in range(5):
             save_name = self.equipt_saved_name + str(i) + ".png"
-            foto = Image.open(f"helpers/promptaires/worxhop_fotoes/base_img.jpeg")
-            foto = equipment_func(foto, self.foto_profile_dict)
-            foto.save(f"helpers/promptaires/worxhop_fotoes/{save_name}")
+            foto = equipment_func(self.cook_image, self.foto_profile_dict)
+            foto.save(f"helpers/promptaires/worx_hop/fotoes/{save_name}")
 
 def resize_foto(foto: Image.Image, new_size: tuple[int, int]) -> Image.Image:
     """Resize a foto and return it."""
@@ -92,7 +106,7 @@ def blend_foto(foto: Image.Image, foto2: Image.Image, blend_percent: float) -> I
 def tile_slice_number(img: Image.Image, profile_dict: dict) -> Image.Image:
     """Tile the foto and return it."""
     img_w, img_h = img.size
-    num_x, num_y = profile_dict["num_tuple"]
+    num_x, num_y = (4, 7)
     tile_xsize = img_w // num_x if num_x > 0 else img_w
     tile_ysize = img_h // num_y if num_y > 0 else img_h
     tile_xnum = num_x if num_x > 0 else ceil(img_w / tile_xsize)
@@ -113,10 +127,12 @@ def tile_slice_number(img: Image.Image, profile_dict: dict) -> Image.Image:
     return img
 
 
-def tile_slice_size(img: Image.Image, profile_dict: dict) -> Image.Image:
+def tile_slice_size(img: Image.Image, thickness=0.123, slice_direction=(1, 0)) -> Image.Image:
     """Tile the foto and return it."""
     img_w, img_h = img.size
-    slice_w, slice_h = profile_dict["size_tuple"]
+    slice_w, slice_h = (int(img_w*thickness),
+                        int(img_h*thickness))
+    # slice_w, slice_h = profile_dict["size_tuple"]
     tile_xnum = ceil(img_w / slice_w)
     tile_ynum = ceil(img_h / slice_h)
     for r in range(tile_ynum):
@@ -129,41 +145,43 @@ def tile_slice_size(img: Image.Image, profile_dict: dict) -> Image.Image:
     return img
 
 def steaming_lid(img: Image.Image, profile_dict: dict) -> Image.Image:
-    """Get a starting box and press it to make it larger."""
+    """ - - """
     w, h = img.size
     return img
 
-def press_spatula(img: Image.Image, profile_dict: dict) -> Image.Image:
+def grill_weight(img: Image.Image, weight_corners=(0.2, 0.2, 0.8, 0.8)) -> Image.Image:
     """Get a starting box and press it to make it larger."""
     w, h = img.size
-    percent_box = profile_dict["start_box_percents"]
-    strength = profile_dict["strength"]
-    jiggle_amount = profile_dict["jiggle_amount"]
-    full_press = strength * int(jiggle_amount * strength)
-    start_pos = (int(percent_box[0]*w), int(percent_box[1]*h))
+    print(weight_corners, "CORNEREDWEIGHT")
+    weight_shape = random.choice(["circle", "rectangle"])
+    time_length = random.randint(1, 9)
+    full_press = time_length * 3
+    start_pos = (int(weight_corners[0]*w), int(weight_corners[1]*h))
     start_box = (int(start_pos[0]), int(start_pos[1]),
-                 percent_box[2]*w, percent_box[3]*h)
+                 weight_corners[2]*w, weight_corners[3]*h)
     end_size = (start_box[2] + full_press, start_box[3] + full_press)
-    pressed = crop_foto(img, start_box)
-    pressed = resize_foto(pressed, end_size)
+    weighted_image = crop_foto(img, start_box)
+    pressed = resize_foto(weighted_image, end_size)
     img.paste(pressed, (start_pos[0], start_pos[1] + full_press))
     return img
 
-def slide_spatula(img: Image.Image, profile_dict: dict) -> Image.Image:
+def slide_spatula(img: Image.Image, slide_direction=(0.43, 0.19)) -> Image.Image:
     """Slide a box of a given size and direction."""
     w, h = img.size
-    percent_box = profile_dict["box_size_percents"]
-    direction = profile_dict["direction"]
-    droppings = profile_dict["droppings"]
-    sliding_box = (percent_box[0]*w, percent_box[1]*h,
-                   percent_box[2]*w, percent_box[3]*h)
+    top_left = slide_direction
+    if random.random() < 0.5:
+        bottom_right = (1-slide_direction[0], 1-slide_direction[1])
+    else:
+        bottom_right = (slide_direction[0]+0.5, slide_direction[1]+0.5)
+    sliding_box = (top_left[0]*w, top_left[1]*h,
+                   bottom_right[1]*(w*2), bottom_right[0]*(h*2))
     sliding_img = crop_foto(img, sliding_box)
-    for i in range(droppings):
+    for i in range(8):
         if random.randint(0, 100) % 2 == 0:
-            direction = (direction[0], direction[1])
+            direction = (slide_direction[0], slide_direction[1])
         else:
-            direction = (direction[1], direction[0])
-        img.paste(sliding_img, (direction[0]*(i*3), direction[1]*(i*3)))
+            direction = (slide_direction[1], slide_direction[0])
+        img.paste(sliding_img, (int(direction[0]*(i*3)), int(direction[1]*(i*3))))
     return img
 
 
@@ -208,49 +226,20 @@ def shuffle_foto(img: Image.Image, kre8dict: dict) -> Image.Image:
     return img
 
 
-def hsb_filter(img: Image.Image, profile_dict: dict) -> Image.Image:
+def oil_boil(img: Image.Image, grease_temp=377) -> Image.Image:
     """
     Applies a hue, saturation, brightness filter to the provided image.
 
-    :param profile_dict:
+    :param grease_temp:
     :param img:
     :return:
     """
-    hsb_im = img.convert('HSV')
-    hsb_dict = profile_dict["hsb_ranges"]
-    h_adjust = random.randint(hsb_dict['hue'][0], hsb_dict['hue'][1])
-    s_adjust = random.randint(hsb_dict['saturation'][0], hsb_dict['saturation'][1])
-    b_adjust = random.randint(hsb_dict['brightness'][0], hsb_dict['brightness'][1])
-    h, a, b = hsb_im.split()
-    h = h.point(lambda p: p + h_adjust)
-    a = a.point(lambda p: p * (s_adjust // 10))
-    b = b.point(lambda p: p * (b_adjust // 10))
-    img = Image.merge('HSV', (h, a, b))
-    return img
-
-def pal_filter(img: Image.Image, profile_dict: dict) -> Image.Image:
-    pal_range = profile_dict["pal_ranges"]["palette"]
-    palet_num = random.randint(pal_range[0], pal_range[1])
-    palet_src = Image.open(f"palettes/palette_{palet_num}.png")
-    altitude_int = profile_dict["pal_ranges"]["altitude"]
-    ligma_factor = random.choice(profile_dict["pal_ranges"]["ligma"])
-    print(ligma_factor, palet_num)
-    num_of_colors = clamp(altitude_int, 1, 256)
-    img = img.quantize(colors=num_of_colors)
-    img = img.remap_palette(list(range(256)), palet_src.tobytes())
-    return img
-
-
-def rgb_filter(img: Image.Image, profile_dict: dict) -> Image.Image:
-    """
-    Applies a red, green, blue filter to the provided image.
-
-    :param profile_dict:
-    :param img: Image to be used in masterpiece.
-    :return:
-    """
     rgb_im = img.convert('RGB')
-    rgb_dict = profile_dict["rgb_ranges"]
+    rgb_dict = {
+        'red': [0, grease_temp//3],
+        'green': [0, grease_temp//3],
+        'blue': [0, grease_temp//3]
+    }
     r_adjust = random.randint(rgb_dict['red'][0], rgb_dict['red'][1])
     g_adjust = random.randint(rgb_dict['green'][0], rgb_dict['green'][1])
     b_adjust = random.randint(rgb_dict['blue'][0], rgb_dict['blue'][1])
@@ -261,16 +250,54 @@ def rgb_filter(img: Image.Image, profile_dict: dict) -> Image.Image:
     img = Image.merge('RGB', (r, g, b))
     return img
 
-def pixel_sorter(img: Image.Image, profile_dict: dict) -> Image.Image:
+def drop_basket(img: Image.Image, basket_depth=3.6) -> Image.Image:
+    # pal_range = profile_dict["pal_ranges"]["palette"]
+    # palet_num = random.randint(pal_range[0], pal_range[1])
+    # palet_src = Image.open(f"palettes/palette_{cook_timer}.png")
+#     altitude_int = profile_dict["pal_ranges"]["altitude"]
+#     ligma_factor = random.choice(profile_dict["pal_ranges"]["ligma"])
+#     print(ligma_factor, palet_num)
+#     num_of_colors = u.clamp(10, 1, 256)
+#     img = img.quantize(colors=num_of_colors)
+#     img = img.remap_palette(list(range(256)), palet_src.tobytes())
+    return img
+
+
+def timed_cook(img: Image.Image, cook_timer=2.7) -> Image.Image:
+    """
+    Applies a red, green, blue filter to the provided image.
+
+    :param cook_timer:
+    :param img: Image to be used in masterpiece.
+    :return:
+    """
+    hsb_im = img.convert('HSV')
+    hsb_dict = {
+        "hue": [0, int(36*cook_timer)],
+        "saturation": [0, int(10*cook_timer)],
+        "brightness": [0, int(10*cook_timer)]
+    }
+    h_adjust = random.randint(hsb_dict['hue'][0], hsb_dict['hue'][1])
+    s_adjust = random.randint(hsb_dict['saturation'][0], hsb_dict['saturation'][1])
+    b_adjust = random.randint(hsb_dict['brightness'][0], hsb_dict['brightness'][1])
+    h, a, b = hsb_im.split()
+    h = h.point(lambda p: p + h_adjust)
+    a = a.point(lambda p: p * (s_adjust // 10))
+    b = b.point(lambda p: p * (b_adjust // 10))
+    img = Image.merge('HSV', (h, a, b))
+    return img
+
+def pixel_sorter(img: Image.Image, noodleBase="flour") -> Image.Image:
     w, h = img.size
     rgb_img = img.convert('RGB')
     draw = ImageDraw.Draw(img)
-    dark_left = profile_dict['dark_left']
+    gravity = len(noodleBase) % 4
+    # dark_left = profile_dict['dark_left']
     for y in range(0, h):
         sorted_rgb_list = []
         for x in range(w):
             sorted_rgb_list.append(rgb_img.getpixel((x, y)))
-        sorted_rgb_list.sort(key=lambda c: c[0] + c[1] + c[2], reverse=not dark_left)
+        sorted_rgb_list.sort(key=lambda c: c[0] + c[1] + c[2], reverse=bool(gravity))
         for x in range(w):
             draw.point((x, y), fill=sorted_rgb_list[x])
     return img
@@ -310,13 +337,13 @@ def pixel_borderer(img: Image.Image, profile_dict: dict) -> Image.Image:
                     draw.point((x+i, y), fill=use_color)
     return img
 
-def pixel_streaker(img: Image.Image, profile_dict: dict) -> Image.Image:
+def pixel_streaker(img: Image.Image, streak_length=5, thickness=4) -> Image.Image:
     w, h = img.size
     rgb_img = img.convert('RGB')
     draw = ImageDraw.Draw(img)
-    number_of_pixels = profile_dict['amount']
-    streak_len = profile_dict['length']
-    direction = profile_dict['direction']
+    number_of_pixels = (thickness+1) * (streak_length+1) * 10
+    streak_len = streak_length
+    direction = (0, 1)
     for i in range(number_of_pixels):
         ran_x = random.randint(0, w-1)
         ran_y = random.randint(0, h-1)
@@ -326,12 +353,12 @@ def pixel_streaker(img: Image.Image, profile_dict: dict) -> Image.Image:
             draw.point((ran_x+x_strk, ran_y+y_strk), fill=rgb_img.getpixel((ran_x, ran_y)))
     return img
 
-def pixel_encircler(img: Image.Image, profile_dict: dict) -> Image.Image:
+def pixel_encircler(img: Image.Image, isSpiral=False, noodleBase="flour") -> Image.Image:
     w, h = img.size
     rgb_img = img.convert('RGB')
     draw = ImageDraw.Draw(img)
-    number_of_pixels = profile_dict['amount']
-    circle_size = profile_dict['size']
+    number_of_pixels = (len(noodleBase)+1) * 10
+    circle_size = 5 if isSpiral else 22
     for i in range(number_of_pixels):
         ran_x = random.randint(0, w-1)
         ran_y = random.randint(0, h-1)
@@ -352,10 +379,10 @@ def tc_blender(tcg1: str, tcg2: str) -> Image.Image:
     blended = blend_foto(img1, img2, 0.5)
     return blended
 
-def solidify_tiles(img, profile_dict: dict) -> Image.Image:
-    solidify_chance = profile_dict["chance"]
-    solidify_color = profile_dict["color"]
-    shuffled = profile_dict["shuffled"]
+def portion_out(img, slice_amount=9, portion_amount=1.1) -> Image.Image:
+    solidify_chance = portion_amount/10
+    solidify_color = random.choice(t.RANDOM_COLORS)
+    # shuffled = profile_dict["shuffled"]
     for img_tile in glob.glob(".temp/*.png"):
         r_c = img_tile.removeprefix(".temp/").removesuffix(".png").split("_")
         solid_hit = random.random()
@@ -376,25 +403,23 @@ def solidify_tiles(img, profile_dict: dict) -> Image.Image:
 
 def flatop_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
     prof_keys = list(profile_dict.keys())
-    if "spatula_press" in prof_keys:
-        img = press_spatula(img, profile_dict["spatula_press"])
+    if "grill_weight" in prof_keys:
+        img = grill_weight(img, profile_dict['grill_weight'])
     if "spatula_slide" in prof_keys:
-        img = slide_spatula(img, profile_dict["spatula_slide"])
+        img = slide_spatula(img, profile_dict['spatula_slide'])
     if "steam_lid" in prof_keys:
-        img = steaming_lid(img, profile_dict["steam_lid"])
-    if "bordered" in prof_keys:
-        img = box_borderer(img, profile_dict["bordered"])
+        img = steaming_lid(img, profile_dict['steam_lid'])
     return img
 
 def get_random_font(font_size: int):
-    return ImageFont.truetype(random.choice(glob.glob('config/fonts/*.ttf')), size=font_size)
+    return ImageFont.truetype(random.choice(glob.glob('settings/fonts/*.ttf')), size=font_size)
 
-def phrase_stamper(img: Image.Image, profile_dict: dict) -> Image.Image:
+def server_stamper(img: Image.Image, serverName="Kyle") -> Image.Image:
     draw = ImageDraw.Draw(img)
-    stamp_phrase = profile_dict['phrase']
-    font_size = profile_dict['font_size']
+    # stamp_phrase = profile_dict['phrase']
+    font_size = 22
     font_list = []
-    for i in range(profile_dict['num_of_fonts']):
+    for i in range(3):
         font_list.append(get_random_font(font_size))
     start_point = (random.randint(font_size, img.size[0]-font_size), random.randint(font_size, img.size[1]-font_size))
     x_thirds = img.size[0]//3
@@ -411,19 +436,19 @@ def phrase_stamper(img: Image.Image, profile_dict: dict) -> Image.Image:
         y_dir = -1
     else:
         y_dir = -1
-    for i, letter in enumerate(stamp_phrase.split()):
+    for i, letter in enumerate(serverName.split()):
         draw.text((start_point[0]+(i*x_dir*font_size), start_point[1]+(i*y_dir*font_size)), text=letter, font=random.choice(font_list), fill=(0, 0, 0))
 
     return img
 
 
-def ticket_single_word(img, profile_dict: dict) -> Image.Image:
-    add_word = profile_dict['word']
-    direction = profile_dict['direction']
-    font_size = profile_dict['font_size']
+def print_ticket_items(img, items_on_ticket=['seat1', 'seattoo']) -> Image.Image:
+    # add_word = profile_dict['word']
+    # direction = profile_dict['direction']
+    font_size = 26
     draw = ImageDraw.Draw(img)
     font_list = []
-    for i in range(profile_dict['num_of_fonts']):
+    for i in range(3):
         font_list.append(get_random_font(font_size))
     start_point = (random.randint(font_size, img.size[0]-font_size), random.randint(font_size, img.size[1]-font_size))
     x_thirds = img.size[0]//3
@@ -440,8 +465,9 @@ def ticket_single_word(img, profile_dict: dict) -> Image.Image:
         y_dir = -1
     else:
         y_dir = -1
-    for i, letter in enumerate(add_word):
-        draw.text((start_point[0]+(i*x_dir*font_size), start_point[1]+(i*y_dir*font_size)), text=letter, font=random.choice(font_list), fill=(0, 0, 0))
+    for word_item in items_on_ticket:
+        for i, letter in enumerate(word_item):
+            draw.text((start_point[0]+(i*x_dir*font_size), start_point[1]+(i*y_dir*font_size)), text=letter, font=random.choice(font_list), fill=(0, 0, 0))
 
     return img
 
@@ -449,20 +475,20 @@ def ticket_single_word(img, profile_dict: dict) -> Image.Image:
 def ticket_print_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
     """Print some words/emojis/numbers on the img."""
     prof_keys = list(profile_dict.keys())
-    if "single_word" in prof_keys:
-        img = ticket_single_word(img, profile_dict["single_word"])
-    if "short_phrase" in prof_keys:
-        img = phrase_stamper(img, profile_dict["short_phrase"])
+    if "ticket_items" in prof_keys:
+        img = print_ticket_items(img, profile_dict["ticket_items"])
+    if "server_name" in prof_keys:
+        img = server_stamper(img, profile_dict["server_name"])
     return img
 
 def s_p_licer_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
     prof_keys = list(profile_dict.keys())
-    if "slice_numbers" in prof_keys:
-        img = tile_slice_number(img, profile_dict["slice_numbers"])
-    if "slice_size" in prof_keys:
-        img = tile_slice_size(img, profile_dict["slice_size"])
-    if "solid_splice" in prof_keys:
-        img = solidify_tiles(img, profile_dict["solid_splice"])
+    if "slice_item" in prof_keys:
+        img = tile_slice_number(img, profile_dict["slice_item"])
+    if "thickness" in prof_keys and "slice_direction" in prof_keys:
+        img = tile_slice_size(img, profile_dict["thickness"], profile_dict["slice_direction"])
+    if "amount" in prof_keys and "portion_amount" in prof_keys:
+        img = portion_out(img, profile_dict["amount"], profile_dict['portion_amount'])
     return img
 
 def deepfry_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
@@ -473,24 +499,22 @@ def deepfry_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
     :return:
     """
     prof_keys = list(profile_dict.keys())
-    if 'hsb_ranges' in prof_keys:
-        img = hsb_filter(img, profile_dict)
-    if 'rgb_ranges' in prof_keys:
-        img = rgb_filter(img, profile_dict)
-    if 'pal_ranges' in prof_keys:
-        img = pal_filter(img, profile_dict)
+    if 'grease_temp' in prof_keys:
+        img = oil_boil(img, profile_dict['grease_temp'])
+    if 'basket_depth' in prof_keys:
+        img = drop_basket(img, profile_dict['basket_depth'])
+    if 'cook_timer' in prof_keys:
+        img = timed_cook(img, profile_dict['cook_timer'])
     img = img.convert('RGB')
     return img
 
 def pixtrude_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
     """Pasta extruder meets pixel manipulations."""
     prof_keys = list(profile_dict.keys())
-    if "sorted" in prof_keys:
-        img = pixel_sorter(img, profile_dict['sorted'])
-    if "raindrops" in prof_keys:
-        img = pixel_streaker(img, profile_dict['raindrops'])
-    if "encircled" in prof_keys:
-        img = pixel_encircler(img, profile_dict['encircled'])
-    if "bordered" in prof_keys:
-        img = pixel_borderer(img, profile_dict['bordered'])
+    if "noodle_base" in prof_keys:
+        img = pixel_sorter(img, profile_dict['noodle_base'])
+    if "length" in prof_keys and "thickness" in prof_keys:
+        img = pixel_streaker(img, profile_dict['length'], profile_dict['thickness'])
+    if "is_spiral" in prof_keys and "noodle_base" in prof_keys:
+        img = pixel_encircler(img, profile_dict['is_spiral'], profile_dict['noodle_base'])
     return img

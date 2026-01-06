@@ -44,14 +44,18 @@ class TCGLabby(BasePrompt):
             case 'Card%Puzzler(]':
                 self.decide_decision("Which card game to puzzle with", TCG_OPTIONS, 'puzzler')
                 if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-                    print("Now puzzling")
                     self.txo.master.deciding_function = self.card_puzzler
+                    self.txo.priont_string("Now puzzlering ")
             case 'TC-Blender 690':
                 pass
             case 'Card-0wn1oad3r':
-                pass
+                self.decide_decision("What game to downloaded cards from", TCG_OPTIONS, '0wn1oad3r')
+                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+                    self.txo.master.deciding_function = self.card_downloader
             case 'RanDexter-2110':
-                pass
+                self.decide_decision("Which card game to generate a deck for", TCG_OPTIONS, 'deckster')
+                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+                    self.txo.master.deciding_function = self.deck_generator
 
     def depictinator(self, tcg_choice: str):
         """
@@ -60,32 +64,41 @@ class TCGLabby(BasePrompt):
         """
         self.current_tcg = tcg_choice
         depiction_profiles = u.retrieve_tcg_profiles(self.opts_to_profs_map[tcg_choice])
-        print("depiction_profs", depiction_profiles)
+        # print("depiction_profs", depiction_profiles)
         self.decide_decision(f"Which profile to use for depiction", list(depiction_profiles.keys()), tcg_choice.lower())
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
             print("Creating depicting")
-            self.txo.master.deciding_function = self.create_depiction
+            self.txo.master.deciding_function = self.create_depictions
 
     def card_puzzler(self, tcg_choice: str):
-        puzzler_profiles = u.retrieve_lab_profiles('puzzlers')
+        self.current_tcg = tcg_choice
+        puzzler_profiles = u.retrieve_tcg_profiles(self.opts_to_profs_map[tcg_choice])
         self.decide_decision(f"Which profile to make a puzzle with", list(puzzler_profiles.keys()), tcg_choice.lower())
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-            self.txo.master.deciding_function = self.create_puzzle
-        if self.current_tcg is None:
-            self.current_tcg = tcg_choice
+            self.txo.master.deciding_function = self.create_puzzles
 
-    def create_depiction(self, profile_name: str):
+    def card_downloader(self, tcg_choice: str):
+        self.current_tcg = tcg_choice
+        download_profiles = u.retrieve_lab_profiles('downloaders')
+        self.decide_decision("Which downloader profile to use", download_profiles)
+
+    def deck_generator(self, tcg_choice: str):
+        self.current_tcg = tcg_choice
+        deckster_profiles = u.retrieve_lab_profiles('decksters')
+        self.decide_decision("Which deck profile to use", list(deckster_profiles.keys()), tcg_choice.lower())
+        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+            self.txo.master.deciding_function = self.generate_decks
+
+    def create_depictions(self, profile_name: str):
         self.txo.priont_string(f"Depicting a {self.current_tcg} {profile_name}..")
-        depict_profile_dict = u.retrieve_lab_profiles('depicters')
-        card_profile_dict = u.retrieve_tcg_profiles(f'magics')[profile_name]
-        match profile_name:
-            case "default":
-                print("CPD", card_profile_dict)
-                create_default_depiction(depict_profile_dict, card_profile_dict)
-            case "playmat":
-                playmat_depiction(profile_name)
+        card_profile_dict = u.retrieve_tcg_profiles(self.opts_to_profs_map[self.current_tcg])[profile_name]
+        self.txo.priont_dict(card_profile_dict)
+        profile_keys = list(card_profile_dict.keys())[:1]
+        print("PROFKEYS", profile_keys)
+        for depiction in profile_keys:
+            create_depiction(card_profile_dict, card_profile_dict)
 
-    def create_puzzle(self, profile_name: str):
+    def create_puzzles(self, profile_name: str):
         self.txo.priont_string(f"Puzzling a {self.current_tcg} {profile_name}....")
         match profile_name:
             case "word_search":
@@ -94,6 +107,10 @@ class TCGLabby(BasePrompt):
                 self.txo.priont_string("┌─┐")
                 self.txo.priont_string("│a│")
                 self.txo.priont_string("└─┘")
+
+    def generate_decks(self, profile_name: str):
+        deck_profile = u.retrieve_lab_profiles('decksters')
+        self.txo.priont_dict(deck_profile)
 
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
@@ -147,14 +164,20 @@ def depict_card(img: Image.Image, card_info_dict: dict):
     # for criteria in ['name', 'type', 'rarity', 'color', 'artist']:
     print(card_info_dict)
     print(card_info_dict)
-    card_name = card_info_dict['name']
-    card_type = card_info_dict['type']
+    card_name = card_info_dict.get('name', "N0ne")
+    card_rarity = card_info_dict.get('rarity', "Rar3")
+    card_artist = card_info_dict.get('artist', "Ar7")
+    card_set = card_info_dict.get('set', "5et")
+    card_type = card_info_dict.get('type', 'C4rd')
     name_points = depict_name(card_name)
+    rarity_points = depict_name(card_rarity)
+    artist_points = depict_name(card_artist)
+    set_points = depict_name(card_set)
     type_points = depict_type(card_type)
     polypoint_dict = {"name_points": name_points,
-                      "rarity_points": type_points,
-                      "artist_points": type_points,
-                      "set_points": type_points,
+                      "rarity_points": rarity_points,
+                      "artist_points": artist_points,
+                      "set_points": set_points,
                       "type_points": type_points}
     draw_depiction(img, polypoint_dict, card_info_dict)
 
@@ -331,11 +354,13 @@ def build_spell_dict(spell_card):
     return None
 
 
-def create_default_depiction(depict_dict: dict, card_dict: dict):
-    img_size = depict_dict['image_size']
-    bg_color = depict_dict['background']
-    color_list = depict_dict['palette']
+def create_depiction(depict_dict: dict, card_dict: dict):
+    img_size = depict_dict.get('image_size', (320, 320))
+    bg_color = depict_dict.get('background', (125, 52, 210, 99))
+    # color_list = depict_dict['palette']
     new_img = Image.new('RGBA', img_size, tuple(bg_color))
+    print("CDD: DD", depict_dict)
+    print("CDD: CD", card_dict)
     depict_card(new_img, card_dict)
     card_name = card_dict['card_name']
     save_name = "_".join(card_name.split())
@@ -343,14 +368,14 @@ def create_default_depiction(depict_dict: dict, card_dict: dict):
     new_img.save(save_path)
     print(f"saved to {save_path}")
 
-def create_depiction(spell_dict: dict):
-    new_spell_img = Image.new("RGBA", (320, 320), t.KHAKI)
-    depict_spell(new_spell_img, spell_dict)
-    card_name = spell_dict['spell_name']
-    save_name = "_".join(card_name.split())
-    save_path = f"filesOutput/depictions/{save_name.split('_//_')[0]}.png"
-    new_spell_img.save(save_path)
-    print(f"saved to {save_path}")
+# def create_depiction(spell_dict: dict):
+#     new_spell_img = Image.new("RGBA", (320, 320), t.KHAKI)
+#     depict_spell(new_spell_img, spell_dict)
+#     card_name = spell_dict['spell_name']
+#     save_name = "_".join(card_name.split())
+#     save_path = f"filesOutput/depictions/{save_name.split('_//_')[0]}.png"
+#     new_spell_img.save(save_path)
+#     print(f"saved to {save_path}")
 
 
 def playmat_depiction(profile_name: str):

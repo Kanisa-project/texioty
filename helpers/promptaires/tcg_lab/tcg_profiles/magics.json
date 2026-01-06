@@ -4,8 +4,9 @@
       "name": "Ajani",
       "colors": "W&|R"
     },
-    "depictionary": {
-      "size": "playmat",
+    "playmat": {
+      "background": [127, 197, 107, 20],
+      "image_size": [1920, 1120],
       "base_shape": "square"
     }
   },
@@ -14,33 +15,39 @@
       "name": "Sorin",
       "colors": "B|W"
     },
-    "depictionary": {
-      "size": "sticker",
+    "sticker": {
+      "background": [127, 127, 127, 20],
+      "image_size": [420, 420],
       "base_shape": "triangle"
     }
   },
-  "kithkin_dexr": {
+  "kithkin_dexr_wordsearch": {
     "card_criteria": {
       "type": "Kithkin",
       "colors": "W"
     },
-    "deckster": {
+    "wordsearch": {
+      "difficulty": 8,
+      "number_of_words": 13
+    },
+    "dexr": {
       "deck_size": 80,
       "primary_resource": "Plains"
     }
   },
-  "blue_sorcery_sleeves_crossword": {
+  "bluesorcery_sleeves_crossword": {
     "card_criteria": {
       "type": "Sorcery",
       "colors": "U",
       "set": "ZEN"
     },
-    "puzzlery": {
+    "crossword": {
       "difficulty": 1,
-      "puzzle_type": "crossword"
+      "number_of_words": 6
     },
-    "depictionary": {
-      "size": "sleeves",
+    "sleeves": {
+      "background": [127, 127, 127, 20],
+      "image_size": [420, 420],
       "base_shape": "circle"
     }
   }

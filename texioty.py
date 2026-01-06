@@ -159,7 +159,7 @@ class Texioty(tk.LabelFrame):
             "konfig": {
                 'name': 'konfig',
                 'usage': '"konfig"',
-                'call_func': self.priont_test_tags,
+                'call_func': self.priont_test,
                 'lite_desc': "Prints some tags for testing.",
                 'full_desc': ['Prints some tags for testing.'],
                 'possible_args':{' - ': 'No arguments available.'},
@@ -370,6 +370,7 @@ class Texioty(tk.LabelFrame):
 
     def create_profile(self, args):
         """Create a new profile."""
+        print('create_profile_args: ', args)
         if "yes" in args:
             self.texoty.priont_string("Creating a new profile...")
             profile_name = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['profile_name'][1]

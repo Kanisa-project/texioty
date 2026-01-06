@@ -1,0 +1,8 @@
+{
+  "spaghetti": {
+    "noodle_base": "spinach",
+    "length": 8,
+    "thickness": 2,
+    "is_spiral": false
+  }
+}

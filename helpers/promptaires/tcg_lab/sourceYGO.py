@@ -4,7 +4,7 @@ import requests
 import yugioh
 
 from helpers import dbHelper
-from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper
+from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper, TCGAPIHelper
 from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
 
 # from tcg_api.sourceTCG import BaseAPIHelper
@@ -31,7 +31,7 @@ class YgoDepicter(TcgDepicter):
         super().__init__(depict_settings)
 
 
-class YugiohAPIHelper(BaseAPIHelper):
+class YugiohAPIHelper(TCGAPIHelper):
     def __init__(self):
         super().__init__()
         self.base_url = 'https://db.ygoprodeck.com/api/v7/cardinfo.php'

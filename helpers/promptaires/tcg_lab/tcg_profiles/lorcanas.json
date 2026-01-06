@@ -1,0 +1,37 @@
+{
+  "mickey_playmat_sleeves": {
+    "card_criteria": {
+      "name": "Mickey Mouse"
+    },
+    "playmat": {
+      "image_size": [1920, 1120],
+      "background": [127, 127, 198, 150],
+      "base_shape": "circle"
+    },
+    "sleeves": {
+      "image_size": [400, 560],
+      "background": [217, 24, 227, 220],
+      "base_shape": "circle"
+    }
+  },
+  "goofy_playmat": {
+    "card_criteria": {
+      "name": "Goofy",
+      "set": "TFC"
+    },
+    "playmat": {
+      "image_size": [1920, 1120],
+      "background": [217, 27, 148, 50],
+      "base_shape": "nonagon"
+    }
+  },
+  "aladdin_wordsearch": {
+    "card_criteria": {
+      "name": "Aladdin"
+    },
+    "wordsearch": {
+      "difficulty": 8,
+      "number_of_words": 13
+    }
+  }
+}

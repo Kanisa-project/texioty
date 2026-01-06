@@ -20,7 +20,8 @@ LAB_OPTIONS = ['Depictinator{}',
 FUNCFOTO_OPTIONS = ['Flatop_XT 2200',
                     'S/p/licer R0T8',
                     'Deep-friar 420',
-                    'Pixtruderer V3']
+                    'Pixtruderer V3',
+                    'Tix>Prit C.R.1']
 
 PROFILIZER_OPTIONS = ['texioty',
                       'laser-tag',
@@ -45,7 +46,7 @@ class PromptRegistry(TexiotyHelper):
         self.arc_api = ArcApi(txo, txi)
         self.helper_commands["tcg_lab"] = {"name": "tcg_lab",
                         "usage": '"tcg_lab"',
-                        "call_func": self.tcg_lab_prompt,
+                        "call_func": self.start_tcg_lab_prompt,
                         "lite_desc": "Enter the TCG lab.",
                         "full_desc": ["Enter the TCG lab.",
                                       "Can be used in Texioty mode only."],
@@ -57,7 +58,7 @@ class PromptRegistry(TexiotyHelper):
                         "back_color": u.rgb_to_hex(t.BLACK)}
         self.helper_commands["foto_worx"] = {"name": "foto_worx",
                           "usage": '"foto_worx"',
-                          "call_func": self.worxhop_prompt,
+                          "call_func": self.start_worxhop_prompt,
                           "lite_desc": "Work in the foto hop.",
                           "full_desc": ["Work in the foto hop.",],
                           "possible_args": {' - ': 'No arguments available.'},
@@ -68,7 +69,7 @@ class PromptRegistry(TexiotyHelper):
                           "back_color": u.rgb_to_hex(t.BLACK)}
         self.helper_commands["profile_make"] = {"name": "profile_make",
                              "usage": '"profile_make"',
-                             "call_func": self.profiler_prompt,
+                             "call_func": self.start_profiler_prompt,
                              "lite_desc": "Make some type of profile.",
                              "full_desc": ["Make some type of profile.",],
                              "possible_args": {' - ': 'No arguments available.'},
@@ -77,36 +78,18 @@ class PromptRegistry(TexiotyHelper):
                              "group_tag": "PRUN",
                              "font_color": u.rgb_to_hex(t.KHAKI),
                              "back_color": u.rgb_to_hex(t.BLACK)}
-        # self.helper_commands["get_arc"] = {"name": "get_arc",
-        #                 "usage": '"get_arc"',
-        #                 "call_func": self.get_arc_prompt,
-        #                 "lite_desc": "Get some data from the arc api.",
-        #                 "full_desc": ["Get some data from the arc api.",],
-        #                 "possible_args": {' - ': 'No arguments available.'},
-        #                 "args_desc": {' - ': 'No arguments available.'},
-        #                 "examples": ['get_arc'],
-        #                 "group_tag": "PRUN",
-        #                 "font_color": u.rgb_to_hex(t.KHAKI),
-        #                 "back_color": u.rgb_to_hex(t.BLACK)}
 
-    def tcg_lab_prompt(self):
+    def start_tcg_lab_prompt(self):
         self.tcg_lab.decide_decision("What lab would you like to work in", LAB_OPTIONS, 'tcg_lab')
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
             self.txo.master.deciding_function = self.tcg_lab.laboratory
 
-    def worxhop_prompt(self):
-        self.foto_worx.decide_decision("What station to work in", FUNCFOTO_OPTIONS, 'worxhop_fotoes')
+    def start_worxhop_prompt(self):
+        self.foto_worx.decide_decision("What station to work in", FUNCFOTO_OPTIONS, 'worx_hop')
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-            self.txo.master.deciding_function = self.foto_worx.worxhop
+            self.txo.master.deciding_function = self.foto_worx.worxhop_stations
 
-    def profiler_prompt(self):
+    def start_profiler_prompt(self):
         self.profilemake.decide_decision("What kind of profile to make", PROFILIZER_OPTIONS, "profilizer")
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-            self.txo.master.deciding_function = self.profilemake
-            pass
-
-    # def get_arc_prompt(self):
-    #     self.display_title('get_arc')
-    #     self.arc_api.decide_decision("What are you looking for, raider?", ARC_API_OPTIONS, "arc_api")
-    #     if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-    #         self.txo.master.deciding_function = self.arc_api.get_random_arc
+            self.txo.master.deciding_function = self.profilemake.profile_make

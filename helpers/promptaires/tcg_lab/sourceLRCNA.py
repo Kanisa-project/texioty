@@ -3,7 +3,7 @@ import random
 import requests
 
 from helpers import dbHelper
-from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper
+from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper, TCGAPIHelper
 
 # from tcg_api.sourceTCG import BaseAPIHelper
 # from src.utils import dbHelper
@@ -11,7 +11,7 @@ from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper
 print_width_len = 36
 base_url = 'https://api.lorcana-api.com'
 
-class LorcanaAPIHelper(BaseAPIHelper):
+class LorcanaAPIHelper(TCGAPIHelper):
     def __init__(self):
         super().__init__()
         self.base_url = 'https://api.lorcana-api.com'

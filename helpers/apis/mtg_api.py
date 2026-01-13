@@ -11,7 +11,7 @@ import random
 # from question_prompts.spell_depicter import TcgDepicter
 from helpers.apis.base_tcg_api import TCGAPI
 from helpers import dbHelper
-from helpers.promptaires.tcg_labby import TcgDepicter
+# from helpers.promptaires.tcg_labby import TcgDepicter
 from settings.alphanumers import MORSE_CODE_RULES
 from settings.utils import clamp
 from settings import themery as t
@@ -514,19 +514,19 @@ class MagicAPIHelper(TCGAPI):
         pass
 
 
-class MtgDepicter(TcgDepicter):
-    def __init__(self, depict_settings: dict):
-        super().__init__(depict_settings)
-
-    def build_card_datadict(self, card_data) -> dict:
-        card_datadict = {
-            'name': card_data.name,
-            'type': card_data.type,
-            'rarity': card_data.rarity,
-            'id': f"{card_data.set}-{card_data.number}"
-        }
-        self.card_datadict = card_datadict
-        return card_datadict
+# class MtgDepicter(TcgDepicter):
+#     def __init__(self, depict_settings: dict):
+#         super().__init__(depict_settings)
+#
+#     def build_card_datadict(self, card_data) -> dict:
+#         card_datadict = {
+#             'name': card_data.name,
+#             'type': card_data.type,
+#             'rarity': card_data.rarity,
+#             'id': f"{card_data.set}-{card_data.number}"
+#         }
+#         self.card_datadict = card_datadict
+#         return card_datadict
 
 
 def run_puzzler_from_script(param):

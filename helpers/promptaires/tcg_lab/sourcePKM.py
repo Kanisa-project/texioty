@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from helpers import dbHelper
 from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper, TCGAPIHelper
-from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
+# from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
 
 from tcgdexsdk import TCGdex, Query
 # from tcg_api.sourceTCG import BaseAPIHelper
@@ -18,19 +18,19 @@ width_len = 36
 ENERGY_TYPES = ['grass', 'fire', 'water', 'lighting', 'psychic', 'fighting', 'darkness', 'metal']
 
 
-class PkmnDepicter(TcgDepicter):
-    def __init__(self, depict_settings: dict):
-        super().__init__(depict_settings)
-
-    def build_card_datadict(self, card_data) -> dict:
-        card_datadict = {
-            'name': card_data.name,
-            'type': ''.join(card_data.types),
-            'rarity': card_data.rarity,
-            'id': card_data.id
-        }
-        self.card_datadict = card_datadict
-        return card_datadict
+# class PkmnDepicter(TcgDepicter):
+#     def __init__(self, depict_settings: dict):
+#         super().__init__(depict_settings)
+#
+#     def build_card_datadict(self, card_data) -> dict:
+#         card_datadict = {
+#             'name': card_data.name,
+#             'type': ''.join(card_data.types),
+#             'rarity': card_data.rarity,
+#             'id': card_data.id
+#         }
+#         self.card_datadict = card_datadict
+#         return card_datadict
 
 
 class PokeAPIHelper(TCGAPIHelper):
@@ -63,8 +63,9 @@ class PokeAPIHelper(TCGAPIHelper):
 
 
     def download_card_batch(self, batch_config: dict):
-        r = requests.get(self.endpoint_builder('cards?', self.query_builder({'category': batch_config["batch_types"],
-                                                                             'set': batch_config["batch_set_ids"]})))
+        endpoint = self.endpoint_builder('cards?', self.query_builder({'category': random.choice(batch_config["card_types"])}))
+        r = requests.get(self.endpoint_builder('cards?', self.query_builder({'category': random.choice(batch_config["card_types"])})))
+        print(endpoint, r.json())
         try:
             r.raise_for_status()
         except Exception as e:
@@ -96,7 +97,7 @@ class PokeAPIHelper(TCGAPIHelper):
             print(f"API returned an object of unknown type: {type(payload)}")
             return
 
-        chosen_count = min(batch_config.get('batch_size', 1), len(cards))
+        chosen_count = min(batch_config.get('pack_size', 1), len(cards))
         chosen_cards = random.sample(cards, chosen_count) if chosen_count <= len(cards) else [random.choice(cards) for _ in range(batch_config.get('batch_size', 1))]
 
         for card in chosen_cards:
@@ -128,9 +129,9 @@ class PokeAPIHelper(TCGAPIHelper):
             except Exception as e:
                 print(f"Failed to download {name} from {img_url}: {e}")
                 continue
-
-            save_name = f"{(set_id or 'UNK').upper()}_" + card.name.replace(" ", "_")
-            out_path = os.path.join('/worx_hop/cardsPokemon', f'{save_name}.png')
+            print(card, "PKMNCard")
+            save_name = f"{(set_id or 'UNK').upper()}_" + card['name'].replace(" ", "_")
+            out_path = os.path.join('helpers/promptaires/tcg_lab/cards/pokemon', f'{save_name}.png')
             try:
                 os.makedirs(os.path.dirname(out_path), exist_ok=True)
                 with open(out_path, 'wb') as handler:

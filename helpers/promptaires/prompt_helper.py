@@ -16,6 +16,7 @@ class BasePrompt(TexiotyHelper):
         self.response_dict = {}
         self.question_keys = []
         self.current_question_index = 0
+        self.current_options_page = 0
 
     def start_question_prompt(self, question_dict: dict, clear_txo=False):
         """
@@ -40,7 +41,9 @@ class BasePrompt(TexiotyHelper):
 
     def display_option_question(self, entitled: str, question: str, avail_options: list):
         """
-        Display a question with a list of options.
+        Print a header/title of the question being decided, then
+        a list of options, each assigned to a single digit number, and finally
+        the specific question to be decided upon.
 
         """
         self.in_decisioning_mode = True
@@ -50,11 +53,16 @@ class BasePrompt(TexiotyHelper):
         for i in range(self.txo.texoty_h-len(avail_options)):
             self.txo.priont_string(' '*(self.txo.texoty_w-2)+'\n')
         self.display_title(entitled, False)
-        for i, option in enumerate(avail_options):
-            self.txo.priont_string(f"{i} - {option}")
+        self.priont_available_options_by_page([avail_options])
+
         self.txo.priont_string(question)
         self.txi.bind_new_options(avail_options)
         return 0
+
+    def priont_available_options_by_page(self, paged_options: list):
+        current_options = paged_options[self.current_options_page]
+        for i, option in enumerate(current_options):
+            self.txo.priont_string(f"{i} - {option}")
 
     def display_question(self):
         """Displays a question from the loaded questionnaire prompt dictionary."""
@@ -108,3 +116,10 @@ class BasePrompt(TexiotyHelper):
                                      input_question + f", (0-{len(possible_options) - 1})? ",
                                      possible_options)
 
+def pagify_available_options(available_options: list) -> list:
+    paged_options = []
+    if len(available_options) <= 10:
+        paged_options.append(available_options)
+    elif len(available_options) > 10:
+        pass
+    return paged_options

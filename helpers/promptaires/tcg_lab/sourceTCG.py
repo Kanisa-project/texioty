@@ -26,6 +26,7 @@ class TCGAPIHelper(BaseAPIHelper):
         self.batch_size = 0
         self.batch_colors = ''
         self.tcg_title_name = 'psa'
+        self.deckster_list = []
 
     def get_card_database(self, card_type="R4ND0M") -> dict:
         pass
@@ -68,6 +69,12 @@ class TCGAPIHelper(BaseAPIHelper):
         print(f"Attempting to download {self.batch_size} {self.batch_type} cards..")
         print(f"Of {self.batch_colors} coloring from {self.batch_set_id} sets...")
 
+    def generate_random_deck(self, deck_config: dict):
+        # number_of_cards = deck_config['number_of_cards']
+        # self.deckster_list = []
+        # for i in range(number_of_cards):
+        #     self.deckster_list.append(i)
+        pass
 
     def download_card_image(self):
         """

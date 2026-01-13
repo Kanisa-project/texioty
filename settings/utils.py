@@ -155,7 +155,7 @@ available_profiles = {
                                  rgb_to_hex(t.GHOST_WHITE)))
 }
 for profile in glob.glob("filesOutput/.profiles/*.json"):
-    if "trevor2" in profile:
+    if "trevor2" in profile or 'old' in profile:
         continue
     with open(profile, "r") as f:
         profile_data = json.load(f)

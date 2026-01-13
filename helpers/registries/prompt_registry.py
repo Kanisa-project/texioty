@@ -4,11 +4,12 @@ import texity
 import texoty
 from helpers.apis.arc_api import ArcApi
 from helpers.kanisa_wallet import KanisaWallet
+from helpers.promptaires.beep_boop.beep_boops import BeepBoops
 from helpers.promptaires.tcg_lab.tcg_labby import TCGLabby
 from helpers.tex_helper import TexiotyHelper
 from settings import themery as t, utils as u
 # from helpers.promptaires.tcg_labby import TCGLabratory
-from helpers.promptaires.foto_worx import FotoWorxHop
+from helpers.promptaires.worx_hop.foto_worx import FotoWorxHop
 from helpers.promptaires.profilizer import Profilizer
 
 LAB_OPTIONS = ['Depictinator{}',
@@ -26,7 +27,9 @@ FUNCFOTO_OPTIONS = ['Flatop_XT 2200',
 PROFILIZER_OPTIONS = ['texioty',
                       'laser-tag',
                       'fotofuncs',
-                      'tcg_lab']
+                      'tcg_lab',
+                      'beop_boeps'
+                      'word_gaims']
 
 ARC_API_OPTIONS = ['items',
                    'quests',
@@ -44,6 +47,16 @@ class PromptRegistry(TexiotyHelper):
         self.profilemake = Profilizer(txo, txi)
         self.k_wallet = KanisaWallet(txo, txi)
         self.arc_api = ArcApi(txo, txi)
+        self.beep_boops = BeepBoops(txo, txi)
+        self.helper_commands = self.helper_commands | self.beep_boops.helper_commands | self.arc_api.helper_commands
+        # self.promptaire_dict = {
+        #     'tcg_lab': self.tcg_lab,
+        #     'foto_worx': self.foto_worx,
+        #     'prof_make': self.profilemake,
+        #     'ka_wallet': self.k_wallet,
+        #     'arc_api': self.arc_api,
+        #     'beep_boops': self.beep_boops
+        # }
         self.helper_commands["tcg_lab"] = {"name": "tcg_lab",
                         "usage": '"tcg_lab"',
                         "call_func": self.start_tcg_lab_prompt,

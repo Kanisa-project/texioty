@@ -1,0 +1,18 @@
+{
+  "single_word": {
+    "vehicles": ["plane", "car", "truck", "limousine", "train", "boat"],
+    "vegetables": ["potato", "carrot", "onion", "broccoli", "corn"],
+    "fruits": ["banana", "tomato", "watermelon", "cantaloupe"]
+  },
+  "short_phrase": {
+    "sports": ["Just do it.", "That's a home run!"],
+    "movie_titles": ["Pineapple Express", "The Butterfly Effect", "Star Wars III - Revenge of the Sith"],
+
+  },
+  "long_phrase": {
+    "others": [
+      "The quick brown fox jumps over the lazy dog.",
+      "If you guess the letter J, I win."
+    ]
+  }
+}

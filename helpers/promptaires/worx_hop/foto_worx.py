@@ -1,5 +1,6 @@
 import glob
 import random
+import tkinter
 from math import ceil
 from typing import Callable
 
@@ -16,6 +17,8 @@ class FotoWorxHop(BasePrompt):
         self.equipt_saved_name = None
         self.equipment_func = None
         self.cook_image = None
+        self.order_up_images = []
+        self.base_images = []
 
     def worxhop_stations(self, equipment: str):
         match equipment:
@@ -83,10 +86,15 @@ class FotoWorxHop(BasePrompt):
                 self.create_foto_iterations(ticket_print_foto)
 
     def create_foto_iterations(self, equipment_func: Callable):
+        self.order_up_images = []
         for i in range(5):
             save_name = self.equipt_saved_name + str(i) + ".png"
             foto = equipment_func(self.cook_image, self.foto_profile_dict)
-            foto.save(f"helpers/promptaires/worx_hop/fotoes/{save_name}")
+            save_path = f"helpers/promptaires/worx_hop/fotoes/{save_name}"
+            foto_serving = resize_foto(foto, (128, 128))
+            foto_serving.save(save_path)
+            self.order_up_images.append(tkinter.PhotoImage(file=save_path))
+            self.txo.image_create(tkinter.END, image=self.order_up_images[i])
 
 def resize_foto(foto: Image.Image, new_size: tuple[int, int]) -> Image.Image:
     """Resize a foto and return it."""
@@ -442,7 +450,7 @@ def server_stamper(img: Image.Image, serverName="Kyle") -> Image.Image:
     return img
 
 
-def print_ticket_items(img, items_on_ticket=['seat1', 'seattoo']) -> Image.Image:
+def print_ticket_items(img, items_on_ticket=('seat1', 'seattoo')) -> Image.Image:
     # add_word = profile_dict['word']
     # direction = profile_dict['direction']
     font_size = 26

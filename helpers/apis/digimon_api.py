@@ -4,7 +4,7 @@ import random
 from helpers import dbHelper
 # from question_prompts.spell_depicter import TcgDepicter
 from helpers.apis.base_tcg_api import TCGAPI
-from helpers.promptaires.tcg_labby import TcgDepicter
+# from helpers.promptaires.tcg_labby import TcgDepicter
 
 base_url = "https://digimoncard.io/api-public/"
 
@@ -66,9 +66,9 @@ def download_digimon():
                 handler.write(img_data)
             print(f"Downloaded {save_name}")
 
-class DgmDepicter(TcgDepicter):
-    def __init__(self, config_dict):
-        super().__init__(config_dict)
+# class DgmDepicter(TcgDepicter):
+#     def __init__(self, config_dict):
+#         super().__init__(config_dict)
 
 # def run_depicter_from_script(depict_config_dict: dict):
 #     depicter = DgmDepicter(depict_config_dict)

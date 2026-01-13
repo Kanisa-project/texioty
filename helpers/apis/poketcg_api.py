@@ -5,7 +5,7 @@ import requests
 from dotenv import load_dotenv
 # from tcgdexsdk import TCGdex, Query
 from helpers.apis.base_tcg_api import TCGAPI
-from helpers.promptaires.tcg_labby import TcgDepicter
+# from helpers.promptaires.tcg_labby import TcgDepicter
 
 # from utils import dbHelper, glythed
 # from utils.glythed import TcgDepicter
@@ -15,19 +15,19 @@ width_len = 36
 ENERGY_TYPES = ['grass', 'fire', 'water', 'lighting', 'psychic', 'fighting', 'darkness', 'metal']
 
 
-class PkmnDepicter(TcgDepicter):
-    def __init__(self, depict_settings: dict):
-        super().__init__(depict_settings)
-
-    def build_card_datadict(self, card_data) -> dict:
-        card_datadict = {
-            'name': card_data.name,
-            'type': ''.join(card_data.types),
-            'rarity': card_data.rarity,
-            'id': card_data.id
-        }
-        self.card_datadict = card_datadict
-        return card_datadict
+# class PkmnDepicter(TcgDepicter):
+#     def __init__(self, depict_settings: dict):
+#         super().__init__(depict_settings)
+#
+#     def build_card_datadict(self, card_data) -> dict:
+#         card_datadict = {
+#             'name': card_data.name,
+#             'type': ''.join(card_data.types),
+#             'rarity': card_data.rarity,
+#             'id': card_data.id
+#         }
+#         self.card_datadict = card_datadict
+#         return card_datadict
 
 
 class PokeAPIHelper(TCGAPI):

@@ -1,5 +1,64 @@
 {
-  "default": {
-
+  "basic_magic": {
+    "card_criteria": {
+      "pack_size": 3,
+      "pack_colors": ["W", "R", "G", "U", "B"],
+      "card_types": ["Land", "Sorcery", "Creature", "Artifact", "Instant"],
+      "rarities": ["Common", "Uncommon", "Rare"],
+      "pack_sets": ["ZEN", "OTJ", "LOR", "LRW"]
+    },
+    "card_specific": {
+      "card_name": "Explore"
+    }
+  },
+  "basic_yugioh": {
+    "card_criteria": {
+      "pack_size": 5,
+      "colors": ["wind", "fire", "earth", "water", "dark",
+        "light", "divine", "laugh"],
+      "rarities": ["common", "uncommon", "rare"],
+      "pack_sets": ["LOB", "DDS", "FMR", "MRD"],
+      "card_types": ["Trap Card", "Skill Card", "Normal Monster", "Effect Monster", "Spell Card"]
+    },
+    "card_specific": {
+      "pack_size": 3
+    }
+  },
+  "basic_pokemon": {
+    "card_criteria": {
+      "pack_size": 5,
+      "colors": ["metal", "fire", "grass", "water", "darkness",
+        "psychic", "fairy", "electric", "fighting"],
+      "rarities": ["Common", "Uncommon", "Rare"],
+      "card_types": ["Pokemon", "Energy", "Trainer"],
+      "pack_sets": ["BS", "JU", "FO", "HS"]
+    },
+    "card_specific": {
+      "pack_size": 3
+    }
+  },
+  "basic_digimon": {
+    "card_criteria": {
+      "pack_size": 5,
+      "colors": ["red", "blue", "yellow", "green", "black", "purple", "white"],
+      "rarities": ["Common", "Uncommon", "Rare"],
+      "card_types": ["Digi-Egg", "Digimon", "Tamer", "Option", "Token"],
+      "pack_sets": ["BT-01", "BT-22", "BT-12", "BT-10"]
+    },
+    "card_specific": {
+      "pack_size": 3
+    }
+  },
+  "basic_lorcana": {
+    "card_criteria": {
+      "pack_size": 5,
+      "colors": ["amber", "amethyst", "emerald", "ruby", "sapphire", "steel"],
+      "rarities": ["Common", "Uncommon", "Rare"],
+      "card_types": ["Character", "Item", "Action", "Location"],
+      "pack_sets": ["1", "2", "3", "4"]
+    },
+    "card_specific": {
+      "pack_size": 3
+    }
   }
 }

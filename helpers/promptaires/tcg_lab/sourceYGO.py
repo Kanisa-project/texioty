@@ -5,7 +5,7 @@ import yugioh
 
 from helpers import dbHelper
 from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper, TCGAPIHelper
-from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
+# from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
 
 # from tcg_api.sourceTCG import BaseAPIHelper
 # from src.utils import dbHelper
@@ -26,9 +26,9 @@ def print_some_toons():
 
 
 
-class YgoDepicter(TcgDepicter):
-    def __init__(self, depict_settings: dict):
-        super().__init__(depict_settings)
+# class YgoDepicter(TcgDepicter):
+#     def __init__(self, depict_settings: dict):
+#         super().__init__(depict_settings)
 
 
 class YugiohAPIHelper(TCGAPIHelper):
@@ -58,15 +58,18 @@ class YugiohAPIHelper(TCGAPIHelper):
         print(f"✓  Added {new_card['name']} to database")
 
     def download_card_batch(self, batch_config: dict):
-        super().download_card_batch(batch_config)
-        r = requests.get(self.endpoint_builder('?', self.query_builder({'type': self.batch_type})))
-        random_cards = random.sample(r.json()['data'], self.batch_size)
+        # super().download_card_batch(batch_config)
+        endpoint = self.endpoint_builder('?', self.query_builder({'type': random.choice(batch_config['card_types'])}))
+        r = requests.get(endpoint)
+        # print(r.json(), endpoint)
+        random_cards = random.sample(r.json()['data'], batch_config['pack_size'])
         for card_dict in random_cards:
-            self.add_card_database(card_dict)
+            print(card_dict)
+            # self.add_card_database(card_dict)
             try:
                 img_data = requests.get(f'https://images.ygoprodeck.com/images/cards/{card_dict["id"]}.jpg').content
                 save_name = card_dict['name'].replace(" ", "_")
-                with open(f'/home/trevor/Documents/PycharmProjects/KanisaBot/fotoes/cardsYuGiOh/{save_name}.jpg',
+                with open(f'helpers/promptaires/tcg_lab/cards/yugioh/{save_name}.jpg',
                           'wb') as handler:
                     handler.write(img_data)
                 print(f"✓|  Downloaded {save_name} into /fotoes/cardsYuGiOh")

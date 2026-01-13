@@ -3,10 +3,7 @@ import random
 
 from helpers import dbHelper
 from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper, TCGAPIHelper
-from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
-
-# from question_prompts.spell_depicter import TcgDepicter
-# from tcg_api.sourceTCG import BaseAPIHelper
+# from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
 
 base_url = "https://digimoncard.io/api-public/"
 
@@ -24,22 +21,22 @@ class DigimonAPIHelper(TCGAPIHelper):
         print(f"✓  Added {new_card['name']} to database.")
 
     def download_card_batch(self, batch_config: dict):
-        super().download_card_batch(batch_config)
+        # super().download_card_batch(batch_config)
         chosen_color = random.choice(self.batch_colors.split(','))
         fetch_url = fetch_cards_url({'color': chosen_color,
                                                        'pack': self.batch_set_id,
                                                        'type': self.batch_type})
-        # print(fetch_url)
+        print(fetch_url)
         random_digimon = requests.get(fetch_url)
-        # print(random_digimon)
-        for i in range(self.batch_size):
+        print(random_digimon)
+        for i in range(batch_config['pack_size']):
             card = random.choice(random_digimon.json())
-            self.add_card_database(card)
-            # print(f"{card['attribute']}    {card['id']}")
+            # self.add_card_database(card)
+            print(f"{card['attribute']}    {card['id']}")
             if card['id'] is not None:
                 img_data = requests.get(f'https://images.digimoncard.io/images/cards/{card['id']}.jpg').content
                 save_name = f"{card['id']}_" + card['name'].replace(" ", "_")
-                with open(f'/home/trevor/Documents/PycharmProjects/KanisaBot/fotoes/cardsDigimon/{save_name}.jpg',
+                with open(f'helpers/promptaires/tcg_lab/cards/digimon/{save_name}.jpg',
                           'wb') as handler:
                     handler.write(img_data)
                 print(f"✓  Downloaded {save_name} into /fotoes/cardsDigimon")
@@ -68,9 +65,9 @@ def download_digimon():
                 handler.write(img_data)
             print(f"Downloaded {save_name}")
 
-class DgmDepicter(TcgDepicter):
-    def __init__(self, config_dict):
-        super().__init__(config_dict)
+# class DgmDepicter(TcgDepicter):
+#     def __init__(self, config_dict):
+#         super().__init__(config_dict)
 
 # def run_depicter_from_script(depict_config_dict: dict):
 #     depicter = DgmDepicter(depict_config_dict)

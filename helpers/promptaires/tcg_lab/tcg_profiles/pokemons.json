@@ -14,12 +14,12 @@
       "base_shape": "heptagon"
     }
   },
-  "jigglypuff_sticker": {
+  "jigglypuff_sticker_hangman": {
     "card_specific": {
       "name": "Jigglypuff",
       "rarity": "Common",
       "type": "Pokemon",
-      "set_id": "Jungle_54",
+      "set_code": "JU#54",
       "artist": "Kagemaru Himeno"
     }
   },

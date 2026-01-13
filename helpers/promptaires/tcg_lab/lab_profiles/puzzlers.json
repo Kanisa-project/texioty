@@ -1,7 +1,17 @@
 {
   "word_search": {
-    "num_of_words": 10,
-    "grid_size": "16x16"
+    "small": {
+      "num_of_words": 8,
+      "grid_size": "13x13"
+    },
+    "medium": {
+      "num_of_words": 10,
+      "grid_size": "15x15"
+    },
+    "large": {
+      "num_of_words": 12,
+      "grid_size": "20x20"
+    }
   },
   "hangman_phrase_maker": {
     "card_phrase": "TCG labby is a great place."

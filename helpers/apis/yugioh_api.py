@@ -7,7 +7,7 @@ from helpers import dbHelper
 from helpers.apis.base_tcg_api import TCGAPI
 # from utils import dbHelper
 
-from helpers.promptaires.tcg_labby import TcgDepicter
+# from helpers.promptaires.tcg_labby import TcgDepicter
 
 # from utils.glythed import TcgDepicter
 
@@ -26,9 +26,9 @@ def print_some_toons():
 
 
 
-class YgoDepicter(TcgDepicter):
-    def __init__(self, depict_settings: dict):
-        super().__init__(depict_settings)
+# class YgoDepicter(TcgDepicter):
+#     def __init__(self, depict_settings: dict):
+#         super().__init__(depict_settings)
 
 
 class YugiohAPIHelper(TCGAPI):

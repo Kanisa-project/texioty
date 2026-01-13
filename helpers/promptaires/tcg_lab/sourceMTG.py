@@ -1,4 +1,5 @@
 import math
+from typing import List
 
 import mtgsdk
 import requests
@@ -10,7 +11,7 @@ import random
 
 from helpers import dbHelper
 from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper, TCGAPIHelper
-from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
+# from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
 from settings.alphanumers import MORSE_CODE_RULES
 from settings.utils import clamp
 from settings import themery as t
@@ -310,7 +311,7 @@ def average_the_colors(src_img: Image, color_name: str) -> tuple:
     return r_avg // ttl_colos, g_avg // ttl_colos, b_avg // ttl_colos
 
 
-def draw_depiction(img: Image, spell_polypoints: dict, spell_info_dict: dict, spell_colors: list):
+def draw_depiction(img: Image.Image, spell_polypoints: dict, spell_info_dict: dict, spell_colors: list):
     draw = ImageDraw.Draw(img)
     mana_cost_color_dict = build_mana_color_dict(spell_info_dict['spell_mana_cost'])
     # print("avg colors ", avg_mana)
@@ -459,6 +460,33 @@ def build_spell_dict(spell_card):
 #     print(f"Saved {save_name}")
 
 
+def gather_all_creature_cards(creature_criteria: dict) -> List[Card]:
+    set_code = creature_criteria['set']
+    colors = creature_criteria['colors']
+    creature_cards = mtgsdk.Card.where(set=set_code).where(colors=colors).where(type="Creature").all()
+    return creature_cards
+
+def gather_all_resource_cards(resource_criteria: dict) -> List[Card]:
+    set_code = resource_criteria['set']
+    colors = resource_criteria['colors']
+    land_cards = mtgsdk.Card.where(set=set_code).where(color_id=colors).where(type="Land").all()
+    return land_cards
+
+def gather_all_temporary_cards(temporary_criteria: dict) -> List[Card]:
+    set_code = temporary_criteria['set']
+    colors = temporary_criteria['colors']
+    sorcery_cards = mtgsdk.Card.where(set=set_code).where(color_identity=colors).where(type="Sorcery").all()
+    instant_cards = mtgsdk.Card.where(set=set_code).where(color_identity=colors).where(type="Instant").all()
+    return sorcery_cards + instant_cards
+
+def gather_all_permanent_cards(permanent_criteria: dict) -> List[Card]:
+    set_code = permanent_criteria['set']
+    colors = permanent_criteria['colors']
+    artifact_cards = mtgsdk.Card.where(set=set_code).where(color_identity=colors).where(type="Artifact").all()
+    enchantment_cards = mtgsdk.Card.where(set=set_code).where(color_identity=colors).where(type="Enchantment").all()
+    return artifact_cards + enchantment_cards
+
+
 class MagicAPIHelper(TCGAPIHelper):
     def __init__(self):
         super().__init__()
@@ -486,38 +514,99 @@ class MagicAPIHelper(TCGAPIHelper):
     def download_card_batch(self, batch_config: dict):
         # super().download_card_batch(batch_config)
         print(batch_config)
+        total_cards = []
         current_cards = []
-        for set_code in batch_config["batch_set_ids"]:
-            for card in mtgsdk.Card.where(set=set_code).all():
-                for mtg_type in batch_config["batch_types"]:
-                    if mtg_type in card.type:
-                        for color_id in batch_config["batch_colors"]:
-                            if card.color_identity is not None:
-                                if color_id in card.color_identity:
-                                    current_cards.append(card)
-                                    self.add_card_database(card)
+        for set_code in batch_config["pack_sets"]:
+            for card_in_set in mtgsdk.Card.where(set=set_code).all():
+                total_cards.append(card_in_set)
+
+        for card in total_cards:
+            print(card, 'card')
+            try:
+                for color_id in card.color_identity:
+                    if color_id not in batch_config['pack_colors']:
+                        print(card.color_identity, "-", batch_config['pack_colors'])
+                        try:
+                            total_cards.remove(card)
+                        except ValueError:
+                            continue
+            except TypeError:
+                pass
+
+            for card_type in batch_config['card_types']:
+                if card_type not in card.type:
+                    print(card.type, "-", card_type)
+                    try:
+                        total_cards.remove(card)
+                    except ValueError:
+                        continue
+
+            for rarity in batch_config['rarities']:
+                if rarity not in card.rarity:
+                    print(card.rarity, "-", batch_config['rarities'])
+                    try:
+                        total_cards.remove(card)
+                    except ValueError:
+                        continue
+
+
+
+                # for mtg_type in batch_config["card_types"]:
+                #     print(mtg_type, "-MTGTYPE")
+                #     if mtg_type in card.type:
+                #         print(True, "TYPEDS")
+                #         for color_id in batch_config["pack_colors"]:
+                #             if card.color_identity is not None:
+                #                 if color_id in card.color_identity:
+                #                     current_cards.append(card)
+                #                     self.add_card_database(card)
         try:
-            chosen_cards = random.sample(current_cards, self.batch_size)
+            chosen_cards = random.sample(total_cards, batch_config['pack_size'])
         except ValueError as e:
             # print(e)
-            chosen_cards = random.sample(current_cards, len(current_cards))
+            chosen_cards = random.sample(total_cards, len(total_cards))
 
         for card in chosen_cards:
             if card.image_url is not None:
                 img_data = requests.get(f'{card.image_url}').content
                 save_name = f"{card.set.upper()}_" + card.name.replace(" ", "_")
-                with open(f'/home/trevor/Documents/PycharmProjects/KanisaBot/fotoes/cardsMagic/{save_name}.png',
+                proper_save_name = save_name.replace("_//_", "-")
+                with open(f'helpers/promptaires/tcg_lab/cards/magic/{proper_save_name}.png',
                           'wb') as handler:
                     handler.write(img_data)
                 print(f"✓  Downloaded {save_name} into /fotoes/cardsMagic")
             else:
                 print(f"✕  Card '{card.name}' has no image to download.")
 
-
+    def generate_random_deck(self, deck_config: dict) -> List[Card]:
+        num_of_cards = deck_config['number_of_cards']
+        creature_base_number = num_of_cards * (deck_config['creature_portion']/100)
+        resource_base_number = num_of_cards * (deck_config['resource_portion']/100)
+        permanent_base_number = num_of_cards * (deck_config['permanent_portion']/100)
+        temporary_base_number = num_of_cards * (deck_config['temporary_portion']/100)
+        creature_base = random.sample(gather_all_creature_cards({'set': "ZEN", "colors": "R"}), int(creature_base_number))
+        resource_base = random.sample(gather_all_resource_cards({'set': "ZEN", "colors": "R"}), int(resource_base_number))
+        permanent_base = random.sample(gather_all_temporary_cards({'set': "ZEN", "colors": "R"}), int(temporary_base_number))
+        temporary_base = random.sample(gather_all_permanent_cards({'set': "ZEN", "colors": "R"}), int(permanent_base_number))
+        # for i in range(num_of_cards):
+        #     self.deckster_list.append(i)
+        deck_list = []
+        for creature in creature_base:
+            deck_list.append(creature.name + f" -{creature.type}")
+        deck_list.append("---------")
+        for resource in resource_base:
+            deck_list.append(resource.name + f" -{resource.type}")
+        deck_list.append("---------")
+        for permanent in permanent_base:
+            deck_list.append(permanent.name + f" -{permanent.type}")
+        deck_list.append("---------")
+        for temporary in temporary_base:
+            deck_list.append(temporary.name + f" -{temporary.type}")
+        deck_list.append("---------")
+        return deck_list
 
     def download_card_image(self):
         pass
-
 
 # class MtgDepicter(TcgDepicter):
 #     def __init__(self, depict_settings: dict):

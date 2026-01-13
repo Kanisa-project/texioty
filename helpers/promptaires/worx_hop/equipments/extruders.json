@@ -1,8 +1,20 @@
 {
   "spaghetti": {
-    "noodle_base": "spinach",
+    "noodle_base": "flour",
     "length": 8,
     "thickness": 2,
     "is_spiral": false
+  },
+  "ziti": {
+    "noodle_base": "egg",
+    "length": 4,
+    "thickness": 8,
+    "is_spiral": false
+  },
+  "lasagna": {
+    "noodle_base": "sauce",
+    "length": 9,
+    "thickness": 3,
+    "is_spiral": true
   }
 }

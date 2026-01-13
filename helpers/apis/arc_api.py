@@ -24,7 +24,7 @@ class ArcApi(BasePrompt, BaseAPIHelper):
                               "[id]": "The id of the object or quest you want to find."},
             "args_desc": {'[items/quests/enemies]': 'The type of arc info to find.'},
             'examples': ['arc items', 'arc quests', 'arc enemies'],
-            "group_tag": "ARCA",
+            "group_tag": "PRUN",
             'font_color': u.rgb_to_hex(t.ARC_BLUE),
             'back_color': u.rgb_to_hex(t.BLACK)}
         self.helper_commands["get_arc"] = {
@@ -36,7 +36,7 @@ class ArcApi(BasePrompt, BaseAPIHelper):
             "possible_args": {' - ': 'No arguments available.'},
             "args_desc": {' - ': 'No arguments available.'},
             "examples": ['get_arc'],
-            "group_tag": "ARCA",
+            "group_tag": "PRUN",
             "font_color": u.rgb_to_hex(t.KHAKI),
             "back_color": u.rgb_to_hex(t.BLACK)}
 

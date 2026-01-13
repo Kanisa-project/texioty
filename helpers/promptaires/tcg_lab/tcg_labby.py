@@ -6,8 +6,12 @@ from PIL import Image, ImageDraw
 import random
 
 from helpers.promptaires.prompt_helper import BasePrompt
-# from src.widgets.basik_widget import BasikWidget
+from helpers.promptaires.tcg_lab.sourceDGM import DigimonAPIHelper
+from helpers.promptaires.tcg_lab.sourceLRCNA import LorcanaAPIHelper
 from settings import themery as t, alphanumers as s, utils as u, konfig as k
+from helpers.promptaires.tcg_lab.sourceMTG import MagicAPIHelper
+from helpers.promptaires.tcg_lab.sourcePKM import PokeAPIHelper
+from helpers.promptaires.tcg_lab.sourceYGO import YugiohAPIHelper
 
 TCG_OPTIONS = ['Magic the Gathering',
                'Pokemon',
@@ -33,6 +37,11 @@ class TCGLabby(BasePrompt):
             'Yu-Gi-Oh': 'yugiohs',
             'Digimon': 'digimons'
         }
+        self.magic_api = MagicAPIHelper()
+        self.pokemon_api = PokeAPIHelper()
+        self.yugioh_api = YugiohAPIHelper()
+        self.digimon_api = DigimonAPIHelper()
+        self.lorcana_api = LorcanaAPIHelper()
 
     def laboratory(self, lab_funcs: str):
         match lab_funcs:
@@ -79,8 +88,10 @@ class TCGLabby(BasePrompt):
 
     def card_downloader(self, tcg_choice: str):
         self.current_tcg = tcg_choice
-        download_profiles = u.retrieve_lab_profiles('downloaders')
-        self.decide_decision("Which downloader profile to use", download_profiles)
+        downloader_profiles = u.retrieve_lab_profiles('downloaders')
+        self.decide_decision("Which downloader profile to use", list(downloader_profiles.keys()))
+        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+            self.txo.master.deciding_function = self.download_cards
 
     def deck_generator(self, tcg_choice: str):
         self.current_tcg = tcg_choice
@@ -108,9 +119,39 @@ class TCGLabby(BasePrompt):
                 self.txo.priont_string("│a│")
                 self.txo.priont_string("└─┘")
 
+    def download_cards(self, profile_name):
+        tcgpack_profile = u.retrieve_lab_profiles('downloaders')[profile_name]
+        self.txo.priont_dict(tcgpack_profile)
+        print(profile_name)
+        if "magic" in profile_name:
+            self.magic_api.download_card_batch(tcgpack_profile['card_criteria'])
+        if "pokemon" in profile_name:
+            self.pokemon_api.download_card_batch(tcgpack_profile['card_criteria'])
+        if "yugioh" in profile_name:
+            self.yugioh_api.download_card_batch(tcgpack_profile['card_criteria'])
+        if "digimon" in profile_name:
+            self.digimon_api.download_card_batch(tcgpack_profile['card_criteria'])
+        if "lorcana" in profile_name:
+            self.lorcana_api.download_card_batch(tcgpack_profile['card_criteria'])
+
     def generate_decks(self, profile_name: str):
-        deck_profile = u.retrieve_lab_profiles('decksters')
+        deck_profile = u.retrieve_lab_profiles('decksters')[profile_name]
         self.txo.priont_dict(deck_profile)
+        if "magic" in profile_name:
+            self.txo.priont_list(self.magic_api.generate_random_deck(deck_profile), numbered=True)
+        if "pokemon" in profile_name:
+            # self.pokemon_api.download_card_batch(deck_profile['card_criteria'])
+            pass
+        if "yugioh" in profile_name:
+#             self.yugioh_api.download_card_batch(deck_profile['card_criteria'])
+            pass
+        if "digimon" in profile_name:
+#             self.digimon_api.download_card_batch(deck_profile['card_criteria'])
+            pass
+        if "lorcana" in profile_name:
+#             self.lorcana_api.download_card_batch(deck_profile['card_criteria'])
+            pass
+
 
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)

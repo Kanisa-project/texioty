@@ -23,12 +23,12 @@ class LorcanaAPIHelper(TCGAPIHelper):
         print(f"✓  Added {new_card['Name']} to database.")
 
     def download_card_batch(self, batch_config: dict):
-        super().download_card_batch(batch_config)
+        # super().download_card_batch(batch_config)
         random_color_types = requests.get(self.fetch_cards_url({'type': self.batch_type,
                                                             'color': random.choice(self.batch_colors.split(','))}))
-        for i in range(batch_config['batch_size']):
+        for i in range(batch_config['pack_size']):
             card = random.choice(random_color_types.json())
-            self.add_card_database(card)
+            # self.add_card_database(card)
             if 'Character' in card['Type']:
                 # print(f"{card['Image']}    {card['Strength']}/{card['Willpower']}")
                 pass
@@ -38,7 +38,7 @@ class LorcanaAPIHelper(TCGAPIHelper):
             if card['Image'] is not None:
                 img_data = requests.get(f'{card['Image']}').content
                 save_name = f"{card['Set_Num']}_" + card['Name'].replace(" ", "_")
-                with open(f'/home/trevor/Documents/PycharmProjects/KanisaBot/fotoes/cardsLorcana/{save_name}.png',
+                with open(f'helpers/promptaires/tcg_lab/cards/lorcana/{save_name}.png',
                           'wb') as handler:
                     handler.write(img_data)
                 print(f"✓  Downloaded {save_name} into /fotoes/cardsLorcana")

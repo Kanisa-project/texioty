@@ -185,7 +185,7 @@ class BostonTrail(BaseGaim):
         self.display_party_members()
 
     def welcome_message(self, welcoming_msgs=None):
-        self.clear_texoty()
+        self.txo.clear_no_header()
         self.display_party_members()
         self.display_inventory_distance()
 

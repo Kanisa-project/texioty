@@ -1,8 +1,9 @@
 import os
 import tkinter as tk
 import texioty
+from helpers.pijun_cooper import PijunCooper
 
-from helpers.digiary import Digiary
+from helpers.promptaires.digiary.digiary import Digiary
 from helpers.registries.api_registry import ApiRegistry
 from helpers.registries.gaim_registry import GaimRegistry
 from helpers.registries.help_registry import HelpRegistry
@@ -26,6 +27,7 @@ class Application(tk.Frame):
         self.txty = texioty.Texioty(width=screen_w, height=screen_h)
         self.available_helpers = {
             "TXTY": self.txty,
+            "PIJN": PijunCooper,
             "DIRY": Digiary,
             "GAIM": GaimRegistry,
             "PRUN": PromptRegistry,

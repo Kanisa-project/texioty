@@ -2,80 +2,17 @@ import json
 import os.path
 import random
 import tkinter as tk
-# from dataclasses import dataclass
 from typing import Callable
-# import inspect
-from helpers.digiary import Digiary
+
+from helpers.pijun_cooper import PijunCooper
+from helpers.promptaires.digiary.digiary import Digiary
 from helpers.registries.command_registry import CommandRegistry
 from helpers.tex_helper import TexiotyHelper
-# from helpers.registries.gaim_registry import GaimRegistry
 from settings import utils as u
-# from helpers.registries.prompt_registry import PromptRegistry
-# from helpers.tex_helper import TexiotyHelper
 from settings import themery as t, konfig as k
 
 import texoty
 import texity
-
-# @dataclass
-# class CommandRegistry:
-#     """
-#     A registry for custom commands for use within Texioty.
-#     """
-#     commands: Dict[str, texity.Command]
-#
-#     def remove_commands(self, help_symb: str):
-#         """
-#         Remove a command from the registry.
-#         """
-#         if help_symb in self.commands:
-#             del self.commands[help_symb]
-#             return
-#
-#         to_delete = [name for name, cmd in self.commands.items() if getattr(cmd, "group_tag", None) == help_symb]
-#         for name in to_delete:
-#             del self.commands[name]
-#
-#     def add_command_dict(self, command_info: Dict[str, Any]):
-#         try:
-#             self.commands[command_info["name"]] = texity.Command(name=command_info["name"],
-#                                                                  usage=command_info["usage"],
-#                                                                  handler=command_info["call_func"],
-#                                                                  lite_desc=command_info["lite_desc"],
-#                                                                  full_desc=command_info["full_desc"],
-#                                                                  possible_args=command_info["possible_args"],
-#                                                                  args_desc=command_info["args_desc"],
-#                                                                  examples=command_info["examples"],
-#                                                                  group_tag=command_info["group_tag"],
-#                                                                  font_color=command_info["font_color"],
-#                                                                  back_color=command_info["back_color"])
-#             print(command_info["name"], "added to registry.")
-#         except KeyError as e:
-#             print(f"Missing key in command dictionary: {e}")
-#
-#
-#
-#     def execute_command(self, name: str, exec_args: tuple) -> None:
-#         """
-#         Executes the command being used in Texity.
-#         :param name: Name of the command being executed.
-#         :param exec_args: Arguments to be used in the command execution.
-#         :return:
-#         """
-#         command = self.commands.get(name)
-#         if not command:
-#             print(f"Command '{name}' not found.")
-#             return
-#
-#         cmd_handler = command.handler
-#         print("Inspecting", name, inspect.getfullargspec(cmd_handler).annotations)
-#         try:
-#             if len(inspect.getfullargspec(cmd_handler).args) == 1:
-#                 cmd_handler()
-#             else:
-#                 cmd_handler(*exec_args)
-#         except Exception as e:
-#             print(f"Error executing '{name}': {e}", exec_args)
 
 
 class Texioty(tk.LabelFrame):
@@ -110,6 +47,7 @@ class Texioty(tk.LabelFrame):
 
         self.digiary = Digiary(self.texoty, self.texity)
         self.base_helper = TexiotyHelper(self.texoty, self.texity)
+        # self.cooper = PijunCooper(self.texoty, self.texity)
         self.default_helpers = {"TXTY": [self],
                                 "HLPR": [self.base_helper],
                                 "DIRY": [self.digiary]}
@@ -169,8 +107,6 @@ class Texioty(tk.LabelFrame):
                 'font_color': u.rgb_to_hex(t.PURPLE),
                 'back_color': u.rgb_to_hex(t.BLACK)}
         }
-        # self.helper_commands = self.active_helper_dict["HLPR"][0].helper_commands|self.known_commands_dict
-        # self.active_helper_dict['HLPR'][0].welcome_message()
         self.add_command_group(self.helper_commands_dict)
 
     def display_konfig_settings(self):
@@ -335,7 +271,7 @@ class Texioty(tk.LabelFrame):
 
     def log_profile_in(self, prof_name: str, prof_pass: str):
         """Check args[0] for a username and args[1] for a password. Logs in a profile if a match."""
-        print("LogIN", prof_name, prof_pass)
+        # print("LogIN", prof_name, prof_pass)
         try:
             if prof_name in self.available_profiles:
                 try:
@@ -346,13 +282,13 @@ class Texioty(tk.LabelFrame):
                                                      self.active_profile.color_theme[1],
                                                      16,
                                                      self.active_profile.color_theme[2])
+                        k.ACTIVE_PROFILE_USERNAME = prof_name
                     else:
                         self.texoty.priont_string(f"⦙⦓ Wrong password, buster.")
                 except IndexError:
                     self.texoty.priont_string(f"⦙⦓ Don't forget to type a password.")
             else:
                 self.texoty.priont_string(f"⦙⦓ I don't recognize '{prof_name}' as profile username.")
-                self.active_helper_dict['PRUN'][0].prompt_texioty_profile()
         except IndexError:
             self.texoty.priont_string("⦙⦓ What username to login to?")
 

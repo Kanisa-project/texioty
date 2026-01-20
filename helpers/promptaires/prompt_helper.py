@@ -1,8 +1,18 @@
+from typing import Optional, List, Callable, Tuple
+from dataclasses import dataclass
 import texity
 import texoty
 from helpers.tex_helper import TexiotyHelper
 from tkinter import END
 
+
+@dataclass
+class Question:
+    key: str
+    prompt: str
+    default: Optional[str] = None
+    choices: Optional[List[str]] = None
+    validator: Optional[Callable[[str], Tuple[bool, Optional[str]]]] = None
 
 class BasePrompt(TexiotyHelper):
     def __init__(self, txo: texoty.TEXOTY, txi: texity.TEXITY, prompt_name: str = "BasePrompt"):

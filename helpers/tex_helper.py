@@ -1,15 +1,14 @@
 import datetime
 import random
-from dataclasses import dataclass
 from tkinter import END
-from typing import Optional, List, Callable, Tuple
+from typing import Optional
 
 from settings import themery as t, utils as u
 import texity
 import texoty
 from settings.utils import PRO_TIPS
 
-ALPHA_BLK_DICT = {
+BLOCK_CHAR_DICT = {
     ' ': ['   ', '   ', '   '],
     '-': ['   ', ' ▁▁', '▔▔ '],
     '_': ['   ', '   ', '▁▁▁'],
@@ -62,14 +61,6 @@ ALPHA_BLK_DICT = {
     }
 
 
-@dataclass
-class Question:
-    key: str
-    prompt: str
-    default: Optional[str] = None
-    choices: Optional[List[str]] = None
-    validator: Optional[Callable[[str], Tuple[bool, Optional[str]]]] = None
-
 
 class TexiotyHelper:
     """
@@ -98,7 +89,7 @@ class TexiotyHelper:
             "commands": {
                 'name': 'commands',
                 'usage': '"commands"',
-                'call_func': self.display_available_commands,
+                'call_func': self.display_all_available_commands,
                 'lite_desc': 'Displays available commands.',
                 'full_desc': ['Displays all commands available to use in the active Texioty mode.',
                               'Available at any point using the system.'],
@@ -128,14 +119,14 @@ class TexiotyHelper:
             }
         }
 
-    def print_block_font(self, blk_word: str):
+    def priont_block_font(self, blk_word: str):
         top_line = ''
         mid_line = ''
         bot_line = ''
         for letter in blk_word:
-            top_line += " " + ALPHA_BLK_DICT[letter][0] + " "
-            mid_line += " " + ALPHA_BLK_DICT[letter][1] + " "
-            bot_line += " " + ALPHA_BLK_DICT[letter][2] + " "
+            top_line += " " + BLOCK_CHAR_DICT[letter][0] + " "
+            mid_line += " " + BLOCK_CHAR_DICT[letter][1] + " "
+            bot_line += " " + BLOCK_CHAR_DICT[letter][2] + " "
         self.txo.priont_string(top_line)
         self.txo.priont_string(mid_line)
         self.txo.priont_string(bot_line)
@@ -150,7 +141,7 @@ class TexiotyHelper:
         if clear_it:
             self.txo.clear_no_header()
         self.txo.priont_string(random.choice('─━═_')*(len(title_word)*5))
-        self.print_block_font(title_word)
+        self.priont_block_font(title_word)
         self.txo.priont_string(random.choice('─━═_')*(len(title_word)*5))
 
     def display_help_message(self, help_topic: Optional[str] = None):
@@ -184,9 +175,9 @@ class TexiotyHelper:
             self.txo.priont_string("⦙⦓ Here are a list of the active helpers:")
             self.txo.priont_list(self.txo.master.active_helpers, parent_key="Helper Tags:")
 
-    def display_available_commands(self):
+    def display_all_available_commands(self):
         """Prints out all the commands that are available."""
-        self.clear_texoty()
+        self.txo.clear_no_header()
         available_commands = self.txo.master.registry.commands
         # print(available_commands)
         for helper_group in self.txo.master.active_helpers:
@@ -196,10 +187,10 @@ class TexiotyHelper:
                 if available_commands[command].group_tag == helper_group:
                     self.txo.priont_command_lite(self.txo.master.registry.commands[command])
 
-    def clear_texoty(self):
-        """Clear all the text from texoty and replace the header."""
-        self.txo.delete("0.0", END)
-        self.txo.set_header()
+    # def clear_texoty(self):
+    #     """Clear all the text from texoty and replace the header."""
+    #     self.txo.delete("0.0", END)
+    #     self.txo.set_header()
 
     def welcome_message(self):
         """

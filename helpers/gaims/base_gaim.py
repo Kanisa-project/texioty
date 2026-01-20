@@ -132,8 +132,8 @@ class BaseGaim(TexiotyHelper):
         # self.txo.priont_string("Using the 'welcome' command will show the welcome message and some directions.")
 
 
-    def display_available_commands(self):
-        super().display_available_commands()
+    def display_all_available_commands(self):
+        super().display_all_available_commands()
 
     def stop_game(self):
         txty = self.txo.master

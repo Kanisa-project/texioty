@@ -5,7 +5,7 @@ import threading
 import time
 from typing import Optional
 
-from texioty import texoty, texity
+# from texioty import texoty, texity
 from .tex_helper import TexiotyHelper
 from settings import themery as t
 
@@ -134,7 +134,7 @@ class CoopWatcher(threading.Thread):
 
 
 class PijunCooper(TexiotyHelper):
-    def __init__(self, txo: texoty.TEXOTY, txi: texity.TEXITY, host='127.0.0.1', port=8008):
+    def __init__(self, txo, txi,  host='127.0.0.1', port=8008):
         super().__init__(txo, txi)
         self.buff_size = 1024
         self.pijun_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -145,7 +145,7 @@ class PijunCooper(TexiotyHelper):
         self.pijuns = {}
         self.pijun_addresses = {}
         self.watcher = CoopWatcher(self.on_pijun_change, poll_interval=POLL_INTERVAL)
-        # self.watcher.start()
+        self.watcher.start()
         self.helper_commands['coop'] = {"name": "coop",
                                         "usage": "'coop [0-255] [GAIM_ENGINE]'",
                                         "call_func": self.host_dovecot,

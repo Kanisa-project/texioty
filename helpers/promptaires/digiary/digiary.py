@@ -2,14 +2,15 @@ import datetime
 import glob
 import random
 from os.path import exists
-from typing import Optional, Callable
+from typing import Callable
 
+from helpers.promptaires.prompt_helper import BasePrompt
 from settings import themery as t, utils as u
 
 from helpers.tex_helper import TexiotyHelper
 
 
-class Digiary(TexiotyHelper):
+class Digiary(BasePrompt):
     def __init__(self, txo, txi):
         super().__init__(txo, txi)
         self.txo = txo
@@ -19,30 +20,30 @@ class Digiary(TexiotyHelper):
         self.in_diary_mode = False
         self.helper_commands["dear_sys,"] = {
             "name": "dear_sys,",
-               "usage": '"dear_sys,"',
-               "call_func": self.start_diary_mode,
-               "lite_desc": "Starts a diary entry.",
-               "full_desc": ["Starts a diary entry.",
-                             "Can only be used in Texioty mode."],
-               "possible_args": {' - ': 'No arguments available.'},
-               "args_desc": {' - ': 'No arguments available.'},
-               'examples': ['dear_sys,'],
-               "group_tag": "DIRY",
-               "font_color": u.rgb_to_hex(t.VIOLET_RED),
-               "back_color": u.rgb_to_hex(t.BLACK)}
+            "usage": '"dear_sys,"',
+            "call_func": self.start_diary_mode,
+            "lite_desc": "Starts a diary entry.",
+            "full_desc": ["Starts a diary entry.",
+                          "Can only be used in Texioty mode."],
+            "possible_args": {' - ': 'No arguments available.'},
+            "args_desc": {' - ': 'No arguments available.'},
+            'examples': ['dear_sys,'],
+            "group_tag": "DIRY",
+            "font_color": u.rgb_to_hex(t.VIOLET_RED),
+            "back_color": u.rgb_to_hex(t.BLACK)}
         self.helper_commands["/until_next_time"] = {
             "name": "/until_next_time",
-                      "usage": '"/until_next_time"',
-                      "call_func": self.stop_diary_mode,
-                      "lite_desc": "Ends a diary entry.",
-                      "full_desc": ["Ends a diary entry.",
-                                    "Can only be used inside of Digiary mode."],
-                      "possible_args": {' - ': 'No arguments available.'},
-                      "args_desc": {' - ': 'No arguments available.'},
-                      'examples': ['/until_next_time'],
-                      "group_tag": "DIRY",
-                      "font_color": u.rgb_to_hex(t.VIOLET_RED),
-                      "back_color": u.rgb_to_hex(t.BLACK)}
+            "usage": '"/until_next_time"',
+            "call_func": self.stop_diary_mode,
+            "lite_desc": "Ends a diary entry.",
+            "full_desc": ["Ends a diary entry.",
+                          "Can only be used inside of Digiary mode."],
+            "possible_args": {' - ': 'No arguments available.'},
+            "args_desc": {' - ': 'No arguments available.'},
+            'examples': ['/until_next_time'],
+            "group_tag": "DIRY",
+            "font_color": u.rgb_to_hex(t.VIOLET_RED),
+            "back_color": u.rgb_to_hex(t.BLACK)}
         self.helper_commands["redear"] = {
             "name": "redear",
             "usage": '"redear"',
@@ -87,11 +88,13 @@ class Digiary(TexiotyHelper):
         return end_now
 
     def select_diary_entry_date(self):
-        self.txo.master.prompt_runner.tcg_lab.decide_decision("What date to read?", glob.glob('filesOutput/.diary/*.txt'))
+        """Decide which dated diary entry to read."""
+        self.decide_decision("What date to read?", glob.glob('filesOutput/.diary/*.txt'))
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
             self.txo.master.deciding_function = self.priont_date_entry
 
     def priont_date_entry(self, entry_filename):
+        """Priont each line of a dated diary entry."""
         with open(entry_filename, "r") as dentry:
             lines = dentry.readlines()
             for line in lines:

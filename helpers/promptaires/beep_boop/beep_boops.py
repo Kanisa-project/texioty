@@ -65,7 +65,6 @@ class BeepBoops(BasePrompt):
 
     def play_boop(self, boop_msg: Optional[str]="none"):
         note_list = []
-        max_len = 0
         pad_list = []
         for letter in boop_msg:
             fs_dur_freq = a.ALPHANUMERIC_NOTE_PATTERNS[letter][0]

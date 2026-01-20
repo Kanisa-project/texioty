@@ -4,21 +4,15 @@ from typing import List
 import mtgsdk
 import requests
 
-# from config import settings as s
 from mtgsdk import Card
 from PIL import Image, ImageDraw
 import random
 
 from helpers import dbHelper
-from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper, TCGAPIHelper
-# from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
+from helpers.promptaires.tcg_lab.sourceTCG import TCGAPIHelper
 from settings.alphanumers import MORSE_CODE_RULES
 from settings.utils import clamp
 from settings import themery as t
-
-# from question_prompts.spell_depicter import TcgDepicter
-# from tcg_api.sourceTCG import BaseAPIHelper
-# from src.utils import dbHelper, glythed
 
 
 
@@ -104,15 +98,6 @@ def download_goblins():
                       'wb') as handler:
                 handler.write(img_data)
             print(f"Downloaded {save_name}")
-
-
-# def depict_playmat(spell_name: str) -> (Image, str):
-#     nim = Image.new("RGBA", (1920, 1120), (0, 0, 0, 0))
-#     spellCard = random.choice(Card.where(name=spell_name).all())
-#     save_name = spellCard.name.replace(" ", "_")
-#     imaj: Image = depict_spell(nim, build_spell_dict(spellCard))
-#     imaj.save(f"tcg_lab\\playmats\\{save_name}.png")
-#     return imaj, save_name
 
 
 def depict_spell(img: Image, spell_info_dict: dict) -> Image:
@@ -234,13 +219,6 @@ def build_mana_color_dict(spell_mana_cost: str) -> dict:
         light_mana_colors = []
         avg_mana_colors = []
         dark_mana_colors = []
-    # print("Full cost", spell_mana_cost, mana_symbols)
-    # for cost in casting_cost_color_dict:
-    #     print(f'{cost}- ')
-    #     for shade in casting_cost_color_dict[cost]:
-    #         print(f'{" "*(len(cost)-2)}{shade}- ')
-    #         for color in casting_cost_color_dict[cost][shade]:
-    #             print(f'{" " * (len(cost)+len(shade)-4)} {color}')
     return casting_cost_color_dict
 
 
@@ -439,27 +417,6 @@ def build_spell_dict(spell_card):
     return None
 
 
-# def create_depiction(img: Image, depicted_dict: dict):
-#     depicted_spell = depict_spell(img, depicted_dict)
-#     save_name = depicted_dict['spell_name'].replace(" ", "_")
-#     if os.path.isdir(f"tcg_lab/{depicted_dict['spell_set'].upper()}/"):
-#         save_path = f"tcg_lab/{depicted_dict['spell_set'].upper()}/{save_name}.png"
-#     else:
-#         os.mkdir(f"tcg_lab/{depicted_dict['spell_set'].upper()}")
-#         save_path = f"tcg_lab/{depicted_dict['spell_set'].upper()}/{save_name}.png"
-#     depicted_spell.save(save_path)
-
-
-# def run_depicter_from_script(depict_config_dict: dict):
-#     depicter = MtgDepicter(depict_config_dict)
-#     rando_card = random.choice(Card.where(name="Ultimatum").all())
-#     card_datadict = depicter.build_card_datadict(rando_card)
-#     depicted_card = depicter.depict_card(card_datadict)
-#     save_name = depicter.card_datadict['name'].replace(' ', '_')
-#     depicted_card.save(f"depictions/{save_name}.png")
-#     print(f"Saved {save_name}")
-
-
 def gather_all_creature_cards(creature_criteria: dict) -> List[Card]:
     set_code = creature_criteria['set']
     colors = creature_criteria['colors']
@@ -548,18 +505,6 @@ class MagicAPIHelper(TCGAPIHelper):
                         total_cards.remove(card)
                     except ValueError:
                         continue
-
-
-
-                # for mtg_type in batch_config["card_types"]:
-                #     print(mtg_type, "-MTGTYPE")
-                #     if mtg_type in card.type:
-                #         print(True, "TYPEDS")
-                #         for color_id in batch_config["pack_colors"]:
-                #             if card.color_identity is not None:
-                #                 if color_id in card.color_identity:
-                #                     current_cards.append(card)
-                #                     self.add_card_database(card)
         try:
             chosen_cards = random.sample(total_cards, batch_config['pack_size'])
         except ValueError as e:
@@ -607,20 +552,3 @@ class MagicAPIHelper(TCGAPIHelper):
 
     def download_card_image(self):
         pass
-
-# class MtgDepicter(TcgDepicter):
-#     def __init__(self, depict_settings: dict):
-#         super().__init__(depict_settings)
-#
-#     def build_card_datadict(self, card_data) -> dict:
-#         card_datadict = {
-#             'name': card_data.name,
-#             'type': card_data.type,
-#             'rarity': card_data.rarity,
-#             'id': f"{card_data.set}-{card_data.number}"
-#         }
-#         self.card_datadict = card_datadict
-#         return card_datadict
-#
-# def run_puzzler_from_script(param):
-#     return None

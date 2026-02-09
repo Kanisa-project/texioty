@@ -4,9 +4,10 @@ import random
 import tkinter as tk
 from typing import Callable
 
-from helpers.pijun_cooper import PijunCooper
+from helpers.pijun import PijunCooper
 from helpers.promptaires.digiary.digiary import Digiary
 from helpers.registries.command_registry import CommandRegistry
+from helpers.registries.gaim_registry import GaimRegistry
 from helpers.tex_helper import TexiotyHelper
 from settings import utils as u
 from settings import themery as t, konfig as k
@@ -47,6 +48,7 @@ class Texioty(tk.LabelFrame):
 
         self.digiary = Digiary(self.texoty, self.texity)
         self.base_helper = TexiotyHelper(self.texoty, self.texity)
+        self.gaim_registry = GaimRegistry(self.texoty, self.texity)
         # self.cooper = PijunCooper(self.texoty, self.texity)
         self.default_helpers = {"TXTY": [self],
                                 "HLPR": [self.base_helper],

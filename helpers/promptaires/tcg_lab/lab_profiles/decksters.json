@@ -1,5 +1,5 @@
 {
-  "default_magic": {
+  "default": {
     "number_of_cards": 60,
     "resource_portion": 25,
     "creature_portion": 25,
@@ -14,7 +14,7 @@
       "benevolent_percent": 50
     }
   },
-  "heavy_aggro_magic": {
+  "aggro": {
     "number_of_cards": 60,
     "resource_portion": 33,
     "creature_portion": 45,
@@ -29,7 +29,7 @@
       "benevolent_percent": 50
     }
   },
-  "mega_control_magic": {
+  "midrange": {
     "number_of_cards": 60,
     "resource_portion": 35,
     "creature_portion": 15,
@@ -44,8 +44,38 @@
       "benevolent_percent": 35
     }
   },
-  "big_magic": {
+  "control": {
     "number_of_cards": 100,
+    "resource_portion": 35,
+    "creature_portion": 15,
+    "permanent_portion": 15,
+    "temporary_portion": 35,
+    "permanents_split": {
+      "malevolent_percent": 35,
+      "benevolent_percent": 65
+    },
+    "temporarys_split": {
+      "malevolent_percent": 65,
+      "benevolent_percent": 35
+    }
+  },
+  "combo": {
+    "number_of_cards": 100,
+    "resource_portion": 35,
+    "creature_portion": 15,
+    "permanent_portion": 15,
+    "temporary_portion": 35,
+    "permanents_split": {
+      "malevolent_percent": 35,
+      "benevolent_percent": 65
+    },
+    "temporarys_split": {
+      "malevolent_percent": 65,
+      "benevolent_percent": 35
+    }
+  },
+  "engine": {
+    "number_of_cards": 70,
     "resource_portion": 35,
     "creature_portion": 15,
     "permanent_portion": 15,

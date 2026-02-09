@@ -9,9 +9,9 @@ from PIL import Image, ImageDraw
 import random
 
 from helpers import dbHelper
-from helpers.promptaires.tcg_lab.sourceTCG import TCGAPIHelper
-from settings.alphanumers import MORSE_CODE_RULES
-from settings.utils import clamp
+from helpers.dbHelper import DatabaseHelper
+from helpers.promptaires.tcg_lab.sourceTCG import SourceTCG
+from settings.utils import clamp, polypointlist, plan_angled_line
 from settings import themery as t
 
 
@@ -28,60 +28,45 @@ COLOR_DICT = {
 }
 
 
-def plan_angled_line(x, y, angle, length, width, color, img_size):
-    endx1 = x
-    endy1 = y
-    endx2 = x + length * math.cos(math.radians(angle + 180)) * -1
-    endy2 = y + length * math.sin(math.radians(angle + 180)) * -1
-    return (clamp(endx1, 0, img_size[0]),
-            clamp(endy1, 0, img_size[1]),
-            clamp(endx2, 0, img_size[0]),
-            clamp(endy2, 0, img_size[1])), width, color
-
-
-def polypointlist(sides: int, offset: int, cx: int, cy: int, radius: int) -> list:
-    step = 2 * math.pi / sides
-    offset = math.radians(offset)
-    pointlist = [(radius * math.cos(step * n + offset) + cx, radius * math.sin(step * n + offset) + cy) for n in
-                 range(0, int(sides) + 1)]
-    return pointlist
-
-
-def lsystem_string_maker(axioms: str, rules: dict, iterations: int) -> str:
-    for _ in range(iterations):
-        new_axioms = ''
-        for axiom in axioms:
-            if axiom in rules:
-                new_axioms += rules[axiom]
-            else:
-                new_axioms += axiom
-            axioms = new_axioms
-    return axioms
-
-
-def lsystem_morse_coder(lstring: str, start_point=(320, 320), start_length=32,
-                        start_width=1, start_color=(22, 143, 212)):
-    angle = 0
-    length = start_length
-    w, h = (960, 960)
-    width = start_width
-    color = start_color
-    prev_line_tuple = ((start_point[0], start_point[1], start_point[0], start_point[1]), width, color)
-    line_points_list = [prev_line_tuple]
-
-    for c in lstring:
-        if MORSE_CODE_RULES[c.lower()].startswith("ANGLE"):
-            angle += int(MORSE_CODE_RULES[c.lower()].split("ANGLE")[1])
-            angle = clamp(angle, -360, 360)
-        if MORSE_CODE_RULES[c.lower()].startswith("LINE"):
-            length = int(MORSE_CODE_RULES[c.lower()].split("LINE")[1])
-        line_tuple = plan_angled_line(prev_line_tuple[0][2], prev_line_tuple[0][3],
-                                      angle, length, width,
-                                      color, (w, h))
-        line_points_list.append(line_tuple)
-        prev_line_tuple = line_tuple
-    # color = random.choice(s.RANDOM_COLORS)
-    return line_points_list
+MAGIC_TEMPLATES = {
+    "all_cards": {
+        "number": [],
+        "name": [],
+        "colour": [],
+        "type": []
+    },
+    "land_cards": {
+        "number": [],
+        "name": [],
+        "colour": [],
+        "rarity": [],
+        "special_effect": []
+    },
+    "creature_cards": {
+        "number": [],
+        "hp": [],
+        "abilities": [],
+        "lvl": [],
+        "name": [],
+        "colour": [],
+        "rarity": [],
+        "stage": [],
+        "retreat_cost": [],
+        "attacks": []
+    },
+    "enchantment_cards": {
+        "number": [],
+        "effects": [],
+        "name": [],
+        "rarity": []
+    },
+    "instant_cards": {
+        "number": [],
+        "effects": [],
+        "name": [],
+        "rarity": []
+    }
+}
 
 
 def download_goblins():
@@ -100,7 +85,7 @@ def download_goblins():
             print(f"Downloaded {save_name}")
 
 
-def depict_spell(img: Image, spell_info_dict: dict) -> Image:
+def depict_spell(img: Image.Image, spell_info_dict: dict) -> Image.Image:
     spell_name = spell_info_dict['spell_name']
     spell_cmc = spell_info_dict['spell_cmc']
     spell_colors = spell_info_dict['spell_colors']
@@ -222,7 +207,7 @@ def build_mana_color_dict(spell_mana_cost: str) -> dict:
     return casting_cost_color_dict
 
 
-def average_the_colors(src_img: Image, color_name: str) -> tuple:
+def average_the_colors(src_img: Image.Image, color_name: str) -> tuple:
     colors = src_img.getcolors(maxcolors=300000)
     r_avg = 0
     g_avg = 0
@@ -418,39 +403,44 @@ def build_spell_dict(spell_card):
 
 
 def gather_all_creature_cards(creature_criteria: dict) -> List[Card]:
-    set_code = creature_criteria['set']
+    set_code = creature_criteria['set_codes']
     colors = creature_criteria['colors']
     creature_cards = mtgsdk.Card.where(set=set_code).where(colors=colors).where(type="Creature").all()
     return creature_cards
 
 def gather_all_resource_cards(resource_criteria: dict) -> List[Card]:
-    set_code = resource_criteria['set']
+    set_code = resource_criteria['set_codes']
     colors = resource_criteria['colors']
     land_cards = mtgsdk.Card.where(set=set_code).where(color_id=colors).where(type="Land").all()
     return land_cards
 
 def gather_all_temporary_cards(temporary_criteria: dict) -> List[Card]:
-    set_code = temporary_criteria['set']
+    set_code = temporary_criteria['set_codes']
     colors = temporary_criteria['colors']
     sorcery_cards = mtgsdk.Card.where(set=set_code).where(color_identity=colors).where(type="Sorcery").all()
     instant_cards = mtgsdk.Card.where(set=set_code).where(color_identity=colors).where(type="Instant").all()
     return sorcery_cards + instant_cards
 
 def gather_all_permanent_cards(permanent_criteria: dict) -> List[Card]:
-    set_code = permanent_criteria['set']
+    set_code = permanent_criteria['set_codes']
     colors = permanent_criteria['colors']
     artifact_cards = mtgsdk.Card.where(set=set_code).where(color_identity=colors).where(type="Artifact").all()
     enchantment_cards = mtgsdk.Card.where(set=set_code).where(color_identity=colors).where(type="Enchantment").all()
     return artifact_cards + enchantment_cards
 
 
-class MagicAPIHelper(TCGAPIHelper):
+class SourceMTG(SourceTCG):
     def __init__(self):
         super().__init__()
+
         self.tcg_title_name = 'magic'
         self.creature_races = ['Goblin', 'Elf', 'Human', 'Horror', 'Hydra', 'Bird', 'Spider', 'Troll', 'Beast',
                                'Turtle', 'Cat']
         self.creature_jobs = ['Cleric', 'Wizard', 'Ninja', 'Samurai', 'Warrior', 'Rogue', 'Pirate']
+        self.enchantment_types = ['Aura', 'Curse', 'Quest']
+        # self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/cards/databases/magic_cards.db')
+        self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/magic_cards.db')
+        self.db_helper.create_tables_from_templates(MAGIC_TEMPLATES)
         self.color_translation_dict = {
             'R': 'red',
             'G': 'green',
@@ -461,6 +451,13 @@ class MagicAPIHelper(TCGAPIHelper):
             'L': 'light grey',
         }
 
+    def get_card_batch(self, card_criteria):
+        creatures = gather_all_creature_cards(card_criteria)
+        resources = gather_all_resource_cards(card_criteria)
+        temps = gather_all_temporary_cards(card_criteria)
+        perms = gather_all_permanent_cards(card_criteria)
+        return creatures + resources + temps + perms
+
     def add_card_database(self, new_card):
         all_card_insert_query = dbHelper.insert_table_statement_maker('all_cards', ['card_name', 'card_rarity', 'card_type', 'card_set', 'card_id'])[0]
         if self.db_helper.execute_query(all_card_insert_query, [new_card.name, new_card.rarity, new_card.type, "Magic the Gathering", new_card.set+'-'+new_card.number]) is None:
@@ -468,63 +465,75 @@ class MagicAPIHelper(TCGAPIHelper):
         else:
             print(f"✓  Added {new_card.name} to database.")
 
-    def download_card_batch(self, batch_config: dict):
-        # super().download_card_batch(batch_config)
-        print(batch_config)
-        total_cards = []
-        current_cards = []
-        for set_code in batch_config["pack_sets"]:
-            for card_in_set in mtgsdk.Card.where(set=set_code).all():
-                total_cards.append(card_in_set)
+    def download_card_batch(self, batch):
+        for i in range(3):
+            card = random.choice(batch)
+            img_data = requests.get(f'{card.image_url}').content
+            save_name = f"{card.set.upper()}_" + card.name.replace(" ", "_")
+            proper_save_name = save_name.replace("_//_", "-")
+            with open(f'cards/{proper_save_name}.png', 'wb') as handler:
+                handler.write(img_data)
 
-        for card in total_cards:
-            print(card, 'card')
-            try:
-                for color_id in card.color_identity:
-                    if color_id not in batch_config['pack_colors']:
-                        print(card.color_identity, "-", batch_config['pack_colors'])
-                        try:
-                            total_cards.remove(card)
-                        except ValueError:
-                            continue
-            except TypeError:
-                pass
-
-            for card_type in batch_config['card_types']:
-                if card_type not in card.type:
-                    print(card.type, "-", card_type)
-                    try:
-                        total_cards.remove(card)
-                    except ValueError:
-                        continue
-
-            for rarity in batch_config['rarities']:
-                if rarity not in card.rarity:
-                    print(card.rarity, "-", batch_config['rarities'])
-                    try:
-                        total_cards.remove(card)
-                    except ValueError:
-                        continue
-        try:
-            chosen_cards = random.sample(total_cards, batch_config['pack_size'])
-        except ValueError as e:
-            # print(e)
-            chosen_cards = random.sample(total_cards, len(total_cards))
-
-        for card in chosen_cards:
-            if card.image_url is not None:
-                img_data = requests.get(f'{card.image_url}').content
-                save_name = f"{card.set.upper()}_" + card.name.replace(" ", "_")
-                proper_save_name = save_name.replace("_//_", "-")
-                with open(f'helpers/promptaires/tcg_lab/cards/magic/{proper_save_name}.png',
-                          'wb') as handler:
-                    handler.write(img_data)
-                print(f"✓  Downloaded {save_name} into /fotoes/cardsMagic")
-            else:
-                print(f"✕  Card '{card.name}' has no image to download.")
+    #
+    # def download_card_batch(self, batch_config: dict):
+    #     # super().download_card_batch(batch_config)
+    #     print(batch_config)
+    #     total_cards = []
+    #     current_cards = []
+    #     for set_code in batch_config["pack_sets"]:
+    #         for card_in_set in mtgsdk.Card.where(set=set_code).all():
+    #             total_cards.append(card_in_set)
+    #
+    #     for card in total_cards:
+    #         print(card, 'card')
+    #         try:
+    #             for color_id in card.color_identity:
+    #                 if color_id not in batch_config['pack_colors']:
+    #                     print(card.color_identity, "-", batch_config['pack_colors'])
+    #                     try:
+    #                         total_cards.remove(card)
+    #                     except ValueError:
+    #                         continue
+    #         except TypeError:
+    #             pass
+    #
+    #         for card_type in batch_config['card_types']:
+    #             if card_type not in card.type:
+    #                 print(card.type, "-", card_type)
+    #                 try:
+    #                     total_cards.remove(card)
+    #                 except ValueError:
+    #                     continue
+    #
+    #         for rarity in batch_config['rarities']:
+    #             if rarity not in card.rarity:
+    #                 print(card.rarity, "-", batch_config['rarities'])
+    #                 try:
+    #                     total_cards.remove(card)
+    #                 except ValueError:
+    #                     continue
+    #     try:
+    #         chosen_cards = random.sample(total_cards, batch_config['pack_size'])
+    #     except ValueError as e:
+    #         # print(e)
+    #         chosen_cards = random.sample(total_cards, len(total_cards))
+    #
+    #     for card in chosen_cards:
+    #         if card.image_url is not None:
+    #             self.add_card_local_database(card)
+    #             img_data = requests.get(f'{card.image_url}').content
+    #             save_name = f"{card.set.upper()}_" + card.name.replace(" ", "_")
+    #             proper_save_name = save_name.replace("_//_", "-")
+    #             with open(f'cards/{proper_save_name}.png',
+    #             # with open(f'helpers/promptaires/tcg_lab/cards/magic/{proper_save_name}.png',
+    #                       'wb') as handler:
+    #                 handler.write(img_data)
+    #             print(f"✓  Downloaded {save_name} into /fotoes/cardsMagic")
+    #         else:
+    #             print(f"✕  Card '{card.name}' has no image to download.")
 
     def generate_random_deck(self, deck_config: dict) -> List[Card]:
-        num_of_cards = deck_config['number_of_cards']
+        num_of_cards = deck_config['deck_size']
         creature_base_number = num_of_cards * (deck_config['creature_portion']/100)
         resource_base_number = num_of_cards * (deck_config['resource_portion']/100)
         permanent_base_number = num_of_cards * (deck_config['permanent_portion']/100)
@@ -533,8 +542,6 @@ class MagicAPIHelper(TCGAPIHelper):
         resource_base = random.sample(gather_all_resource_cards({'set': "ZEN", "colors": "R"}), int(resource_base_number))
         permanent_base = random.sample(gather_all_temporary_cards({'set': "ZEN", "colors": "R"}), int(temporary_base_number))
         temporary_base = random.sample(gather_all_permanent_cards({'set': "ZEN", "colors": "R"}), int(permanent_base_number))
-        # for i in range(num_of_cards):
-        #     self.deckster_list.append(i)
         deck_list = []
         for creature in creature_base:
             deck_list.append(creature.name + f" -{creature.type}")
@@ -550,5 +557,7 @@ class MagicAPIHelper(TCGAPIHelper):
         deck_list.append("---------")
         return deck_list
 
-    def download_card_image(self):
-        pass
+
+if __name__ == '__main__':
+    mtg = SourceMTG()
+    mtg.download_card_batch({'pack_sets': ['ZEN'], 'pack_colors': ['R'], 'card_types': ['Creature'], 'rarities': ['Basic'], 'pack_size': 10})

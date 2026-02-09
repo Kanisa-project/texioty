@@ -1,11 +1,91 @@
 import random
 import sqlite3
 import sqlite3 as sq3
+from typing import Any
+
 # from helpers import dummyHelper
 from mtgsdk import Card
 
+# ALL_CARDS_TEMPLATE = {"card_name": [],
+#                      "card_set": [],
+#                      "card_id": [],
+#                      "card_rarity": [],
+#                      "card_type": []}
 
-def create_table_statement_maker(table_name: str, column_names: list) -> (str, dict):
+ALL_CARDS_TEMPLATE = {"card_id": [],  ## set_code + card_number
+                      "card_game": [],
+                      "card_name": [],
+                      "card_type": []}
+
+DIGIMON_CARD_TEMPLATE = {"card_name": [],
+                         "card_attribute": [],
+                         "card_digi_type": [],
+                         "card_play_cost": [],
+                         "card_dp": []}
+
+YUGIOH_CARD_TEMPLATE = {"card_name": [],
+                        "card_attribute": [],
+                        "card_digi_type": [],
+                        "card_": [],
+                        "card_": []}
+
+POKEMON_CARD_TEMPLATE = {"card_name": [],
+                         "card_type": [],
+                         "card_rarity": [],
+                         "card_": [],
+                         "card_dp": []}
+
+LORCANA_CARD_TEMPLATE = {"card_name": [],
+                         "card_ink": [],
+                         "card_type": [],
+                         "card_cost": [],
+                         "card_lore": []}
+
+MTG_CARD_TEMPLATE = {"card_name": [],
+                     "card_set": [],
+                     "card_cmc": [],
+                     "card_layout": [],
+                     "card_type": [],
+                     "card_colors": [],
+                     "card_mana_cost": []}
+
+ALL_GAIM_TEMPLATE = {"player_name": [],
+                     "high_score": [],
+                     "prev_score": [],
+                     "average_score": [],
+                     "total_score": []}
+
+CANDY_SLINGER_TEMPLATE = {"player_name": [],
+                          "money": [],
+                          "gumdrop": [],
+                          "gummy_bear": [],
+                          "gummy_worm": [],
+                          "candy_cane": [],
+                          "jelly_bean": [],
+                          "fruit_chew": [],
+                          "rock_candy": [],
+                          "candy_corn": [],
+                          "sour_gummy ring": [],
+                          "butterscotch disc": []}
+
+K_PAINT_TEMPLATE = {"player_name": [],
+                    "high_score": [],
+                    "prev_score": [],
+                    "color_palette": []}
+
+OTHAIDO_TEMPLATE = {"player_name": [],
+                    "high_score": [],
+                    "prev_score": [],
+                    "num_of_aett": []}
+
+PYLANES_TEMPLATE = {"player_name": [],
+                    "player_wizard": [],
+                    "high_score": [],
+                    "prev_score": []}
+
+
+
+def create_table_statement_maker(table_name: str, column_names: list) -> tuple[str, dict[Any, list[Any]]]:
     """
     Makes a sqlite3 statement from the parameters.
     :param table_name: Name of the new table being created.
@@ -19,7 +99,7 @@ def create_table_statement_maker(table_name: str, column_names: list) -> (str, d
     statement_maked = f'CREATE TABLE IF NOT EXISTS {table_name} ('
     statement_maked += f'{column_names[0]} TEXT PRIMARY KEY,'
     for column in column_names[1:]:
-        statement_maked += f' {column} TEXT NOT NULL,'
+        statement_maked += f' {column} TEXT,'
         add_new_table_info[column] = []
     return statement_maked[:-1] + ');', add_new_table_info
 
@@ -76,20 +156,20 @@ class DatabaseHelper:
             create_sql = create_table_statement_maker(table_name, list(template.keys()))[0]
             self.execute_query(create_sql)
 
-    # def create_tcg_tables(self):
-    #     """
-    #     Create each of the TCG tables.
-    #     :return:
-    #     """
-    #     tcg_templates = {
-    #         'all_cards': dummyHelper.all_card_template,
-    #         'pokemon_cards': dummyHelper.pokemon_card_template,
-    #         'magic_cards': dummyHelper.mtg_card_template,
-    #         'digimon_cards': dummyHelper.digimon_card_template,
-    #         'lorcana_cards': dummyHelper.lorcana_card_template,
-    #         'yugioh_cards': dummyHelper.yugioh_card_template
-    #     }
-    #     self.create_tables_from_templates(tcg_templates)
+    def create_tcg_tables(self):
+        """
+        Create each of the TCG tables.
+        :return:
+        """
+        tcg_templates = {
+            'all_cards': ALL_CARDS_TEMPLATE,
+            'pokemon_cards': POKEMON_CARD_TEMPLATE,
+            'magic_cards': MTG_CARD_TEMPLATE,
+            'digimon_cards': DIGIMON_CARD_TEMPLATE,
+            'lorcana_cards': LORCANA_CARD_TEMPLATE,
+            'yugioh_cards': YUGIOH_CARD_TEMPLATE
+        }
+        self.create_tables_from_templates(tcg_templates)
 
     # def create_gaim_tables(self):
     #     """Create necessary starting tables and populate the columns."""
@@ -105,7 +185,7 @@ class DatabaseHelper:
     def init_databases(self):
         """Create necessary starting tables and populate the columns."""
         create_all_gaims_table_sql = create_table_statement_maker('all_gaims',
-                                                                    list(dummyHelper.all_gaim_template.keys()))[0]
+                                                                  list(ALL_GAIM_TEMPLATE.keys()))[0]
         self.execute_query(create_all_gaims_table_sql)
 
 
@@ -137,10 +217,10 @@ class DatabaseHelper:
             else:
                 cursor.execute(query)
             self.connection.commit()
-            # print(query.split()[0] + f" {query.split()[5]}" + "\n     ╚►  executed successfully.")
+            print(query.split()[0] + f" {query.split()[5]}" + "\n     ╚►  executed successfully.")
             return cursor
         except sq3.Error as e:
-            # print(f"Query execution failed for this reason: {e}")
+            print(f"Query execution failed for this reason: {e}")
             return None
 
     def fetch_data(self, query: str, params=None):
@@ -169,14 +249,14 @@ class DatabaseHelper:
 
 
 if __name__ == "__main__":
-    dbhelp = DatabaseHelper('mtg_spells.db')
+    dbhelp = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/mtg_spells.db')
     card_list = Card.where(set="ONE").where(layout='normal').all()
     for i in range(16):
         next_card = random.choice(card_list)
         while "Land" in next_card.type:
             next_card = random.choice(card_list)
         insert_norm_spells_table_sql = insert_table_statement_maker('norm_spells',
-                                                                    list(dummyHelper.mtg_card_template.keys()))[0]
+                                                                    list(dummyHelper.MTG_CARD_TEMPLATE.keys()))[0]
         print(dbhelp.execute_query(insert_norm_spells_table_sql,
                                    [next_card.name, next_card.set, str(next_card.cmc),
                                     next_card.layout, next_card.type.replace('\u2014', '-'),

@@ -187,11 +187,6 @@ class TexiotyHelper:
                 if available_commands[command].group_tag == helper_group:
                     self.txo.priont_command_lite(self.txo.master.registry.commands[command])
 
-    # def clear_texoty(self):
-    #     """Clear all the text from texoty and replace the header."""
-    #     self.txo.delete("0.0", END)
-    #     self.txo.set_header()
-
     def welcome_message(self):
         """
         Display welcoming messages with a few commands to get started.

@@ -1,8 +1,50 @@
 import os
 import random
-from typing import Callable
+from typing import Callable, Any
 
-from helpers.promptaires.prompt_helper import BasePrompt
+from helpers.promptaires.prompt_helper import BasePrompt, Question, QuestionType
+
+FOTO_WORX_PROFILE_DICT = {
+    "printer": {
+        "table_size": ["people_integer",
+                       "How many people are in the table?",
+                       QuestionType.STRICT, "4"],
+        "ticket_items": ["printer_items",
+                         "What text will be printing onto the image?",
+                         QuestionType.STRICT, []],
+        "ticket_time_in": ["time_in_float",
+                           "Give a float for ticket_time_in.",
+                           QuestionType.STRICT, 1.7],
+        "ticket_time_out": ["time_out_float",
+                            "Give a float for ticket_time_out.",
+                            QuestionType.STRICT, 6.4],
+        "table_number": ["table_integer",
+                         "Give an integer for the table_number.",
+                         QuestionType.STRICT, 67],
+        "server_name": ["server_string",
+                        "What's the server_name.",
+                        QuestionType.STRICT, "Ginger"],
+    },
+    "friar": {
+        "grease_temp": ["grease_temp_integer", "What temperature is the grease?", QuestionType.STRICT, 471],
+        "basket_depth": ["basket_depth_integer", "How deep is the basket?", QuestionType.STRICT, 7],
+        "cook_timer": ["cook_timer_float", "How long is the timer float?", QuestionType.STRICT, 12.6]
+    }
+}
+
+
+def dict_to_question_prompt_factory(profile_dict: dict) -> dict[str, Question]:
+    question_dict = {}
+    for profile_key, profile_value in profile_dict.items():
+        print(profile_key, profile_value)
+        match len(profile_value):
+            case 3:
+                question_dict[profile_key] = Question(profile_value[0], profile_value[1], profile_value[2])
+            case 4:
+                question_dict[profile_key] = Question(profile_value[0], profile_value[1], profile_value[2], profile_value[3])
+            case _:
+                raise ValueError(f"Invalid profile_dict length: {len(profile_value)}")
+    return question_dict
 
 
 class Profilizer(BasePrompt):
@@ -18,15 +60,21 @@ class Profilizer(BasePrompt):
         match profile_type:
             case 'texioty':
                 self.prompt_texioty_profile()
-            case 'laser-tag':
+            case 'laser_tag':
                 self.prompt_lasertag_profile()
-            case 'fotofuncs':
-                pass
+            case 'foto_worx':
+                self.prompt_foto_worx_profile()
             case 'tcg_lab':
                 pass
             case 'word_gaims':
                 self.decide_word_gaims_profile()
 
+    def prompt_foto_worx_profile(self):
+        question_dict = dict_to_question_prompt_factory(FOTO_WORX_PROFILE_DICT["printer"])
+        print(question_dict)
+        self.txo.master.change_current_mode("Questionnaire", self.helper_commands)
+
+        self.start_question_prompt(question_dict)
 
     def prompt_texioty_profile(self):
         self.txo.master.change_current_mode("Questionnaire", self.helper_commands)

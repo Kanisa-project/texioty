@@ -1,7 +1,7 @@
 {
   "slimetoad_playmat_fillin_sleeves": {
     "card_criteria": {
-      "name": "Slime Toad"
+      "type": "Trap Card"
     },
     "fillin": {
       "difficulty": 4,

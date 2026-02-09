@@ -10,6 +10,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 class FotoWorxHop(BasePrompt):
+    """
+    The worxhop for fotoes. You can put an image on the flatop, through the slicer, in the deep friar.
+    """
     def __init__(self, txo, txi):
         super().__init__(txo, txi)
         self.current_equipment = None
@@ -52,16 +55,17 @@ class FotoWorxHop(BasePrompt):
         #         self.decide_decision("What to ticket print", list(u.retrieve_worx_profiles("printers").keys()), equipment.lower())
         #         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
         #             self.txo.master.deciding_function = self.set_foto_profile_dict
-        self.image_to_cook_with()
+        self.decide_image_for_cook()
 
-    def image_to_cook_with(self):
-        self.decide_decision("What image to cook with", glob.glob('helpers/promptaires/worx_hop/fotoes/base_img*.jpeg'))
+    def decide_image_for_cook(self):
+        self.decide_foto_decision("What image to cook with", glob.glob('helpers/promptaires/worx_hop/fotoes/base_img*.jpeg'), "foto_opt")
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
             self.txo.master.deciding_function = self.image_to_station
 
 
     def image_to_station(self, image_path):
-        self.cook_image = Image.open(image_path)
+        if image_path not in ['<pg', 'pg>']:
+            self.cook_image = Image.open(image_path)
         self.decide_decision("At the station", list(u.retrieve_worx_profiles(self.current_equipment).keys()))
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
             self.txo.master.deciding_function = self.set_foto_profile_dict

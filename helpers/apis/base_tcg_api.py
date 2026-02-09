@@ -1,4 +1,3 @@
-import requests
 import random
 from dotenv import load_dotenv
 from helpers import dbHelper
@@ -11,7 +10,7 @@ load_dotenv()
 class TCGAPI(BaseAPIHelper):
     def __init__(self):
         super().__init__()
-        self.db_helper = dbHelper.DatabaseHelper('utils/tcg_cards.db')
+        # self.db_helper = dbHelper.DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/tcg_cards.db')
         self.base_url = 'https://api.psacard.com/publicapi/'
         self.previous_endpoint = ''
         self.endpoint_names = {'cert': ['GetByCertNumber', 'GetByCertNumberForFileAppend', 'GetImagesByCertNumber'],
@@ -30,9 +29,9 @@ class TCGAPI(BaseAPIHelper):
     def get_card_database(self, card_type="R4ND0M") -> dict:
         pass
 
-    def add_card_database(self, new_card):
-        # all_card_insert_query = dbHelper.insert_table_statement_maker('all_cards', ['card_name', 'card_rarity', 'card_type', 'card_set', 'card_id'])[0]
-        # self.db_helper.execute_query(all_card_insert_query, [new_card.name, new_card.rarity, new_card.type, new_card.set, new_card.number])
+    def add_card_local_database(self, new_card):
+        all_card_insert_query = dbHelper.insert_table_statement_maker('all_cards', ['card_name', 'card_rarity', 'card_type', 'card_set', 'card_id'])[0]
+        self.db_helper.execute_query(all_card_insert_query, [new_card.name, new_card.rarity, new_card.type, new_card.set, new_card.number])
         pass
 
     def endpoint_builder(self, endpoint_name: str, url_ending: str):
@@ -47,12 +46,12 @@ class TCGAPI(BaseAPIHelper):
         # print('dict:  ', query_dict)
         return query_str
 
-    def get_random_psa_cert(self):
-        rand_cert = random.randint(1, 99999999)
-        rand_cert = f'{"0"*(8-len(str(rand_cert)))}{rand_cert}'
-        print(self.endpoint_builder('cert', 'GetByCertNumber/70507261'))
-        r = requests.get(self.endpoint_builder('cert', f'GetByCertNumber/70507261'), headers=self.headers)
-        return r.json()
+    # def get_random_psa_cert(self):
+    #     rand_cert = random.randint(1, 99999999)
+    #     rand_cert = f'{"0"*(8-len(str(rand_cert)))}{rand_cert}'
+    #     print(self.endpoint_builder('cert', 'GetByCertNumber/70507261'))
+    #     r = requests.get(self.endpoint_builder('cert', f'GetByCertNumber/70507261'), headers=self.headers)
+    #     return r.json()
 
     def download_card_batch(self, batch_config: dict):
         """
@@ -76,6 +75,6 @@ class TCGAPI(BaseAPIHelper):
         """
         pass
 
-if __name__ == "__main__":
-    based_helper = TCGAPI()
-    print(based_helper.get_random_psa_cert())
+# if __name__ == "__main__":
+#     based_helper = TCGAPI()
+#     print(based_helper.get_random_psa_cert())

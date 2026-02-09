@@ -159,7 +159,7 @@ class HangmanRunner(BaseGaim):
         """Generate a dictionary to solve by guessing one letter at a time."""
         for c in self.gaim_phrase:
             hide_it = "◙"
-            if c in [' ', '.', ',', '\'']:
+            if c in [' ', '.', ',', '\'', '?', '!']:
                 hide_it = c
             while c in self.hidden_dict:
                 c += c[0]
@@ -235,9 +235,17 @@ class HangmanRunner(BaseGaim):
         super().display_help_message(group_tag)
         # self.txo.priont_string("Using the 'guess' command will allow you to guess a single letter at a time.")
 
-
-    def display_available_commands(self):
-        super().display_available_commands()
-
     def stop_game(self):
         super().stop_game()
+
+def generate_hidden_dictionary(phrase) -> dict:
+    """Generate a dictionary to solve by guessing one letter at a time."""
+    hidden_dict = {}
+    for c in phrase:
+        hide_it = "◙"
+        if c in ' .,\'?!':
+            hide_it = c
+        while c in hidden_dict:
+            c += c[0]
+        hidden_dict[c] = hide_it
+    return hidden_dict

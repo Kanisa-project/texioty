@@ -1,48 +1,68 @@
 import os
 import random
+from typing import List
 
 import requests
 from dotenv import load_dotenv
 
-from helpers import dbHelper
-from helpers.promptaires.tcg_lab.sourceTCG import BaseAPIHelper, TCGAPIHelper
-# from helpers.promptaires.tcg_lab.tcg_labby import TcgDepicter
-
-from tcgdexsdk import TCGdex, Query
-# from tcg_api.sourceTCG import BaseAPIHelper
-# from src.utils import dbHelper, glythed
-# from src.utils.glythed import TcgDepicter
+from helpers.dbHelper import DatabaseHelper, insert_table_statement_maker
+from helpers.promptaires.tcg_lab.sourceTCG import SourceTCG
+from settings import themery as t, utils as u
+from tcgdexsdk import TCGdex, Query, Card
 
 load_dotenv()
 width_len = 36
 ENERGY_TYPES = ['grass', 'fire', 'water', 'lighting', 'psychic', 'fighting', 'darkness', 'metal']
 
 
-# class PkmnDepicter(TcgDepicter):
-#     def __init__(self, depict_settings: dict):
-#         super().__init__(depict_settings)
-#
-#     def build_card_datadict(self, card_data) -> dict:
-#         card_datadict = {
-#             'name': card_data.name,
-#             'type': ''.join(card_data.types),
-#             'rarity': card_data.rarity,
-#             'id': card_data.id
-#         }
-#         self.card_datadict = card_datadict
-#         return card_datadict
+POKEMON_TEMPLATES = {
+    "all_cards": {
+        "number": [],
+        "name": [],
+        "colour": [],
+        "type": []
+    },
+    "energy_cards": {
+        "number": [],
+        "name": [],
+        "colour": [],
+        "rarity": [],
+        "special_effect": []
+    },
+    "pokemon_cards": {
+        "number": [],
+        "hp": [],
+        "abilities": [],
+        "lvl": [],
+        "name": [],
+        "colour": [],
+        "rarity": [],
+        "stage": [],
+        "retreat_cost": [],
+        "attacks": []
+    },
+    "trainer_cards": {
+        "number": [],
+        "effects": [],
+        "name": [],
+        "rarity": []
+    }
+}
 
 
-class PokeAPIHelper(TCGAPIHelper):
+class SourcePKM(SourceTCG):
     """
     An API helper for Pokemon TCG depiction, puzzling and listering on the KanisaBot.
     """
     def __init__(self):
         super().__init__()
         self.CARDTYPES = ["Energy", "Pokemon", "Trainer"]
-        self.base_url = 'https://api.tcgdex.net/v2/en/'
-        self.endpoint_names = {'cards': [],
-                               'sets': []}
+        self.base_url = 'https://api.pokemontcg.io/v2/'
+        self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/pokemon_cards.db')
+        # self.db_helper = DatabaseHelper('cards/databases/pokemon_cards.db')
+        self.db_helper.create_tables_from_templates(POKEMON_TEMPLATES)
+        # self.endpoint_names = {'cards': [],
+        #                        'sets': []}
         self.color_translation_dict = {
             'grass': 'green',
             'fire': 'red',
@@ -51,95 +71,140 @@ class PokeAPIHelper(TCGAPIHelper):
             'psychic': 'purple',
             'fighting': 'brown',
             'darkness': 'dark grey',
-            'metal': 'light grey'
+            'metal': 'light grey',
+            'colorless': 'white'
         }
         self.sdk = TCGdex()
         self.tcg_title_name = 'pokemon'
 
-    def add_card_database(self, new_card):
-        all_card_insert_query = dbHelper.insert_table_statement_maker('all_cards', ['card_name', 'card_rarity', 'card_type', 'card_set', 'card_id'])[0]
-        self.db_helper.execute_query(all_card_insert_query, [new_card.name, new_card.rarity, new_card.category, "Pokemon TCG", new_card.id])
+    def gather_all_creature_cards(self, creature_criteria: dict) -> List[dict]:
+        # super().gather_all_creature_cards(creature_criteria)
+        pass
+
+
+    def add_card_local_database(self, new_card):
+        all_card_insert_query = insert_table_statement_maker('all_cards', ['number', 'name', 'colour', 'type'])[0]
+        new_card = self.sdk.card.getSync(new_card.id)
+        self.db_helper.execute_query(all_card_insert_query, [new_card.id, new_card.name, ', '.join(new_card.types) if new_card.types else "None", new_card.category])
         print(f"✓  Added {new_card.name} to database.")
+        match new_card.category:
+            case "Pokemon":
+                self.add_pokemon_local_database(new_card)
+            case "Energy":
+                self.add_energy_local_database(new_card)
+            case "Trainer":
+                self.add_trainer_local_database(new_card)
+
+    def add_pokemon_local_database(self, new_card):
+        tamer_card_insert_query = insert_table_statement_maker('pokemon_cards', ['number', 'hp', 'abilities', 'lvl', 'name', 'colour', 'rarity', 'stage', 'retreat_cost', 'attacks'])[0]
+        new_card = self.sdk.card.getSync(new_card.id)
+        print(new_card)
+        self.db_helper.execute_query(tamer_card_insert_query,
+                                     [new_card.id,
+                                      new_card.hp,
+                                      random.choice(new_card.abilities).name if new_card.abilities else "None",
+                                      str(new_card.level),
+                                      new_card.name,
+                                      ', '.join(new_card.types),
+                                      new_card.rarity,
+                                      new_card.stage,
+                                      new_card.retreat if new_card.retreat else "None",
+                                      random.choice(new_card.attacks).name])
+        print(f"✓  Added {new_card.name} to pokemon_cards.")
+
+    def add_energy_local_database(self, new_card):
+        """
+        Add an energy card from the card batch to the local database.
+        :new_card: The card to add to the database.
+        """
+        energy_card_insert_query = insert_table_statement_maker('energy_cards', ['number', 'name', 'colour', 'rarity', 'special_effect'])[0]
+        new_card = self.sdk.card.getSync(new_card.id)
+        print(new_card)
+        self.db_helper.execute_query(energy_card_insert_query,
+                                     [new_card.id,
+                                             new_card.name,
+                                             new_card.name.replace(" Energy", ""),
+                                             new_card.rarity,
+                                             str(new_card.effect)])
+        print(f"✓  Added {new_card.name} to energy_cards.")
+
+    def add_trainer_local_database(self, new_card):
+        """
+        Add a trainer card from the card batch.
+        """
+        trainer_card_insert_query = insert_table_statement_maker('trainer_cards', ['number', 'effects', 'name', 'rarity'])[0]
+        new_card = self.sdk.card.getSync(new_card.id)
+        print(new_card)
+        self.db_helper.execute_query(trainer_card_insert_query,
+                                     [new_card.id,
+                                      new_card.effect if not None else "None",
+                                      new_card.name,
+                                      new_card.rarity])
+        print(f"✓  Added {new_card.name} to trainer_cards.")
 
 
-    def download_card_batch(self, batch_config: dict):
-        endpoint = self.endpoint_builder('cards?', self.query_builder({'category': random.choice(batch_config["card_types"])}))
-        r = requests.get(self.endpoint_builder('cards?', self.query_builder({'category': random.choice(batch_config["card_types"])})))
-        print(endpoint, r.json())
-        try:
-            r.raise_for_status()
-        except Exception as e:
-            print(f"Error: {e} (status {getattr(r, 'status_code', 'unknown')})")
-            return
 
-        try:
-            payload = r.json()
-        except ValueError:
-            print("Invalid JSON received.")
-            return
-
-        if isinstance(payload, dict):
-            cards = None
-            for possible_key in ('cards', 'data', 'results', 'items'):
-                if possible_key in payload and isinstance(payload[possible_key], list):
-                    cards = payload[possible_key]
-                    break
-            if cards is None:
-                for v in payload.values():
-                    if isinstance(v, list):
-                        cards = v
-                        break
-            if cards is None:
-                print(f"API returned an object and no card list was found: {list(payload.keys())}")
-        elif isinstance(payload, list):
-            cards = payload
-        else:
-            print(f"API returned an object of unknown type: {type(payload)}")
-            return
-
-        chosen_count = min(batch_config.get('pack_size', 1), len(cards))
-        chosen_cards = random.sample(cards, chosen_count) if chosen_count <= len(cards) else [random.choice(cards) for _ in range(batch_config.get('batch_size', 1))]
-
-        for card in chosen_cards:
-            if isinstance(card, dict):
-                image_field = card.get('image') or card.get('image_url') or card.get('images')
-                if isinstance(image_field, dict):
-                    img_url = image_field.get('high') or image_field.get('png') or image_field.get('large')
-                else:
-                    img_url = image_field
-                name = card.get('name') or card.get('title') or 'unknown card'
-                set_info = card.get('set') or card.get('set_name') or {}
-                set_id = set_info.get('id') if isinstance(set_info, dict) else getattr(set_info, 'id', 'unknown')
-            else:
-                img_url = getattr(card, 'image', None)
-                name = getattr(card, 'name', 'unknown card')
-                set_id = getattr(getattr(card, 'set', None), 'id', 'unknown')
-
-            if not img_url or img_url in ("None", "none"):
-                print(f"Skipping {name} because it has no image.")
-                continue
-
-            if img_url.endswith('/high.png') or img_url.endswith('.png'):
-                final_url = img_url if img_url.endswith('.png') else img_url + '.png'
-            else:
-                final_url = img_url + '/high.png'
-
-            try:
-                img_data = requests.get(final_url).content
-            except Exception as e:
-                print(f"Failed to download {name} from {img_url}: {e}")
-                continue
-            print(card, "PKMNCard")
-            save_name = f"{(set_id or 'UNK').upper()}_" + card['name'].replace(" ", "_")
-            out_path = os.path.join('helpers/promptaires/tcg_lab/cards/pokemon', f'{save_name}.png')
-            try:
-                os.makedirs(os.path.dirname(out_path), exist_ok=True)
-                with open(out_path, 'wb') as handler:
+    def download_card_batch(self, batch):
+        print("Downloading cards:")
+        for _ in range(5):
+            card = random.choice(batch)
+            self.add_card_local_database(card)
+            if card.image is not None:
+                img_data = requests.get(f'{card.image}/high.png').content
+                save_name = f"{card.id}_" + card.name.replace(" ", "_")
+                with open(f'helpers/promptaires/tcg_lab/cards/pokemon/{save_name}.png',
+                # with open(f'cards/{save_name}.png',
+                          'wb') as handler:
                     handler.write(img_data)
-                print(f"✓  Downloaded {save_name} into /worx_hop/cardsPokemon")
-            except Exception as e:
-                print(f"Failed to write image to {out_path}: {e}")
+                print(f"Downloaded {save_name}")
 
+
+    def gather_correct_cards(self, card_criteria: dict):
+        search_criteria = {}
+        if 'name' in card_criteria:
+            search_criteria['name'] = card_criteria['name']
+        if 'color' in card_criteria:
+            search_criteria['color'] = card_criteria['color']
+        if 'rarity' in card_criteria:
+            search_criteria['rarity'] = card_criteria['rarity']
+        if 'artist' in card_criteria:
+            search_criteria['artist'] = card_criteria['artist']
+        if 'type' in card_criteria:
+            match card_criteria['type']:
+                case "Pokemon":
+                    search_criteria['type'] = card_criteria['type']
+                    return self.gather_pokemon_cards(search_criteria)
+                case "Energy":
+                    search_criteria['type'] = card_criteria['type']
+                    return self.gather_energy_cards(search_criteria)
+                case "Trainer":
+                    search_criteria['type'] = card_criteria['type']
+                    return self.gather_trainer_cards(search_criteria)
+                case _:
+                    return None
+        return None
+
+    def gather_pokemon_cards(self, creature_criteria):
+        if "name" in creature_criteria:
+            pokemons = self.sdk.card.listSync(Query().equal('name', creature_criteria['name']))
+        print(pokemons)
+        return pokemons
+
+    def gather_energy_cards(self, energy_criteria):
+        if "name" in energy_criteria:
+            energys = self.sdk.card.listSync(Query().equal('name', energy_criteria['name']))
+        elif "type" in energy_criteria:
+            energys = self.sdk.card.listSync(Query().equal('category', energy_criteria['type']))
+        else:
+            energys = []
+        print(energys)
+        return energys
+
+    def gather_trainer_cards(self, trainer_criteria):
+        if "name" in trainer_criteria:
+            trainers = self.sdk.card.listSync(Query().equal('name', trainer_criteria['name']))
+        print(trainers)
+        return trainers
 
 def download_snorlaxes():
     sdk = TCGdex()
@@ -153,25 +218,15 @@ def download_snorlaxes():
         if card.image is not None:
             img_data = requests.get(f'{card.image}/high.png').content
             save_name = f"{card.set.id.upper()}_" + card.name.replace(" ", "_")
-            with open(f'/worx_hop/cardsPokemon/{save_name}.png',
+            with open(f'cards/{save_name}.png',
                       'wb') as handler:
                 handler.write(img_data)
             print(f"Downloaded {save_name}")
 
 if __name__ == "__main__":
-    # download_energy_set()
-    download_snorlaxes()
+    pkm = SourcePKM()
+    batch_profile = u.retrieve_tcg_profiles('pokemons')["snorlax_playmat_wordsearch"]
+    card_batch = pkm.gather_correct_cards(batch_profile['card_criteria'])
+    pkm.download_card_batch(card_batch)
+    # download_snorlaxes()
 
-
-def run_depicter_from_script(depict_config_dict: dict):
-    depicter = PkmnDepicter(depict_config_dict)
-    sdk = TCGdex()
-    rando_card = random.choice(sdk.card.listSync(Query().equal('name', 'Snorlax')))
-    pkmn_card = sdk.card.getSync(rando_card.id)
-    card_datadict = depicter.build_card_datadict(pkmn_card)
-    depicted_card = depicter.depict_card(card_datadict)
-    depicted_card.save(f"depictions/{depicter.card_datadict['name']}.png")
-
-
-def run_puzzler_from_script(puzzle_config_dict: dict):
-    pass

@@ -1,16 +1,14 @@
 {
-  "snorlax_playmat_wordsearch": {
+  "snorlax_pokemon_playmat_wordsearch": {
     "card_criteria": {
       "name": "Snorlax",
-      "rarity": "Common"
+      "rarity": "Rare",
+      "type": "Pokemon"
     },
     "wordsearch": {
-      "difficulty": 1,
-      "number_of_words": 4
+      "difficulty": 1
     },
     "playmat": {
-      "background": [127, 197, 107, 20],
-      "image_size": [1920, 1120],
       "base_shape": "heptagon"
     }
   },
@@ -32,8 +30,6 @@
       "primary_resource": "Fighting Energy"
     },
     "sticker": {
-      "background": [127, 127, 127, 20],
-      "image_size": [420, 420],
       "base_shape": "triangle"
     }
   },
@@ -44,12 +40,9 @@
       "is_random": true
     },
     "wordsearch": {
-      "difficulty": 8,
-      "number_of_words": 8
+      "difficulty": 8
     },
     "sticker": {
-      "background": [127, 127, 127, 20],
-      "image_size": [420, 420],
       "base_shape": "circle"
     }
   },
@@ -61,8 +54,6 @@
       "set": "GYM"
     },
     "sleeves": {
-      "background": [217, 24, 227, 220],
-      "image_size": [400, 560],
       "base_shape": "circle"
     }
   }

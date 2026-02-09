@@ -1,14 +1,19 @@
 {
-  "basic_magic": {
+  "ajani_playmat_hangman_magic": {
     "card_criteria": {
       "pack_size": 3,
-      "pack_colors": ["W", "R", "G", "U", "B"],
-      "card_types": ["Land", "Sorcery", "Creature", "Artifact", "Instant"],
-      "rarities": ["Common", "Uncommon", "Rare"],
-      "pack_sets": ["ZEN", "OTJ", "LOR", "LRW"]
+      "pack_colors": ["G"],
+      "pack_types": ["Sorcery"],
+      "pack_rarities": ["Common"],
+      "pack_sets": ["WWK"]
     },
     "card_specific": {
-      "card_name": "Explore"
+      "card_name": "Explore",
+      "card_type": "Sorcery",
+      "card_color": "G",
+      "card_rarity": "Common",
+      "card_artist": "John Avon",
+      "card_set": "Worldwake"
     }
   },
   "basic_yugioh": {

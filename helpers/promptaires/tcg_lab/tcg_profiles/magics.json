@@ -1,16 +1,19 @@
 {
-  "ajani_playmat": {
+  "ajani_playmat_hangman_magic": {
     "card_criteria": {
-      "name": "Ajani",
-      "colors": "W"
+      "names": ["Ajani"],
+      "colors": ["W"],
+      "set_codes": ["M11", "M13", "ALA"]
     },
     "playmat": {
-      "background": [127, 197, 107, 20],
-      "image_size": [1920, 1120],
       "base_shape": "square"
+    },
+    "hangman": {
+      "phrase_length": "tall",
+      "difficulty": 3
     }
   },
-  "explore_playmat_sleeves_sticker_hangman": {
+  "explore": {
     "card_specific": {
       "name": "Explore",
       "colors": "G",
@@ -20,15 +23,17 @@
       "rarity": "Common"
     }
   },
-  "sorin_sticker": {
+  "sorin_sticker_wordsearch": {
     "card_criteria": {
       "name": "Sorin",
       "colors": "B|W"
     },
     "sticker": {
-      "background": [127, 127, 127, 20],
-      "image_size": [420, 420],
       "base_shape": "triangle"
+    },
+    "wordsearch": {
+      "board_size": "medium",
+      "difficulty": 2
     }
   },
   "kithkin_dexr_wordsearch": {
@@ -37,11 +42,12 @@
       "colors": "W"
     },
     "wordsearch": {
-      "difficulty": 8,
-      "number_of_words": 13
+      "board_size": "small",
+      "difficulty": 8
     },
     "dexr": {
       "deck_size": 80,
+      "deck_type": "default",
       "primary_resource": "Plains"
     }
   },
@@ -52,12 +58,10 @@
       "set": "ZEN"
     },
     "crossword": {
-      "difficulty": 1,
-      "number_of_words": 6
+      "board_size": "small",
+      "difficulty": 1
     },
     "sleeves": {
-      "background": [127, 127, 127, 20],
-      "image_size": [420, 420],
       "base_shape": "circle"
     }
   }

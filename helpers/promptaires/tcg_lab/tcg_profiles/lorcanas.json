@@ -1,7 +1,8 @@
 {
   "mickey_playmat_sleeves": {
     "card_criteria": {
-      "name": "Mickey Mouse"
+      "type": "Item",
+      "color": "Sapphire"
     },
     "playmat": {
       "image_size": [1920, 1120],

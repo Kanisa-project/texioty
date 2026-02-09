@@ -225,6 +225,7 @@ def retrieve_lab_profiles(lab_to_get: str) -> dict:
 
 def retrieve_tcg_profiles(tcg_to_get: str) -> dict:
     with open(f'helpers/promptaires/tcg_lab/tcg_profiles/{tcg_to_get}.json') as labbed_tcg:
+    # with open(f'tcg_profiles/{tcg_to_get}.json') as labbed_tcg:
         data = json.load(labbed_tcg)
         return data
 

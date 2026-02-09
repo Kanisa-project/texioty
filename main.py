@@ -1,20 +1,16 @@
 import os
 import tkinter as tk
 import texioty
-from helpers.pijun_cooper import PijunCooper
+from helpers.pijun import PijunCooper
 
 from helpers.promptaires.digiary.digiary import Digiary
-from helpers.registries.api_registry import ApiRegistry
+# from helpers.registries.api_registry import ApiRegistry
 from helpers.registries.gaim_registry import GaimRegistry
-from helpers.registries.help_registry import HelpRegistry
+# from helpers.registries.help_registry import HelpRegistry
 from helpers.registries.prompt_registry import PromptRegistry
 from settings.utils import check_file_exists
 from settings import konfig as k
 
-
-# def start_simple_client():
-#     client_script_path = "./test_client.py"
-#     threading.Thread(target=subprocess.run, args=(["python", client_script_path], )).start()
 
 
 class Application(tk.Frame):
@@ -27,12 +23,12 @@ class Application(tk.Frame):
         self.txty = texioty.Texioty(width=screen_w, height=screen_h)
         self.available_helpers = {
             "TXTY": self.txty,
-            "PIJN": PijunCooper,
+            # "PIJN": PijunCooper,
             "DIRY": Digiary,
             "GAIM": GaimRegistry,
             "PRUN": PromptRegistry,
-            "HLPR": HelpRegistry,
-            "HAPI": ApiRegistry
+            # "HLPR": HelpRegistry,
+            # "HAPI": ApiRegistry
         }
         for group_tag in k.UNLOCKED_HELPERS:
             if group_tag is not "TXTY":

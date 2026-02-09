@@ -2,13 +2,15 @@ import os
 import requests
 import random
 from dotenv import load_dotenv
-# from utils import dbHelper
 
 load_dotenv()
 
 
 class BaseAPIHelper:
     def __init__(self):
+        """
+        The most basic API helper. Another API helper should inherit from this.
+        """
         self.base_url = 'https://api.api-ninjas.com'
         self.previous_endpoint = ''
         self.endpoint_names = {

@@ -226,6 +226,12 @@ class TEXOTY(Text):
         self.insert(END, f"\n╫{help_shade}{group_tag} {break_line}╫", 'break_line')
 
 
+    def priont_foto_option(self, opt_num: int, foto_name: str, foto: PhotoImage):
+        self.insert(END, f"{opt_num}- {foto_name} ")
+        self.image_create(END, image=foto)
+        self.insert(END, '\n')
+        self.yview(END)
+
     def priont_string(self, striong: str, line_index=END):
         """
         Display a string of text at line_index.
@@ -233,6 +239,7 @@ class TEXOTY(Text):
         @param line_index: Index of where on the line to insert text.
         @param striong: String to display.
         """
+        # self.insert(line_index, striong)
         self.insert(line_index, striong + "\n")
         self.yview(END)
 

@@ -113,7 +113,7 @@ class CoopWatcher(threading.Thread):
 
     def run(self):
         while not self._stop.is_set():
-            print('CoopWatcher running.')
+            # print('CoopWatcher running.')
             try:
                 raw = get_linux_status()
                 interp = {}
@@ -135,6 +135,9 @@ class CoopWatcher(threading.Thread):
 
 class PijunCooper(TexiotyHelper):
     def __init__(self, txo, txi,  host='127.0.0.1', port=8008):
+        """
+        Allows for other devices to send a pijun to a coop server.
+        """
         super().__init__(txo, txi)
         self.buff_size = 1024
         self.pijun_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -242,6 +245,8 @@ class PijunCooper(TexiotyHelper):
         print(f"trying to bind to {address}")
         self.txo.priont_string(f"coop socket bound to {address} for playing {gaim_engine}")
         self.txo.priont_string("coop_thread_started")
+        if gaim_engine == "slinger":
+            self.start_slinger_coop()
 
 
     def start_slinger_coop(self):

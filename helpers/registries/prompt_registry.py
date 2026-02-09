@@ -24,8 +24,8 @@ FUNCFOTO_OPTIONS = ['Flatop_XT 2200',
                     'Tix>Prit C.R.1']
 
 PROFILIZER_OPTIONS = ['texioty',
-                      'laser-tag',
-                      'fotofuncs',
+                      'laser_tag',
+                      'foto_worx',
                       'tcg_lab',
                       'beop_boeps'
                       'word_gaims']

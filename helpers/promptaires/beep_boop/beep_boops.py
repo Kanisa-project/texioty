@@ -8,6 +8,7 @@ from helpers.promptaires.prompt_helper import BasePrompt
 import numpy as np
 import sounddevice as sd
 from settings import utils as u, themery as t, alphanumers as a
+from scipy.io import wavfile
 
 def generate_sine_wave(freq, duration, sample_rate=44100):
     print(freq, duration, sample_rate)
@@ -46,7 +47,18 @@ class BeepBoops(BasePrompt):
             'back_color': u.rgb_to_hex(t.BLACK)
         }
 
+    def save_audio(self, audio_data, filename, sample_rate=44100):
+        wavfile.write(filename, sample_rate, audio_data)
+        self.txo.priont_string(f"Audio saved to {filename}")
+
     def play_beep(self, beep_msg: Optional[str]="none"):
+        self.generate_beep(beep_msg)
+        sample_rate, audio_data = wavfile.read("beep.wav")
+        sd.play(audio_data, sample_rate)
+        sd.wait()
+
+
+    def generate_beep(self, beep_msg: Optional[str]="none"):
         note_list = []
         for letter in beep_msg:
             # print(letter)
@@ -59,7 +71,8 @@ class BeepBoops(BasePrompt):
             # print(data, "DATA")
             note_list.append(data)
         concatted = np.concatenate(note_list)
-        sd.play(concatted, 44100)
+        self.save_audio(concatted, "beep.wav")
+        # sd.play(concatted, 44100)
         self.txo.priont_string("Beep beep played!")
 
 

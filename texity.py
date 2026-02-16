@@ -8,7 +8,7 @@ from settings.utils import clamp
 class Command:
     name: str
     usage: str
-    handler: Any
+    call_func: Any
     lite_desc: str
     full_desc: List[str]
     possible_args: dict

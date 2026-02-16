@@ -1,3 +1,4 @@
+import glob
 import math
 from typing import Callable
 
@@ -26,6 +27,19 @@ TCG_OPTIONS = ['Magic the Gathering',
 #     def __init__(self, txo, txi):
 #         super().__init__(txo, txi)
 #         self.current_tcg = None
+
+def tc_blender(tcg1: str, tcg2: str) -> Image.Image:
+    """Blend a TCG card from two different card games."""
+    print(tcg1, tcg2)
+    src1_img_list = glob.glob(f'config/cards{tcg1.split(" ")[0]}/*.*')
+    src2_img_list = glob.glob(f'config/cards{tcg2.split(" ")[0]}/*.*')
+    img1 = Image.open(random.choice(src1_img_list))
+    img2 = Image.open(random.choice(src2_img_list))
+    if img1.mode is "P":
+        img1 = img1.convert("RGBA")
+    img2 = img2.convert(img1.mode).resize(img1.size)
+    blended = blend_foto(img1, img2, 0.5)
+    return blended
 
 
 class TCGLabby(BasePrompt):

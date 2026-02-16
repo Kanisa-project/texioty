@@ -1,8 +1,7 @@
 {
   "mozzarella_sticks": {
-    "grease_temp": 741,
-    "basket_depth":	6,
-    "cook_timer": 4.2
+    "basket_depth":	40,
+    "grease_temp": 120
   },
   "french_fries": {
     "grease_temp": 320,

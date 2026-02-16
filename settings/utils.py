@@ -4,10 +4,13 @@ import os
 import glob
 import random
 from dataclasses import dataclass
+from typing import List
 
 # from pytube import YouTube
 
 import requests
+from PIL import ImageFont
+
 # from dotenv import load_dotenv
 from settings import themery as t, alphanumers as a
 
@@ -135,6 +138,16 @@ def random_loading_phrase() -> str:
 def rgb_to_hex(color):
     return "#{:02x}{:02x}{:02x}".format(color[0], color[1], color[2])
 
+def get_point_delta(point1, point2) -> tuple:
+    return point2[0] - point1[0], point2[1] - point1[1]
+
+def get_random_font(font_size: int):
+    return ImageFont.truetype(random.choice(glob.glob('settings/fonts/*.ttf')), size=font_size)
+
+def get_font_server_name(server_fonts: List[str], font_size: int):
+    font_name = random.choice(server_fonts)
+    print(font_name)
+    return ImageFont.truetype(f'settings/fonts/{font_name}', size=font_size)
 
 @dataclass
 class TexiotyProfile:

@@ -2,22 +2,24 @@ import json
 import os.path
 import random
 import tkinter as tk
-from typing import Callable
+from typing import Callable, Dict
 
 from helpers.pijun import PijunCooper
 from helpers.promptaires.digiary.digiary import Digiary
+from helpers.promptaires.prompt_helper import UserResponse, ResponseType, Question
 from helpers.registries.command_registry import CommandRegistry
 from helpers.registries.gaim_registry import GaimRegistry
 from helpers.tex_helper import TexiotyHelper
 from settings import utils as u
-from settings import themery as t, konfig as k
+from settings import themery as t, konfig as k, alphanumers as a
+from helpers.promptaires.profilizer import PROFILE_NAMING_KEYS
 
 import texoty
 import texity
 
 
 class Texioty(tk.LabelFrame):
-    def __init__(self, width, height, master=None):
+    def __init__(self, width, height, helper_registry=None, master=None):
         """
         Textual input from Texity, such as commands and other necessary inputs. Textual output from Texoty, such as help display
         and confirmation prompting.
@@ -27,8 +29,9 @@ class Texioty(tk.LabelFrame):
         :param master: Parent widget
         """
         super(Texioty, self).__init__(master)
+        self.helper_registry = helper_registry
         self.current_mode = "Texioty"
-        self.registry = CommandRegistry({})
+        self.command_registry = CommandRegistry({})
 
         self.active_helpers = k.UNLOCKED_HELPERS
         self.available_profiles = u.available_profiles
@@ -46,14 +49,14 @@ class Texioty(tk.LabelFrame):
         self.texity.bind('<KP_Enter>', lambda e: self.process_texity())
         self.texity.bind('<Return>', lambda e: self.process_texity())
 
-        self.digiary = Digiary(self.texoty, self.texity)
-        self.base_helper = TexiotyHelper(self.texoty, self.texity)
-        self.gaim_registry = GaimRegistry(self.texoty, self.texity)
+        # self.digiary = Digiary(self.texoty, self.texity)
+        # self.base_helper = TexiotyHelper(self.texoty, self.texity)
+        # self.gaim_registry = GaimRegistry(self.texoty, self.texity)
         # self.cooper = PijunCooper(self.texoty, self.texity)
-        self.default_helpers = {"TXTY": [self],
-                                "HLPR": [self.base_helper],
-                                "DIRY": [self.digiary]}
-        self.active_helper_dict = self.default_helpers
+        # self.default_helpers = {"TXTY": [self],
+        #                         "HLPR": [self.base_helper],
+        #                         "DIRY": [self.digiary]}
+        # self.active_helper_dict = self.default_helpers
         self.deciding_function = None
 
 
@@ -111,6 +114,19 @@ class Texioty(tk.LabelFrame):
         }
         self.add_command_group(self.helper_commands_dict)
 
+        if helper_registry:
+            for tag, helper in helper_registry.get_all_helpers().items():
+                if hasattr(helper, "helper_commands"):
+                    for cmd_name, cmd_config in helper.helper_commands.items():
+                        self.command_registry.register_command(cmd_name, cmd_config)
+
+    def register_helper_commands(self, helper_tag: str):
+        if self.helper_registry:
+            helper = self.helper_registry.get_helper(helper_tag)
+            if helper and hasattr(helper, "helper_commands"):
+                for cmd_name, cmd_config in helper.helper_commands.items():
+                    self.command_registry.register_command(cmd_name, cmd_config)
+
     def display_konfig_settings(self):
         pass
 
@@ -140,10 +156,10 @@ class Texioty(tk.LabelFrame):
         # print(group_of_cmds)
         for command in group_of_cmds:
             # print("COM", command)
-            self.registry.add_command_dict(group_of_cmds[command])
+            self.command_registry.add_command_dict(group_of_cmds[command])
 
     def remove_commands(self):
-        self.registry.commands = {}
+        self.command_registry.commands = {}
         self.active_helpers = k.UNLOCKED_HELPERS
 
     def change_current_mode(self, new_mode: str, new_commands: dict):
@@ -163,9 +179,9 @@ class Texioty(tk.LabelFrame):
         self.texity.no_options()
         self.remove_commands()
         self.add_command_group(self.helper_commands_dict)
-        for key, helper in self.default_helpers.items():
+        for key, helper in self.helper_registry.get_all_helpers().items():
             # print(key, helper)
-            self.add_helper_widget(key, helper[0])
+            self.register_helper_commands(key)
 
     def close_program(self):
         """
@@ -221,7 +237,7 @@ class Texioty(tk.LabelFrame):
 
             case "Questionnaire":
                 parsed_input = self.texity.parse_question_response()
-                self.active_helper_dict["PRUN"][0].profilemake.store_response(parsed_input)
+                self.helper_registry.get_helper("PRUN").profilemake.store_response(parsed_input)
 
             case "Decisioning":
                 parsed_input = self.texity.parse_decision()
@@ -240,8 +256,8 @@ class Texioty(tk.LabelFrame):
                 else:
                     self.execute_command(parsed_input[0], parsed_input[1:])
 
-                if self.active_helper_dict["GAIM"][0].current_gaim:
-                    prefix = self.active_helper_dict["GAIM"][0].current_gaim.gaim_prefix
+                if self.helper_registry.get_helper("GAIM").current_gaim:
+                    prefix = self.helper_registry.get_helper("GAIM").current_gaim.gaim_prefix
         self.texity.command_string_var.set(prefix)
 
     def set_texity_input(self, new_input):
@@ -257,9 +273,9 @@ class Texioty(tk.LabelFrame):
         """
         # self.clear_texoty()
         # print("cmd args", command, arguments)
-        if command in self.registry.commands:
+        if command in self.command_registry.commands:
             try:
-                self.registry.execute_command(command, arguments)
+                self.command_registry.execute_command(command, arguments)
             except PermissionError as e:
                 self.texoty.priont_string(str(e))
             except KeyError as e:
@@ -294,44 +310,37 @@ class Texioty(tk.LabelFrame):
         except IndexError:
             self.texoty.priont_string("⦙⦓ What username to login to?")
 
-    def log_profile_out(self, args):
-        if self.active_profile:
-            #TODO Save each used command for the profile
-            self.texoty.priont_string(f"Logging {self.active_profile.username} out. Goodbye!")
-            self.active_profile = self.available_profiles["guest"]
-            self.texoty.set_header_theme(self.active_profile.color_theme[0],
-                                         self.active_profile.color_theme[1],
-                                         16,
-                                         self.active_profile.color_theme[2])
-        else:
-            self.texoty.priont_string("You have to log in before you can log out.")
+    # def log_profile_out(self, args):
+    #     if self.active_profile:
+    #         #TODO Save each used command for the profile
+    #         self.texoty.priont_string(f"Logging {self.active_profile.username} out. Goodbye!")
+    #         self.active_profile = self.available_profiles["guest"]
+    #         self.texoty.set_header_theme(self.active_profile.color_theme[0],
+    #                                      self.active_profile.color_theme[1],
+    #                                      16,
+    #                                      self.active_profile.color_theme[2])
+    #     else:
+    #         self.texoty.priont_string("You have to log in before you can log out.")
 
-    def create_profile(self, args):
-        """Create a new profile."""
-        print('create_profile_args: ', args)
-        if "yes" in args:
-            self.texoty.priont_string("Creating a new profile...")
-            profile_name = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['profile_name'][1]
-            password = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['password'][1]
-            color_theme = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['color_theme'][1]
-            color_theme = t.DEFAULT_THEMES[color_theme]
-            self.available_profiles[profile_name] = u.TexiotyProfile(profile_name, password, color_theme)
-            save_path = f"filesOutput/.profiles/{profile_name}.json"
-            # print(save_path)
-            if not os.path.exists(save_path):
-                with open(save_path, 'w') as f:
-                    f.write(json.dumps({"texioty": self.available_profiles[profile_name].__dict__}, indent=4, sort_keys=True,
-                                       default=lambda o: o.__dict__, ensure_ascii=False))
-                    self.texoty.priont_string(f"Profile '{profile_name}' created.")
-
-            else:
-                self.texoty.priont_string(f"Profile '{profile_name}' already exists, did not create.")
-
-    # def dl_youtube_vid(self, args):
-    #     self.texoty.priont_string("Attempting to download:")
-    #     self.texoty.priont_string(f"    {args}")
-    #     u.download_youtube_video(args)
-    #     self.texoty.priont_string(f"Maybe finished, maybe completed.")
+    # def create_profile(self, args):
+    #     """Create a new profile."""
+    #     print('create_profile_args: ', args)
+    #     if "yes" in args:
+    #         self.texoty.priont_string("Creating a new profile...")
+    #         profile_name = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['profile_name'][1]
+    #         password = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['password'][1]
+    #         color_theme = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['color_theme'][1]
+    #         color_theme = t.DEFAULT_THEMES[color_theme]
+    #         self.available_profiles[profile_name] = u.TexiotyProfile(profile_name, password, color_theme)
+    #         save_path = f"filesOutput/.profiles/{profile_name}.json"
+    #         if not os.path.exists(save_path):
+    #             with open(save_path, 'w') as f:
+    #                 f.write(json.dumps({"texioty": self.available_profiles[profile_name].__dict__}, indent=4, sort_keys=True,
+    #                                    default=lambda o: o.__dict__, ensure_ascii=False))
+    #                 self.texoty.priont_string(f"Profile '{profile_name}' created.")
+    #
+    #         else:
+    #             self.texoty.priont_string(f"Profile '{profile_name}' already exists, did not create.")
 
     def priont_test(self):
         self.texoty.priont_dict({
@@ -350,3 +359,36 @@ class Texioty(tk.LabelFrame):
                         }}
             }
         })
+
+    def responses_to_profile(self, responses: Dict[str, Question]):
+        """Create any kind of profile."""
+        self.texoty.priont_string("Creating a new profile...")
+        save_dict = {}
+        for key in responses:
+            match responses[key].user_response.response_type:
+                case ResponseType.BOOL:
+                    save_dict[key] = responses[key].user_response.bool_response
+                case ResponseType.STRING:
+                    save_dict[key] = responses[key].user_response.str_response
+                case ResponseType.INT:
+                    save_dict[key] = responses[key].user_response.int_response
+                case ResponseType.LIST:
+                    save_dict[key] = responses[key].user_response.list_response
+                case ResponseType.FLOAT:
+                    save_dict[key] = responses[key].user_response.float_response
+                case ResponseType.DECISION:
+                    save_dict[key] = responses[key].user_response.float_response
+        profile_name = f"{save_dict['profile_name']}"
+        save_path = f"filesOutput/.profiles/testing/{profile_name}.json"
+        if not os.path.exists(save_path):
+            with open(save_path, 'w') as f:
+                f.write(json.dumps(save_dict, indent=4, sort_keys=True,
+                                   default=lambda o: dict(o) if isinstance(o, dict) else (
+                                       o.__dict__ if hasattr(o, '__dict__') else str(o)
+                                   ), ensure_ascii=False))
+                self.texoty.priont_string(f"Profile '{profile_name}' created.")
+        else:
+            self.texoty.priont_string(f"Profile '{profile_name}' already exists, did not create.")
+
+        # self.texoty.priont_dict(responses)
+

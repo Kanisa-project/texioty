@@ -28,7 +28,7 @@ class CommandRegistry:
         try:
             self.commands[command_info["name"]] = texity.Command(name=command_info["name"],
                                                                  usage=command_info["usage"],
-                                                                 handler=command_info["call_func"],
+                                                                 call_func=command_info["call_func"],
                                                                  lite_desc=command_info["lite_desc"],
                                                                  full_desc=command_info["full_desc"],
                                                                  possible_args=command_info["possible_args"],
@@ -55,7 +55,7 @@ class CommandRegistry:
             print(f"Command '{name}' not found.")
             return
 
-        cmd_handler = command.handler
+        cmd_handler = command.call_func
         print("Inspecting", name, inspect.getfullargspec(cmd_handler).annotations)
         try:
             if len(inspect.getfullargspec(cmd_handler).args) == 1:
@@ -64,3 +64,7 @@ class CommandRegistry:
                 cmd_handler(*exec_args)
         except Exception as e:
             print(f"Error executing '{name}': {e}", exec_args)
+
+    def register_command(self, cmd_name, cmd_config):
+        print(cmd_config)
+        self.commands[cmd_name] = texity.Command(**cmd_config)

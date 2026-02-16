@@ -1,9 +1,15 @@
+import glob
+import random
 from math import ceil
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
-from helpers.promptaires.worx_hop.foto_worx import crop_foto
+from settings import utils as u, themery as t
 
+
+def crop_foto(foto: Image.Image, cropping: tuple[int, int, int, int]) -> Image.Image:
+    """Crop a foto with the cropping and return it."""
+    return foto.crop(cropping)
 
 def tile_slice_number(img: Image.Image, profile_dict: dict) -> Image.Image:
     """Tile the foto and return it."""
@@ -44,4 +50,26 @@ def tile_slice_size(img: Image.Image, thickness=0.123, slice_direction=(1, 0)) -
             right = min(left + slice_w, img_w)
             bottom = min(top + slice_h, img_h)
             crop_foto(img, (left, top, right, bottom)).save(f".temp/{r}_{c}.png")
+    return img
+
+def portion_out(img, slice_amount=9, portion_amount=1.1) -> Image.Image:
+    solidify_chance = portion_amount/10
+    solidify_color = random.choice(t.RANDOM_COLORS)
+    # shuffled = profile_dict["shuffled"]
+    for img_tile in glob.glob(".temp/*.png"):
+        r_c = img_tile.removeprefix(".temp/").removesuffix(".png").split("_")
+        solid_hit = random.random()
+        if solid_hit < solidify_chance:
+            solid_tile = Image.open(img_tile)
+            w, h = solid_tile.size
+            tile_draw = ImageDraw.Draw(solid_tile)
+            tile_draw.rectangle((0, 0, w, h), fill=u.rgb_to_hex(solidify_color))
+            solid_tile.save(img_tile)
+        else:
+            solid_tile = Image.open(img_tile)
+            w, h = solid_tile.size
+        try:
+            img.paste(solid_tile, (int(r_c[1])*w, int(r_c[0])*h))
+        except ValueError as e:
+            print(e)
     return img

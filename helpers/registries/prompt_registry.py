@@ -23,8 +23,7 @@ FUNCFOTO_OPTIONS = ['Flatop_XT 2200',
                     'Pixtruderer V3',
                     'Tix>Prit C.R.1']
 
-PROFILIZER_OPTIONS = ['texioty',
-                      'laser_tag',
+PROFILIZER_OPTIONS = ['users',
                       'foto_worx',
                       'tcg_lab',
                       'beop_boeps'

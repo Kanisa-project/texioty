@@ -2,6 +2,45 @@ ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyz0123456789"
 MIN_CREATION_UTC = 1119553200
 MAX_CREATION_UTC = 1633120253
 
+ALPHANUMERIC_FONTS = {
+    "0": "AguafinaScript.ttf",
+    "1": "Akt.ttf",
+    "2": "Ancientsans.ttf",
+    "3": "AnonymousPro.ttf",
+    "4": "berkshirewash.ttf",
+    "5": "Charlie.ttf",
+    "6": "Code2000.ttf",
+    "7": "Codygoon.ttf",
+    "8": "Cookie.ttf",
+    "9": "Gisshiri.ttf",
+    "a": "Jemgonzademo.ttf",
+    "b": "JetBrainsMono.ttf",
+    "c": "Mertalion.ttf",
+    "d": "MintsodaLimeGreen13X16.ttf",
+    "e": "Monofur.ttf",
+    "f": "Parkinsans.ttf",
+    "g": "Pixgamer.ttf",
+    "h": "rogue.ttf",
+    "i": "Stars.ttf",
+    "j": "Suboleya.ttf",
+    "k": "AguafinaScript.ttf",
+    "l": "Akt.ttf",
+    "m": "Ancientsans.ttf",
+    "n": "AnonymousPro.ttf",
+    "o": "rogue.ttf",
+    "p": "Charlie.ttf",
+    "q": "Code2000.ttf",
+    "r": "MintsodaLimeGreen13X16.ttf",
+    "s": "Cookie.ttf",
+    "t": "Gisshiri.ttf",
+    "u": "AguafinaScript.ttf",
+    "v": "rogue.ttf",
+    "w": "Stars.ttf",
+    "x": "AnonymousPro.ttf",
+    "y": "Suboleya.ttf",
+    "z": "Charlie.ttf"
+}
+
 ALPHANUMERIC_AXIOMS = {
     " ": " ",
     ":": ":",

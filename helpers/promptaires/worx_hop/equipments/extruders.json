@@ -12,7 +12,7 @@
     "is_spiral": false
   },
   "lasagna": {
-    "noodle_base": "sauce",
+    "noodle_base": "spinach",
     "length": 9,
     "thickness": 3,
     "is_spiral": true

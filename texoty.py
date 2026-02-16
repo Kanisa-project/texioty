@@ -23,11 +23,11 @@ class TEXOTY(Text):
         :param height: 
         :param master: 
         """
+        self.active_profile = None
         self.texoty_h = height // 19
         self.texoty_w = int(width // 4.2)
         self.y_line_index = 0
         self.master: texioty.Texioty = master
-        # self.active_profile = self.master.active_profile
         super(TEXOTY, self).__init__(master=master,
                                      height=self.texoty_h,
                                      width=self.texoty_w,

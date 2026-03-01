@@ -6,6 +6,31 @@ from PIL import Image, ImageDraw
 
 from settings import utils as u, themery as t
 
+def slice_up_image(img: Image.Image, slicer_profile: dict) -> Image.Image:
+    slitem = slicer_profile['slice_item']
+    slangle = slicer_profile['slice_angle']
+    slthickness = slicer_profile['thickness']
+    slamount = slicer_profile['amount']
+    slportion = slicer_profile['portion_amount']
+
+    angled_img = img.rotate(slangle)
+    number_of_slices = slamount//slthickness
+    current_slice = 0
+    while current_slice < number_of_slices:
+        a_slice = slide_slicer(angled_img, slthickness, current_slice)
+        a_slice.save(f"helpers/promptaires/worx_hop/fotoes/prepped/{slitem}_{current_slice}.png")
+        current_slice += 1
+    return img
+
+def slide_slicer(img: Image.Image, slice_thick: int, current_slice: int) -> Image.Image:
+    left = current_slice*slice_thick*10
+    top = 0
+    right = min(left + (slice_thick*10), img.width)
+    bottom = img.height
+    if right <= left or bottom <= top:
+        return img
+    cropped = img.crop((left, top, right, bottom))
+    return cropped
 
 def crop_foto(foto: Image.Image, cropping: tuple[int, int, int, int]) -> Image.Image:
     """Crop a foto with the cropping and return it."""

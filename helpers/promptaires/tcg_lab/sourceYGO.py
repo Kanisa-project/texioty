@@ -1,4 +1,5 @@
 import random
+from pathlib import Path
 from typing import List
 
 import requests
@@ -50,25 +51,15 @@ YUGIOH_TEMPLATES = {
     }
 }
 
-# def print_some_toons():
-#     cards = yugioh.get_cards_by_name(keyword='toon')
-#     random_cards = random.sample(cards.list, 6)
-#     for card_name in random_cards:
-#         random_toon = yugioh.get_card(card_name=card_name)
-#         try:
-#             print(random_toon.name)
-#             print(random_toon.attack, random_toon.defense, random_toon.attribute)
-#         except AttributeError as e:
-#             pass
-
-
 class SourceYGO(SourceTCG):
     def __init__(self):
         super().__init__()
         self.base_url = 'https://db.ygoprodeck.com/api/v7/cardinfo.php'
-        # self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/cards/databases/yugioh_cards.db')
-        self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/yugioh_cards.db')
-        self.db_helper.create_tables_from_templates(YUGIOH_TEMPLATES)
+        self.tcg_title_name = 'yugioh'
+
+        if not Path('helpers/promptaires/tcg_lab/cards/databases/yugioh_cards.db').exists():
+            self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/yugioh_cards.db')
+            self.db_helper.create_tables_from_templates(YUGIOH_TEMPLATES)
         self.color_translation_dict = {
             'light': 'yellow',
             'dark': 'purple',
@@ -78,7 +69,6 @@ class SourceYGO(SourceTCG):
             'earth': 'brown',
             'divine': 'white'
         }
-        self.tcg_title_name = 'yugioh'
 
     def add_card_local_database(self, new_card):
         """
@@ -192,7 +182,7 @@ class SourceYGO(SourceTCG):
 
     def gather_correct_cards(self, card_criteria: dict):
         search_criteria = {}
-        print("GATH", card_criteria)
+        # print("GATH", card_criteria)
         if 'name' in card_criteria:
             search_criteria['name'] = card_criteria['name']
         if 'color' in card_criteria:

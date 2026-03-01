@@ -1,19 +1,20 @@
-import math
-from typing import List
-
+import logging
+from pathlib import Path
+from typing import List, Optional, Dict
 import mtgsdk
 import requests
-
-from mtgsdk import Card
-from PIL import Image, ImageDraw
 import random
+
+from PIL import Image
+from mtgsdk import Card
 
 from helpers import dbHelper
 from helpers.dbHelper import DatabaseHelper
-from helpers.promptaires.tcg_lab.sourceTCG import SourceTCG
+from helpers.promptaires.tcg_lab.sourceTCG import SourceTCG, CardGameType
 from settings.utils import clamp, polypointlist, plan_angled_line
 from settings import themery as t
 
+logger = logging.getLogger(__name__)
 
 
 COLOR_DICT = {
@@ -27,46 +28,55 @@ COLOR_DICT = {
     "2": {}
 }
 
-
 MAGIC_TEMPLATES = {
-    "all_cards": {
-        "number": [],
-        "name": [],
-        "colour": [],
-        "type": []
-    },
-    "land_cards": {
-        "number": [],
-        "name": [],
-        "colour": [],
-        "rarity": [],
-        "special_effect": []
-    },
-    "creature_cards": {
-        "number": [],
-        "hp": [],
-        "abilities": [],
-        "lvl": [],
-        "name": [],
-        "colour": [],
-        "rarity": [],
-        "stage": [],
-        "retreat_cost": [],
-        "attacks": []
-    },
-    "enchantment_cards": {
-        "number": [],
-        "effects": [],
-        "name": [],
-        "rarity": []
-    },
-    "instant_cards": {
-        "number": [],
-        "effects": [],
-        "name": [],
-        "rarity": []
-    }
+    "all_cards": ["number", "name", "color", "type", "rarity", "artist", "set_code"],
+    "land_cards": ["number", "name", "color", "rarity", "special_effect"],
+    "creature_cards": ["number", "strength", "toughness", "abilities", "name", "color", "rarity"],
+    "enchantment_cards": ["number", "effects", "name", "rarity"],
+    "artifact_cards": ["number", "effects", "name", "rarity"],
+    "instant_cards": ["number", "effects", "name", "rarity"],
+    "sorcery_cards": ["number", "effects", "name", "rarity"]
 }
+
+# OLD_MAGIC_TEMPLATES = {
+#     "all_cards": {
+#         "number": [],
+#         "name": [],
+#         "colour": [],
+#         "type": []
+#     },
+#     "land_cards": {
+#         "number": [],
+#         "name": [],
+#         "colour": [],
+#         "rarity": [],
+#         "special_effect": []
+#     },
+#     "creature_cards": {
+#         "number": [],
+#         "hp": [],
+#         "abilities": [],
+#         "lvl": [],
+#         "name": [],
+#         "colour": [],
+#         "rarity": [],
+#         "stage": [],
+#         "retreat_cost": [],
+#         "attacks": []
+#     },
+#     "enchantment_cards": {
+#         "number": [],
+#         "effects": [],
+#         "name": [],
+#         "rarity": []
+#     },
+#     "instant_cards": {
+#         "number": [],
+#         "effects": [],
+#         "name": [],
+#         "rarity": []
+#     }
+# }
 
 
 def download_goblins():
@@ -421,6 +431,9 @@ def gather_all_temporary_cards(temporary_criteria: dict) -> List[Card]:
     instant_cards = mtgsdk.Card.where(set=set_code).where(color_identity=colors).where(type="Instant").all()
     return sorcery_cards + instant_cards
 
+def gather_enchantment_cards(enchantment_criteria: dict) -> List[Card]:
+    pass
+
 def gather_all_permanent_cards(permanent_criteria: dict) -> List[Card]:
     set_code = permanent_criteria['set_codes']
     colors = permanent_criteria['colors']
@@ -432,132 +445,263 @@ def gather_all_permanent_cards(permanent_criteria: dict) -> List[Card]:
 class SourceMTG(SourceTCG):
     def __init__(self):
         super().__init__()
-
         self.tcg_title_name = 'magic'
+
         self.creature_races = ['Goblin', 'Elf', 'Human', 'Horror', 'Hydra', 'Bird', 'Spider', 'Troll', 'Beast',
                                'Turtle', 'Cat']
         self.creature_jobs = ['Cleric', 'Wizard', 'Ninja', 'Samurai', 'Warrior', 'Rogue', 'Pirate']
         self.enchantment_types = ['Aura', 'Curse', 'Quest']
-        # self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/cards/databases/magic_cards.db')
-        self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/magic_cards.db')
-        self.db_helper.create_tables_from_templates(MAGIC_TEMPLATES)
         self.color_translation_dict = {
-            'R': 'red',
-            'G': 'green',
-            'U': 'blue',
-            'W': 'white',
-            'B': 'black',
-            'C': 'dark grey',
-            'L': 'light grey',
+            'R': 'red', 'G': 'green', 'U': 'blue',
+            'W': 'white', 'B': 'black', 'C': 'dark grey', 'L': 'light grey',
         }
+        self._init_mtg_database()
 
-    def get_card_batch(self, card_criteria):
-        creatures = gather_all_creature_cards(card_criteria)
-        resources = gather_all_resource_cards(card_criteria)
-        temps = gather_all_temporary_cards(card_criteria)
-        perms = gather_all_permanent_cards(card_criteria)
-        return creatures + resources + temps + perms
+    def _init_mtg_database(self):
+        try:
+            db_path = Path('magic_cards.db')
+            if not db_path.exists():
+                self.db_helper = DatabaseHelper(str(db_path))
+                self.db_helper.create_tables_from_templates(MAGIC_TEMPLATES)
+            else:
+                self.db_helper = DatabaseHelper(str(db_path))
+        except Exception as e:
+            logger.error(f"Error initializing MTG database: {e}")
 
-    def add_card_database(self, new_card):
-        all_card_insert_query = dbHelper.insert_table_statement_maker('all_cards', ['card_name', 'card_rarity', 'card_type', 'card_set', 'card_id'])[0]
-        if self.db_helper.execute_query(all_card_insert_query, [new_card.name, new_card.rarity, new_card.type, "Magic the Gathering", new_card.set+'-'+new_card.number]) is None:
-            print(f"✕  Could not add {new_card.name}, probably already exists.")
-        else:
-            print(f"✓  Added {new_card.name} to database.")
+    def gather_all_creature_cards(self, creature_criteria: Dict,
+                                  tcg_type: Optional[str] = None) -> List[Card]:
+        try:
+            query = mtgsdk.Card.where(type="Creature")
+            if creature_criteria.get("colors"):
+                query = query.where(colors=creature_criteria["colors"])
+            if creature_criteria.get("name"):
+                query = query.where(name=creature_criteria["name"])
+            if creature_criteria.get("artist"):
+                query = query.where(artist=creature_criteria["artist"])
+            if creature_criteria.get("rarity"):
+                query = query.where(rarity=creature_criteria["rarity"])
+            if creature_criteria.get("set"):
+                query = query.where(set=creature_criteria["set"])
+            return query.all()
+        except Exception as e:
+            logger.error(f"Error gathering creature cards: {e}")
+            return []
 
-    def download_card_batch(self, batch):
-        for i in range(3):
-            card = random.choice(batch)
-            img_data = requests.get(f'{card.image_url}').content
-            save_name = f"{card.set.upper()}_" + card.name.replace(" ", "_")
-            proper_save_name = save_name.replace("_//_", "-")
-            with open(f'cards/{proper_save_name}.png', 'wb') as handler:
-                handler.write(img_data)
+    def gather_all_resource_cards(self, resource_criteria: Dict,
+                                  tcg_type: Optional[str] = None) -> List[Card]:
+        try:
+            query = mtgsdk.Card.where(type="Land")
+            if resource_criteria.get("colors"):
+                query = query.where(colors=resource_criteria["colors"])
+            if resource_criteria.get("name"):
+                query = query.where(name=resource_criteria["name"])
+            if resource_criteria.get("artist"):
+                query = query.where(artist=resource_criteria["artist"])
+            if resource_criteria.get("rarity"):
+                query = query.where(rarity=resource_criteria["rarity"])
+            return query.all()
+        except Exception as e:
+            logger.error(f"Error gathering resource cards: {e}")
+            return []
 
-    #
-    # def download_card_batch(self, batch_config: dict):
-    #     # super().download_card_batch(batch_config)
-    #     print(batch_config)
-    #     total_cards = []
-    #     current_cards = []
-    #     for set_code in batch_config["pack_sets"]:
-    #         for card_in_set in mtgsdk.Card.where(set=set_code).all():
-    #             total_cards.append(card_in_set)
-    #
-    #     for card in total_cards:
-    #         print(card, 'card')
-    #         try:
-    #             for color_id in card.color_identity:
-    #                 if color_id not in batch_config['pack_colors']:
-    #                     print(card.color_identity, "-", batch_config['pack_colors'])
-    #                     try:
-    #                         total_cards.remove(card)
-    #                     except ValueError:
-    #                         continue
-    #         except TypeError:
-    #             pass
-    #
-    #         for card_type in batch_config['card_types']:
-    #             if card_type not in card.type:
-    #                 print(card.type, "-", card_type)
-    #                 try:
-    #                     total_cards.remove(card)
-    #                 except ValueError:
-    #                     continue
-    #
-    #         for rarity in batch_config['rarities']:
-    #             if rarity not in card.rarity:
-    #                 print(card.rarity, "-", batch_config['rarities'])
-    #                 try:
-    #                     total_cards.remove(card)
-    #                 except ValueError:
-    #                     continue
-    #     try:
-    #         chosen_cards = random.sample(total_cards, batch_config['pack_size'])
-    #     except ValueError as e:
-    #         # print(e)
-    #         chosen_cards = random.sample(total_cards, len(total_cards))
-    #
-    #     for card in chosen_cards:
-    #         if card.image_url is not None:
-    #             self.add_card_local_database(card)
-    #             img_data = requests.get(f'{card.image_url}').content
-    #             save_name = f"{card.set.upper()}_" + card.name.replace(" ", "_")
-    #             proper_save_name = save_name.replace("_//_", "-")
-    #             with open(f'cards/{proper_save_name}.png',
-    #             # with open(f'helpers/promptaires/tcg_lab/cards/magic/{proper_save_name}.png',
-    #                       'wb') as handler:
-    #                 handler.write(img_data)
-    #             print(f"✓  Downloaded {save_name} into /fotoes/cardsMagic")
-    #         else:
-    #             print(f"✕  Card '{card.name}' has no image to download.")
+    def gather_all_enchantment_cards(self, enchantment_criteria: Dict,
+                                  tcg_type: Optional[str] = None) -> List[Card]:
+        try:
+            query = mtgsdk.Card.where(type="Enchantment")
+            if enchantment_criteria.get("colors"):
+                query = query.where(colors=enchantment_criteria["colors"])
+            if enchantment_criteria.get("name"):
+                query = query.where(name=enchantment_criteria["name"])
+            if enchantment_criteria.get("artist"):
+                query = query.where(artist=enchantment_criteria["artist"])
+            if enchantment_criteria.get("rarity"):
+                query = query.where(rarity=enchantment_criteria["rarity"])
+            return query.all()
+        except Exception as e:
+            logger.error(f"Error gathering enchantment cards: {e}")
+            return []
+
+    def gather_all_temporary_cards(self, temporary_criteria: Dict,
+                                  tcg_type: Optional[str] = None) -> List[Card]:
+        try:
+            set_code = temporary_criteria.get('set')
+            colors = temporary_criteria.get('colors')
+
+            sorcery_query = mtgsdk.Card.where(type="Sorcery")
+            instant_query = mtgsdk.Card.where(type="Instant")
+            if colors:
+                sorcery_query = sorcery_query.where(colors=colors)
+                instant_query = instant_query.where(colors=colors)
+            if set_code:
+                sorcery_query = sorcery_query.where(set=set_code)
+                instant_query = instant_query.where(set=set_code)
+            if temporary_criteria.get('name'):
+                sorcery_query = sorcery_query.where(name=temporary_criteria['name'])
+                instant_query = instant_query.where(name=temporary_criteria['name'])
+            if temporary_criteria.get('rarity'):
+                sorcery_query = sorcery_query.where(rarity=temporary_criteria['rarity'])
+                instant_query = instant_query.where(rarity=temporary_criteria['rarity'])
+            if temporary_criteria.get('artist'):
+                sorcery_query = sorcery_query.where(artist=temporary_criteria['artist'])
+                instant_query = instant_query.where(artist=temporary_criteria['artist'])
+            return sorcery_query.all() + instant_query.all()
+        except Exception as e:
+            logger.error(f"Error gathering temporary cards: {e}")
+            return []
+
+    def gather_all_permanent_cards(self, permanent_criteria: Dict,
+                                   tcg_type: Optional[str] = None) -> List[Card]:
+        try:
+            set_code = permanent_criteria.get('set')
+            colors = permanent_criteria.get('colors')
+
+            artifact_query = mtgsdk.Card.where(type="Artifact")
+            enchantment_query = mtgsdk.Card.where(type="Enchantment")
+            if colors:
+                artifact_query = artifact_query.where(colors=colors)
+                enchantment_query = enchantment_query.where(colors=colors)
+            if set_code:
+                artifact_query = artifact_query.where(set=set_code)
+                enchantment_query = enchantment_query.where(set=set_code)
+            if permanent_criteria.get('name'):
+                artifact_query = artifact_query.where(name=permanent_criteria['name'])
+                enchantment_query = enchantment_query.where(name=permanent_criteria['name'])
+            if permanent_criteria.get('rarity'):
+                artifact_query = artifact_query.where(rarity=permanent_criteria['rarity'])
+                enchantment_query = enchantment_query.where(rarity=permanent_criteria['rarity'])
+            if permanent_criteria.get('artist'):
+                artifact_query = artifact_query.where(artist=permanent_criteria['artist'])
+                enchantment_query = enchantment_query.where(artist=permanent_criteria['artist'])
+            return artifact_query.all() + enchantment_query.all()
+        except Exception as e:
+            logger.error(f"Error gathering permanent cards: {e}")
+            return []
+
+    def get_card_batch(self, card_criteria: Dict) -> List[Card]:
+        print("CRITERIA-TYPE", card_criteria.get('type', 'has no type'))
+        if "Creature" in card_criteria.get('type', ''):
+            return self.gather_all_creature_cards(card_criteria)
+        if "Land" in card_criteria.get('type', ''):
+            return self.gather_all_resource_cards(card_criteria)
+        if "Instant" in card_criteria.get('type', ''):
+            return self.gather_all_temporary_cards(card_criteria)
+        if "Sorcery" in card_criteria.get('type', ''):
+            return self.gather_all_temporary_cards(card_criteria)
+        if "Artifact" in card_criteria.get('type', ''):
+            return self.gather_all_permanent_cards(card_criteria)
+        if "Enchantment" in card_criteria.get('type', ''):
+            return self.gather_all_enchantment_cards(card_criteria)
+        return []
+
+    def add_card_to_database(self, new_card: Card) -> bool:
+        try:
+            if not self.db_helper:
+                logger.error("Database not initialized")
+                return False
+            if not isinstance(new_card, dict):
+                new_card = mtgcard_to_dict(new_card)
+            return super().add_card_to_database(new_card)
+        except Exception as e:
+            logger.error(f"Error adding card to database:--{e}")
+            return False
+
+    def download_card_batch(self, batch_: List[Card], output_dir: str = 'cards/') -> int:
+        downloaded_count = 0
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        print("BAT", batch_)
+        for batch_card in batch_:
+            try:
+                if not batch_card.image_url:
+                    print(batch_card.image_url)
+                    logger.warning(f"Card {batch_card.name} has no image URL")
+                    continue
+
+                save_name = f"{batch_card.set.upper()}_{batch_card.name.replace('/', '-').replace(' ', '_')}.png"
+                file_path = Path(output_dir) / save_name
+                response = requests.get(batch_card.image_url, timeout=10)
+                response.raise_for_status()
+
+                with open(file_path, 'wb') as handler:
+                    handler.write(response.content)
+                logger.info(f"Downloaded card {save_name}")
+                downloaded_count += 1
+            except Exception as e:
+                logger.error(f"Error downloading card {batch_card.name}: {e}")
+
+        return downloaded_count
 
     def generate_random_deck(self, deck_config: dict) -> List[Card]:
-        num_of_cards = deck_config['deck_size']
-        creature_base_number = num_of_cards * (deck_config['creature_portion']/100)
-        resource_base_number = num_of_cards * (deck_config['resource_portion']/100)
-        permanent_base_number = num_of_cards * (deck_config['permanent_portion']/100)
-        temporary_base_number = num_of_cards * (deck_config['temporary_portion']/100)
-        creature_base = random.sample(gather_all_creature_cards({'set': "ZEN", "colors": "R"}), int(creature_base_number))
-        resource_base = random.sample(gather_all_resource_cards({'set': "ZEN", "colors": "R"}), int(resource_base_number))
-        permanent_base = random.sample(gather_all_temporary_cards({'set': "ZEN", "colors": "R"}), int(temporary_base_number))
-        temporary_base = random.sample(gather_all_permanent_cards({'set': "ZEN", "colors": "R"}), int(permanent_base_number))
-        deck_list = []
-        for creature in creature_base:
-            deck_list.append(creature.name + f" -{creature.type}")
-        deck_list.append("---------")
-        for resource in resource_base:
-            deck_list.append(resource.name + f" -{resource.type}")
-        deck_list.append("---------")
-        for permanent in permanent_base:
-            deck_list.append(permanent.name + f" -{permanent.type}")
-        deck_list.append("---------")
-        for temporary in temporary_base:
-            deck_list.append(temporary.name + f" -{temporary.type}")
-        deck_list.append("---------")
-        return deck_list
+        try:
+            deck_size = deck_config.get('deck_size', 60)
+            set_code = deck_config.get('set_code', 'ZEN')
+            colors = deck_config.get('colors', 'R')
+            creature_count = int(deck_size * (deck_config.get('creature_portion', 40)/100))
+            resource_count = int(deck_size * (deck_config.get('resource_portion', 30)/100))
+            permanent_count = int(deck_size * (deck_config.get('permanent_portion', 15)/100))
+            temporary_count = int(deck_size * (deck_config.get('temporary_portion', 15)/100))
 
+            criteria = {'set_codes': set_code, 'colors': colors}
+
+            creatures = self.gather_all_creature_cards(criteria)
+            resources = self.gather_all_resource_cards(criteria)
+            permanents = self.gather_all_permanent_cards(criteria)
+            temporarys = self.gather_all_temporary_cards(criteria)
+            deck_list = []
+
+            if creatures:
+                deck_list.extend([f"{c.name} - {c.type}" for c in random.sample(creatures, min(creature_count, len(creatures)))])
+            if resources:
+                deck_list.extend([f"{r.name} - {r.type}" for r in random.sample(resources, min(resource_count, len(resources)))])
+            if permanents:
+                deck_list.extend([f"{p.name} - {p.type}" for p in random.sample(permanents, min(permanent_count, len(permanents)))])
+            if temporarys:
+                deck_list.extend([f"{te.name} - {te.type}" for te in random.sample(temporarys, min(temporary_count, len(temporarys)))])
+            return deck_list
+        except Exception as e:
+            logger.error(f"Error generating random deck: {e}")
+            return []
+
+    def gather_correct_cards(self, card_criteria: dict):
+        search_criteria = {}
+        if 'name' in card_criteria:
+            search_criteria['name'] = card_criteria['name']
+        if 'color' in card_criteria:
+            search_criteria['color'] = card_criteria['color']
+        if 'rarity' in card_criteria:
+            search_criteria['rarity'] = card_criteria['rarity']
+        if 'artist' in card_criteria:
+            search_criteria['artist'] = card_criteria['artist']
+        if 'type' in card_criteria:
+            if 'Enchantment' in card_criteria['type']:
+                return gather_enchantment_cards()
+            if 'Creature' in card_criteria['type']:
+                pass
+            if 'Land' in card_criteria['type']:
+                pass
+            if 'Sorcery' in card_criteria['type']:
+                pass
+            if 'Instant' in card_criteria['type']:
+                pass
+            if 'Artifact' in card_criteria['type']:
+                pass
+            if 'Planeswalker' in card_criteria['type']:
+                pass
+
+def mtgcard_to_dict(mtgcard: Card) -> dict:
+    return {
+        'name': mtgcard.name,
+        'rarity': mtgcard.rarity,
+        'color': ', '.join(mtgcard.colors),
+        'artist': mtgcard.artist,
+        'type': mtgcard.type,
+        'set_code': mtgcard.set
+    }
 
 if __name__ == '__main__':
     mtg = SourceMTG()
-    mtg.download_card_batch({'pack_sets': ['ZEN'], 'pack_colors': ['R'], 'card_types': ['Creature'], 'rarities': ['Basic'], 'pack_size': 10})
+    batch = mtg.get_card_batch({'rarity': 'Rare', 'colors': 'G', 'set': 'SHM', 'type': 'Creature'})
+    # batch = mtg.gather_all_enchantment_cards({'color': 'B', 'type': 'Enchantment'})
+    # batch = mtg.gather_all_enchantment_cards({'name': 'Goblin', 'type': 'Enchantment'})
+    card = random.choice(batch)
+    mtg.add_card_to_database(card)
+    mtg.download_card_batch([card])

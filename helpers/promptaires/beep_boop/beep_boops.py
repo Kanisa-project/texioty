@@ -29,7 +29,7 @@ class BeepBoops(BasePrompt):
             'possible_args': {' - ': 'No arguments available.'},
             'args_desc': {' - ': ['No arguments available.', None]},
             'examples': ['beep'],
-            'group_tag': 'PRUN',
+            'group_tag': 'BEEP',
             'font_color': u.rgb_to_hex(t.CHARTREUSE),
             'back_color': u.rgb_to_hex(t.BLACK)
         }
@@ -42,7 +42,7 @@ class BeepBoops(BasePrompt):
             'possible_args': {' - ': 'No arguments available.'},
             'args_desc': {' - ': ['No arguments available.', None]},
             'examples': ['boop'],
-            'group_tag': 'PRUN',
+            'group_tag': 'BEEP',
             'font_color': u.rgb_to_hex(t.CHARTREUSE),
             'back_color': u.rgb_to_hex(t.BLACK)
         }

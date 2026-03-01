@@ -7,7 +7,7 @@ import requests
 from helpers.dbHelper import DatabaseHelper, insert_table_statement_maker
 from helpers.promptaires.tcg_lab.sourceTCG import SourceTCG
 from settings import themery as t, utils as u
-
+from pathlib import Path
 # from tcg_api.sourceTCG import BaseAPIHelper
 # from src.utils import dbHelper
 
@@ -67,10 +67,11 @@ class SourceLRCNA(SourceTCG):
     def __init__(self):
         super().__init__()
         self.base_url = 'https://api.lorcana-api.com'
-        self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/lorcana_cards.db')
-        # self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/lorcana_cards.db')
-        self.db_helper.create_tables_from_templates(LORCANA_TEMPLATES)
         self.tcg_title_name = 'lorcana'
+
+        if not Path('helpers/promptaires/tcg_lab/cards/databases/lorcana_cards.db').exists():
+            self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/lorcana_cards.db')
+            self.db_helper.create_tables_from_templates(LORCANA_TEMPLATES)
 
     def add_card_local_database(self, new_card):
         all_card_insert_query = insert_table_statement_maker('all_cards',

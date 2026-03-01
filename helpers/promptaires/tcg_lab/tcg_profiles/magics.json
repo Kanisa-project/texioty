@@ -1,9 +1,10 @@
 {
   "ajani_playmat_hangman_magic": {
     "card_criteria": {
-      "names": ["Ajani"],
-      "colors": ["W"],
-      "set_codes": ["M11", "M13", "ALA"]
+      "name": "Ajani",
+      "type": "Creature",
+      "colors": "W",
+      "set": "M11"
     },
     "playmat": {
       "base_shape": "square"
@@ -15,12 +16,8 @@
   },
   "explore": {
     "card_specific": {
-      "name": "Explore",
-      "colors": "G",
-      "type": "Sorcery",
-      "set_code": "TLE#259",
-      "artist": "Maojin Lee",
-      "rarity": "Common"
+      "set": "TLE",
+      "card_number": "259"
     }
   },
   "sorin_sticker_wordsearch": {

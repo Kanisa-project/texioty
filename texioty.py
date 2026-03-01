@@ -48,15 +48,6 @@ class Texioty(tk.LabelFrame):
         self.texity.focus_set()
         self.texity.bind('<KP_Enter>', lambda e: self.process_texity())
         self.texity.bind('<Return>', lambda e: self.process_texity())
-
-        # self.digiary = Digiary(self.texoty, self.texity)
-        # self.base_helper = TexiotyHelper(self.texoty, self.texity)
-        # self.gaim_registry = GaimRegistry(self.texoty, self.texity)
-        # self.cooper = PijunCooper(self.texoty, self.texity)
-        # self.default_helpers = {"TXTY": [self],
-        #                         "HLPR": [self.base_helper],
-        #                         "DIRY": [self.digiary]}
-        # self.active_helper_dict = self.default_helpers
         self.deciding_function = None
 
 
@@ -231,7 +222,7 @@ class Texioty(tk.LabelFrame):
             case "Diary":
                 if self.texity.parse_diary_line() != "/until_next_time":
                     parsed_input = self.texity.parse_diary_line()
-                    self.active_helper_dict["DIRY"][0].add_diary_line(parsed_input)
+                    self.helper_registry.get_helper("DIRY").add_diary_line(parsed_input)
                 else:
                     self.execute_command("/until_next_time", [])
 

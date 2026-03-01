@@ -4,8 +4,6 @@ from tkinter import *
 from tkHyperLinkManager import HyperlinkManager
 import webbrowser
 from functools import partial
-
-# import settings as s
 import texioty
 import texity
 
@@ -185,13 +183,16 @@ class TEXOTY(Text):
         self.priont_command_colorized(f'{command.name}╕', command.font_color, command.back_color)
         help_message_text = f'{" " * len(command.name)}└► {command.lite_desc}'
         self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
-        usage_message_text = f'\nHow to use─►  {command.usage}'
+        usage_message_text = f'\nHow to use─►  {command.usage}\n'
         self.priont_colorized_string(usage_message_text, command.back_color, command.font_color)
+        self.priont_string('')
+        self.priont_dict(command.args_desc)
+        self.priont_string('')
+        self.priont_dict(command.possible_args)
+
         self.priont_string('')
         rando_examp = random.choice(command.examples)
         self.priont_click_command(rando_examp, rando_examp)
-        self.priont_dict(command.possible_args)
-        self.priont_dict(command.args_desc)
         self.priont_break_line()
         self.yview(END)
 

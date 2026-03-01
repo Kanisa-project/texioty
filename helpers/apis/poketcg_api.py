@@ -3,31 +3,11 @@ import random
 
 import requests
 from dotenv import load_dotenv
-# from tcgdexsdk import TCGdex, Query
 from helpers.apis.base_tcg_api import TCGAPI
-# from helpers.promptaires.tcg_labby import TcgDepicter
-
-# from utils import dbHelper, glythed
-# from utils.glythed import TcgDepicter
 
 load_dotenv()
 width_len = 36
 ENERGY_TYPES = ['grass', 'fire', 'water', 'lighting', 'psychic', 'fighting', 'darkness', 'metal']
-
-
-# class PkmnDepicter(TcgDepicter):
-#     def __init__(self, depict_settings: dict):
-#         super().__init__(depict_settings)
-#
-#     def build_card_datadict(self, card_data) -> dict:
-#         card_datadict = {
-#             'name': card_data.name,
-#             'type': ''.join(card_data.types),
-#             'rarity': card_data.rarity,
-#             'id': card_data.id
-#         }
-#         self.card_datadict = card_datadict
-#         return card_datadict
 
 
 class PokeAPIHelper(TCGAPI):
@@ -50,13 +30,7 @@ class PokeAPIHelper(TCGAPI):
             'darkness': 'dark grey',
             'metal': 'light grey'
         }
-        self.sdk = TCGdex()
         self.tcg_title_name = 'pokemon'
-
-    def add_card_database(self, new_card):
-        all_card_insert_query = dbHelper.insert_table_statement_maker('all_cards', ['card_name', 'card_rarity', 'card_type', 'card_set', 'card_id'])[0]
-        self.db_helper.execute_query(all_card_insert_query, [new_card.name, new_card.rarity, new_card.category, "Pokemon TCG", new_card.id])
-        print(f"✓  Added {new_card.name} to database.")
 
 
     def download_card_batch(self, batch_config: dict):

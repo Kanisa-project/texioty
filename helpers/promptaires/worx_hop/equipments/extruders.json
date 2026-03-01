@@ -1,20 +1,26 @@
 {
-  "spaghetti": {
-    "noodle_base": "flour",
-    "length": 8,
-    "thickness": 2,
-    "is_spiral": false
+  "wheat": {
+    "noodle_base": "spaghetti",
+    "noodle_size": {
+      "length": 8,
+      "thickness": 3,
+      "is_spiral": false
+    }
   },
-  "ziti": {
-    "noodle_base": "egg",
-    "length": 4,
-    "thickness": 8,
-    "is_spiral": false
+  "rice": {
+    "noodle_base": "vermicelli",
+    "noodle_size": {
+      "length": 7,
+      "thickness": 1,
+      "is_spiral": false
+    }
   },
-  "lasagna": {
-    "noodle_base": "spinach",
-    "length": 9,
-    "thickness": 3,
-    "is_spiral": true
+  "starch": {
+    "noodle_base": "cellophane",
+    "noodle_size": {
+      "length": 6,
+      "thickness": 8,
+      "is_spiral": true
+    }
   }
 }

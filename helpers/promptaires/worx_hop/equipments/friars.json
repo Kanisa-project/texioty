@@ -1,7 +1,8 @@
 {
   "mozzarella_sticks": {
-    "basket_depth":	40,
-    "grease_temp": 120
+    "grease_temp": 120,
+    "basket_depth":	4,
+    "cook_timer": 1.352
   },
   "french_fries": {
     "grease_temp": 320,
@@ -11,7 +12,7 @@
   "chicken_patty": {
     "grease_temp": 120,
     "basket_depth":	9,
-    "cook_timer": 1.158
+    "cook_timer": 8.658
   },
   "egg_rolls": {
     "grease_temp": 642,

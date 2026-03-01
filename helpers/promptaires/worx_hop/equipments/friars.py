@@ -3,6 +3,17 @@ import random
 from PIL import Image
 from settings import themery as t
 
+def deep_fry_image(img: Image.Image, frier_profile: dict) -> Image.Image:
+    basket_depth = frier_profile['basket_depth']
+    grease_temp = frier_profile['grease_temp']
+    cook_timer = frier_profile['cook_timer']
+    img = timed_cook(img, cook_timer)
+    img = oil_boil(img, grease_temp)
+    return img
+
+# def deep_fry_image(img: Image.Image, frier_profile: dict) -> Image.Image:
+#     return img.point(lambda p: p * random.randint(frier_profile['basket_depth'], frier_profile['grease_temp']))
+
 def oil_boil(img: Image.Image, grease_temp=377) -> Image.Image:
     """
     Applies a red, green, blue filter to the provided image.

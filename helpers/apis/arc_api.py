@@ -14,19 +14,6 @@ class ArcApi(BasePrompt, BaseAPIHelper):
         self.endpoint_names = {'items': ['/items'],
                                'quests': ['/quests'],
                                'enemies': ['/arc-enemies']}
-        self.helper_commands["arc"] = {
-            "name": "arc",
-            "usage": '"arc [items/quests/enemies] [id]"',
-            "call_func": self.find_arc_id,
-            "lite_desc": "Find an arc id.",
-            "full_desc": ["Get info about items/quests/enemies from the arc api."],
-            "possible_args": {'[items/quests/enemies]': "What type of id you want to find.",
-                              "[id]": "The id of the object or quest you want to find."},
-            "args_desc": {'[items/quests/enemies]': 'The type of arc info to find.'},
-            'examples': ['arc items', 'arc quests', 'arc enemies'],
-            "group_tag": "PRUN",
-            'font_color': u.rgb_to_hex(t.ARC_BLUE),
-            'back_color': u.rgb_to_hex(t.BLACK)}
         self.helper_commands["get_arc"] = {
             "name": "get_arc",
             "usage": '"get_arc"',
@@ -46,13 +33,6 @@ class ArcApi(BasePrompt, BaseAPIHelper):
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
             self.txo.master.deciding_function = self.get_random_arc
 
-
-    def find_arc_id(self, desired_info: str, desired_id: str):
-        self.txo.priont_string(f"Finding {desired_info} with id {desired_id}...")
-        endpoint_path = self.endpoint_builder(f'/{desired_info}/', desired_id)
-        print(endpoint_path)
-        response = requests.get(endpoint_path, headers=self.headers)
-        self.txo.priont_dict(response.json())
 
     def get_random_arc(self, desired_info: str):
         endpoint_path = self.endpoint_builder('', self.endpoint_names[desired_info][0])

@@ -7,6 +7,7 @@ from helpers.dbHelper import DatabaseHelper
 from helpers.dbHelper import insert_table_statement_maker
 from helpers.promptaires.tcg_lab.sourceTCG import SourceTCG
 from settings import themery as t, utils as u
+from pathlib import Path
 
 base_url = "https://digimoncard.io/api-public/"
 
@@ -66,9 +67,9 @@ class SourceDGM(SourceTCG):
     def __init__(self):
         super().__init__()
         self.tcg_title_name = 'digimon'
-        # self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/cards/databases/digimon_cards.db')
-        self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/digimon_cards.db')
-        self.db_helper.create_tables_from_templates(DIGIMON_TEMPLATES)
+        if not Path('helpers/promptaires/tcg_lab/cards/databases/digimon_cards.db').exists():
+            self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/digimon_cards.db')
+            self.db_helper.create_tables_from_templates(DIGIMON_TEMPLATES)
 
     def gather_correct_cards(self, card_criteria: dict):
         search_criteria = {}

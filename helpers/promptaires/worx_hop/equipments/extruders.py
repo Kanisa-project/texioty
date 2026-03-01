@@ -1,7 +1,33 @@
 import random
+from typing import List
 
 from PIL import Image, ImageDraw
 
+def extrude_noodle(img: Image.Image, noodle_profile: dict) -> Image.Image:
+    w, h = img.size
+    noodle_base = noodle_profile['noodle_base']
+    noodle_length = int(w * (noodle_profile['noodle_size']['length']/10))
+    noodle_thickness = noodle_profile['noodle_size']['thickness'] * 2
+    noodle_spiral = noodle_profile['noodle_size']['is_spiral']
+
+    base_amount = len(noodle_base) * noodle_length * noodle_thickness
+    extruded_amount = 0
+    while extruded_amount < base_amount:
+        y_start = random.randint(0, h-noodle_thickness)
+        extruded_amount += int(noodle_length + noodle_thickness)
+        a_noodle = noodle_box(img, y_start, noodle_thickness, noodle_length)
+        a_noodle.save(f"helpers/promptaires/worx_hop/fotoes/prepped/{noodle_base}_{extruded_amount}.png")
+    return img
+
+def noodle_box(img: Image.Image, y_start: int, nood_thick: int, nood_len: int) -> Image.Image:
+    left = random.randint(0, img.width-nood_len)
+    top = y_start
+    right = nood_len
+    bottom = min(top + nood_thick, img.width)
+    if right <= left or bottom <= top:
+        return img
+    cropped = img.crop((left, top, right, bottom))
+    return cropped
 
 def pixel_sorter(img: Image.Image, noodleBase="flour") -> Image.Image:
     w, h = img.size
@@ -78,5 +104,5 @@ def pixel_encircler(img: Image.Image, isSpiral=False, noodleBase="flour") -> Ima
         ran_x = random.randint(0, w-1)
         ran_y = random.randint(0, h-1)
         r, g, b = rgb_img.getpixel((ran_x, ran_y))
-        draw.circle((ran_x, ran_y), 10, fill=(r, g, b), width=circle_size)
+        draw.ellipse((ran_x, ran_y), fill=(r, g, b), outline=10, width=circle_size)
     return img

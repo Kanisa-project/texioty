@@ -1,0 +1,11 @@
+{
+  "cookies": {
+    "sheet_pan_size": {
+      "width": 11,
+      "height": 6,
+      "spacing": 3
+    },
+    "oven_temp": 350,
+    "oven_timer": 15.3
+  }
+}

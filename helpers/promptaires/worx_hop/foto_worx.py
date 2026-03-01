@@ -1,13 +1,11 @@
 import glob
-import random
 import tkinter
-from math import ceil
 from typing import Callable
 
 from helpers.promptaires.prompt_helper import BasePrompt
-from settings import utils as u, themery as t
-from PIL import Image, ImageDraw, ImageFont
-from helpers.promptaires.worx_hop.equipments import slicers, printers, friars, extruders, flatops
+from settings import utils as u
+from PIL import Image
+from helpers.promptaires.worx_hop.equipments import slicers, printers, friars, extruders, flatops, ovens, mixers
 
 
 class FotoWorxHop(BasePrompt):
@@ -41,6 +39,12 @@ class FotoWorxHop(BasePrompt):
             case 'Tix>Prit C.R.1':
                 self.current_equipment = "printers"
                 self.equipt_saved_name = "ticked"
+            case '[)UtchOven 650':
+                self.current_equipment = "ovens"
+                self.equipt_saved_name = "backed"
+            case 'Mix-n-Stir 816':
+                self.current_equipment = "mixers"
+                self.equipt_saved_name = "micksed"
         self.decide_image_for_cook()
 
     def decide_image_for_cook(self):
@@ -50,8 +54,7 @@ class FotoWorxHop(BasePrompt):
 
 
     def image_to_station(self, image_path):
-        if image_path not in ['<pg', 'pg>']:
-            self.cook_image = Image.open(image_path)
+        self.cook_image = Image.open(image_path)
         self.decide_decision("At the station", list(u.retrieve_worx_profiles(self.current_equipment).keys()))
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
             self.txo.master.deciding_function = self.set_foto_profile_dict
@@ -71,6 +74,10 @@ class FotoWorxHop(BasePrompt):
                 self.create_foto_iterations(pixtrude_foto)
             case "printers":
                 self.create_foto_iterations(ticket_print_foto)
+            case "ovens":
+                self.create_foto_iterations(dutched_foto)
+            case "mixers":
+                self.create_foto_iterations(stirmix_foto)
 
     def create_foto_iterations(self, equipment_func: Callable):
         self.order_up_images = []
@@ -101,20 +108,12 @@ def flatop_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
         img = flatops.steaming_lid(img, profile_dict['steam_lid'])
     return img
 
-
 def ticket_print_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
     """Print some words/emojis/numbers on the img."""
     return printers.print_on_image(img, profile_dict)
 
 def s_p_licer_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
-    prof_keys = list(profile_dict.keys())
-    if "slice_item" in prof_keys:
-        img = slicers.tile_slice_number(img, profile_dict["slice_item"])
-    if "thickness" in prof_keys and "slice_direction" in prof_keys:
-        img = slicers.tile_slice_size(img, profile_dict["thickness"], profile_dict["slice_direction"])
-    if "amount" in prof_keys and "portion_amount" in prof_keys:
-        img = slicers.portion_out(img, profile_dict["amount"], profile_dict['portion_amount'])
-    return img
+    return slicers.slice_up_image(img, profile_dict)
 
 def deepfry_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
     """
@@ -123,23 +122,21 @@ def deepfry_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
     :param profile_dict:
     :return:
     """
-    prof_keys = list(profile_dict.keys())
-    if 'basket_depth' in prof_keys:
-        img = friars.drop_basket(img, profile_dict['basket_depth'])
-    if 'grease_temp' in prof_keys:
-        img = friars.oil_boil(img, profile_dict['grease_temp'])
-    if 'cook_timer' in prof_keys:
-        img = friars.timed_cook(img, profile_dict['cook_timer'])
-    img = img.convert('RGB')
-    return img
+    return friars.deep_fry_image(img, profile_dict)
 
 def pixtrude_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
     """Pasta extruder meets pixel manipulations."""
+    return extruders.extrude_noodle(img, profile_dict)
+
+def dutched_foto(img: Image.Image, profile_dict) -> Image.Image:
     prof_keys = list(profile_dict.keys())
-    if "noodle_base" in prof_keys:
-        img = extruders.pixel_sorter(img, profile_dict['noodle_base'])
-    if "length" in prof_keys and "thickness" in prof_keys:
-        img = extruders.pixel_streaker(img, profile_dict['length'], profile_dict['thickness'])
-    if "is_spiral" in prof_keys and "noodle_base" in prof_keys:
-        img = extruders.pixel_encircler(img, profile_dict['is_spiral'], profile_dict['noodle_base'])
+    if "oven_temp" in prof_keys:
+        img = ovens.preheat_oven(img, profile_dict['oven_temp'])
+    if "sheet_pan_size" in prof_keys:
+        img = ovens.setup_sheet_pan(img, profile_dict['sheet_pan_size'])
+    if "oven_timer" in prof_keys:
+        img = ovens.insert_sheet_pan(img, profile_dict['oven_timer'])
     return img
+
+def stirmix_foto(img: Image.Image, profile_dict) -> Image.Image:
+    return mixers.mix_it(img, profile_dict)

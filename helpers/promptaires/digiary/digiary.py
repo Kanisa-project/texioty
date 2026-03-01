@@ -7,8 +7,6 @@ from typing import Callable
 from helpers.promptaires.prompt_helper import BasePrompt
 from settings import themery as t, utils as u
 
-from helpers.tex_helper import TexiotyHelper
-
 
 class Digiary(BasePrompt):
     def __init__(self, txo, txi):

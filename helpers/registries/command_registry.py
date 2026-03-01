@@ -66,5 +66,5 @@ class CommandRegistry:
             print(f"Error executing '{name}': {e}", exec_args)
 
     def register_command(self, cmd_name, cmd_config):
-        print(cmd_config)
+        # print(cmd_config)
         self.commands[cmd_name] = texity.Command(**cmd_config)

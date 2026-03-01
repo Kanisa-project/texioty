@@ -20,7 +20,8 @@ class Application(tk.Frame):
         super().__init__(master)
         self.helper_registry = HelperRegistry()
         self._register_helpers()
-        self.txty = texioty.Texioty(width=screen_w, height=screen_h, helper_registry=self.helper_registry)
+        self.txty = texioty.Texioty(width=screen_w, height=screen_h,
+                                    helper_registry=self.helper_registry)
 
         self.helper_registry.initialize_all(
             self.txty.texoty, self.txty.texity,

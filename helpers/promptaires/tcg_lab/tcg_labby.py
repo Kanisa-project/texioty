@@ -9,7 +9,7 @@ import random
 from helpers.promptaires.prompt_helper import BasePrompt
 from helpers.promptaires.tcg_lab.sourceDGM import SourceDGM
 from helpers.promptaires.tcg_lab.sourceLRCNA import SourceLRCNA
-from settings import themery as t, alphanumers as s, utils as u, konfig as k
+from settings import themery as t, alphanumers as a, utils as u, konfig as k
 from helpers.promptaires.tcg_lab.sourceMTG import SourceMTG
 from helpers.promptaires.tcg_lab.sourcePKM import SourcePKM
 from helpers.promptaires.tcg_lab.sourceYGO import SourceYGO
@@ -160,13 +160,13 @@ class TCGLabby(BasePrompt):
         print("profName", profile_name)
         if "magic" in profile_name:
             card_batch = self.magic_api.get_card_batch(tcgpack_profile['card_criteria'])
-            self.magic_api.download_card_batch(card_batch)
+            self.magic_api.download_card_batch(card_batch, 'helpers/promptaires/tcg_lab/cards/magic')
         if "pokemon" in profile_name:
             card_batch = self.pokemon_api.gather_correct_cards(tcgpack_profile['card_criteria'])
-            print("CBAT", card_batch)
             self.pokemon_api.download_card_batch(card_batch)
         if "yugioh" in tcgpack_profile:
-            self.yugioh_api.download_card_batch(tcgpack_profile['card_criteria'])
+            card_batch = self.yugioh_api.gather_correct_cards(tcgpack_profile['card_criteria'])
+            self.yugioh_api.download_card_batch(card_batch)
         if "digimon" in tcgpack_profile:
             self.digimon_api.download_card_batch(tcgpack_profile['card_criteria'])
         if "lorcana" in tcgpack_profile:
@@ -242,12 +242,12 @@ def lsystem_dual_mana_decoder(lstring: str, start_point=(480, 480), start_length
     line_points_list = [prev_line_tuple]
 
     for c in lstring:
-        if MORSE_CODE_RULES[c.lower()].startswith("ANGLE"):
-            angle += int(MORSE_CODE_RULES[c.lower()].split("ANGLE")[1])
+        if a.MORSE_CODE_RULES[c.lower()].startswith("ANGLE"):
+            angle += int(a.MORSE_CODE_RULES[c.lower()].split("ANGLE")[1])
             angle = clamp(angle, -360, 360)
-        if MORSE_CODE_RULES[c.lower()].startswith("LINE"):
-            length = int(MORSE_CODE_RULES[c.lower()].split("LINE")[1])
-        line_tuple = plan_angled_line(prev_line_tuple[0][2], prev_line_tuple[0][3],
+        if a.MORSE_CODE_RULES[c.lower()].startswith("LINE"):
+            length = int(a.MORSE_CODE_RULES[c.lower()].split("LINE")[1])
+        line_tuple = u.plan_angled_line(prev_line_tuple[0][2], prev_line_tuple[0][3],
                                       angle, length, width,
                                       color, (w, h))
         line_points_list.append(line_tuple)
@@ -553,36 +553,36 @@ class TcgDepicter:
         planned_name_lines = []
         for x in range(0, image_size[0], 3):
             planned_name_lines.append(
-                u.plan_angled_line(x, 0, 90, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
+                u.plan_angled_line(x, 0, 90, name_len, 1, t.BLUE_2, (image_size[0], image_size[1])))
             planned_name_lines.append(
-                u.plan_angled_line(x, image_size[1], 270, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
+                u.plan_angled_line(x, image_size[1], 270, name_len, 1, t.BLUE_2, (image_size[0], image_size[1])))
         for y in range(0, image_size[1], 3):
             planned_name_lines.append(
-                u.plan_angled_line(0, y, 0, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
+                u.plan_angled_line(0, y, 0, name_len, 1, t.BLUE_2, (image_size[0], image_size[1])))
             planned_name_lines.append(
-                u.plan_angled_line(image_size[0], y, 180, name_len, 1, s.BLUE_2, (image_size[0], image_size[1])))
+                u.plan_angled_line(image_size[0], y, 180, name_len, 1, t.BLUE_2, (image_size[0], image_size[1])))
         return planned_name_lines
 
     def depict_type(self) -> list:
         card_type = u.string_to_morse(self.card_datadict['type'])
-        type_lstring = lsystem_string_maker(card_type, s.MORSE_CODE_AXIOMS, 2)
+        type_lstring = lsystem_string_maker(card_type, a.MORSE_CODE_AXIOMS, 2)
         lsystem_points = u.lsystem_morse_coder(type_lstring)
         return lsystem_points
 
     def depict_rarity(self) -> list:
         card_rarity = u.string_to_morse(self.card_datadict['rarity'])
-        rarity_lstring = lsystem_string_maker(card_rarity, s.MORSE_CODE_AXIOMS, 2)
+        rarity_lstring = lsystem_string_maker(card_rarity, a.MORSE_CODE_AXIOMS, 2)
         lsystem_points = u.lsystem_morse_coder(rarity_lstring)
         return lsystem_points
 
     def depict_id(self) -> list:
         card_id = u.string_to_morse(self.card_datadict['id'])
-        id_lstring = lsystem_string_maker(card_id, s.MORSE_CODE_AXIOMS, 2)
+        id_lstring = lsystem_string_maker(card_id, a.MORSE_CODE_AXIOMS, 2)
         lsystem_points = u.lsystem_morse_coder(id_lstring)
         return lsystem_points
 
     def depict_coloring(self) -> list:
         card_coloring = u.string_to_morse(self.card_datadict['coloring'])
-        coloring_lstring = lsystem_string_maker(card_coloring, s.MORSE_CODE_AXIOMS, 2)
+        coloring_lstring = lsystem_string_maker(card_coloring, a.MORSE_CODE_AXIOMS, 2)
         lsystem_points = u.lsystem_morse_coder(coloring_lstring)
         return lsystem_points

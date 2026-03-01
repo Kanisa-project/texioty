@@ -9,6 +9,7 @@ from helpers.dbHelper import DatabaseHelper, insert_table_statement_maker
 from helpers.promptaires.tcg_lab.sourceTCG import SourceTCG
 from settings import themery as t, utils as u
 from tcgdexsdk import TCGdex, Query, Card
+from pathlib import Path
 
 load_dotenv()
 width_len = 36
@@ -58,11 +59,9 @@ class SourcePKM(SourceTCG):
         super().__init__()
         self.CARDTYPES = ["Energy", "Pokemon", "Trainer"]
         self.base_url = 'https://api.pokemontcg.io/v2/'
-        self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/pokemon_cards.db')
-        # self.db_helper = DatabaseHelper('cards/databases/pokemon_cards.db')
-        self.db_helper.create_tables_from_templates(POKEMON_TEMPLATES)
-        # self.endpoint_names = {'cards': [],
-        #                        'sets': []}
+        if not Path('helpers/promptaires/tcg_lab/cards/databases/pokemon_cards.db').exists():
+            self.db_helper = DatabaseHelper('helpers/promptaires/tcg_lab/cards/databases/pokemon_cards.db')
+            self.db_helper.create_tables_from_templates(POKEMON_TEMPLATES)
         self.color_translation_dict = {
             'grass': 'green',
             'fire': 'red',
@@ -187,7 +186,7 @@ class SourcePKM(SourceTCG):
     def gather_pokemon_cards(self, creature_criteria):
         if "name" in creature_criteria:
             pokemons = self.sdk.card.listSync(Query().equal('name', creature_criteria['name']))
-        print(pokemons)
+        # print(pokemons)
         return pokemons
 
     def gather_energy_cards(self, energy_criteria):

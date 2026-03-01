@@ -153,23 +153,25 @@ class DatabaseHelper:
 
     def create_tables_from_templates(self, table_templates: dict):
         for table_name, template in table_templates.items():
-            create_sql = create_table_statement_maker(table_name, list(template.keys()))[0]
+            print(f"Creating table '{table_name}'...")
+            create_sql = create_table_statement_maker(table_name, template)[0]
+            # create_sql = create_table_statement_maker(table_name, list(template.keys()))[0]
             self.execute_query(create_sql)
 
-    def create_tcg_tables(self):
-        """
-        Create each of the TCG tables.
-        :return:
-        """
-        tcg_templates = {
-            'all_cards': ALL_CARDS_TEMPLATE,
-            'pokemon_cards': POKEMON_CARD_TEMPLATE,
-            'magic_cards': MTG_CARD_TEMPLATE,
-            'digimon_cards': DIGIMON_CARD_TEMPLATE,
-            'lorcana_cards': LORCANA_CARD_TEMPLATE,
-            'yugioh_cards': YUGIOH_CARD_TEMPLATE
-        }
-        self.create_tables_from_templates(tcg_templates)
+    # def create_tcg_tables(self):
+    #     """
+    #     Create each of the TCG tables.
+    #     :return:
+    #     """
+    #     tcg_templates = {
+    #         'all_cards': ALL_CARDS_TEMPLATE,
+    #         'pokemon_cards': POKEMON_CARD_TEMPLATE,
+    #         'magic_cards': MTG_CARD_TEMPLATE,
+    #         'digimon_cards': DIGIMON_CARD_TEMPLATE,
+    #         'lorcana_cards': LORCANA_CARD_TEMPLATE,
+    #         'yugioh_cards': YUGIOH_CARD_TEMPLATE
+    #     }
+    #     self.create_tables_from_templates(tcg_templates)
 
     # def create_gaim_tables(self):
     #     """Create necessary starting tables and populate the columns."""

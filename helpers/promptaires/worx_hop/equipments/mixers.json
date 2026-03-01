@@ -1,0 +1,10 @@
+{
+  "protein": {
+    "": "meatballs",
+    "noodle_size": {
+      "length": 8,
+      "thickness": 3,
+      "is_spiral": false
+    }
+  }
+}

@@ -52,7 +52,3 @@ def slide_spatula(img: Image.Image, slide_direction=(0.43, 0.19)) -> Image.Image
             direction = (slide_direction[1], slide_direction[0])
         img.paste(sliding_img, (int(direction[0]*(i*3)), int(direction[1]*(i*3))))
     return img
-
-def flip_foto(img: Image.Image) -> Image.Image:
-    """Flip the foto horizontally."""
-    return img.transpose(Image.FLIP_LEFT_RIGHT)

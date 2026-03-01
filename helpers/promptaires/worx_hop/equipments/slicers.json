@@ -1,23 +1,23 @@
 {
   "cheese": {
     "slice_item": "cheddar",
-    "slice_direction": [1, 0.5],
-    "thickness": 0.75,
-    "amount": 7,
+    "slice_angle": 140,
+    "thickness": 3,
+    "amount": 71,
     "portion_amount": 1.4
   },
-  "turkey": {
-    "slice_item": "\uD83E\uDD83\uD83E\uDD83",
-    "slice_direction": [0.5, 0.5],
-    "thickness": 0.25,
-    "amount": 8,
-    "portion_amount": 1.9
+  "protein": {
+    "slice_item": "turkey",
+    "slice_angle": 241,
+    "thickness": 6,
+    "amount": 24,
+    "portion_amount": 0.8
   },
-  "ham": {
-    "slice_item": "OINKoinkOINK",
-    "slice_direction": [0, 1],
-    "thickness": 0.569,
-    "amount": 2,
-    "portion_amount": 2.2
+  "bread": {
+    "slice_item": "baguette",
+    "slice_angle": 180,
+    "thickness": 9,
+    "amount": 86,
+    "portion_amount": 2.8
   }
 }

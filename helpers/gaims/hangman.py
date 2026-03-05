@@ -2,6 +2,7 @@ import random
 from typing import Optional
 
 from helpers.gaims.base_gaim import BaseGaim
+from helpers.registries.command_definitions import HANGMAN_COMMANDS, bind_commands
 from settings import themery as t, utils as u
 
 # PHRASE_LIST = ["You gave Sally a cheese wheel, she buried it under a tree.",
@@ -88,34 +89,10 @@ HANGMAN_TEXTMAN_LIST = ["  ╔╤╤═══╕   \n"
 class HangmanRunner(BaseGaim):
     def __init__(self, txo, txi):
         super().__init__(txo, txi, "Hangman")
-        self.gaim_commands["guess"] = {
-            "name": "guess",
-            "usage": "guess [LETTER]",
-            "call_func": self.guess_letter,
-            "lite_desc": "Guess a single letter.",
-            "full_desc": ["Guess a single letter."],
-            "possible_args": {},
-            "args_desc": {
-                '[LETTER]': 'A letter of the alphabet.'
-            },
-            "group_tag": "HMAN",
-            "examples": ["guess a", 'guess e', 'guess h', 'guess y'],
-            "font_color": t.rgb_to_hex(t.MUSTARD_YELLOW),
-            "back_color": t.rgb_to_hex(t.BLACK)}
-        self.gaim_commands["solve"] = {
-            "name": "solve",
-            "usage": "solve [PHRASE]",
-            "call_func": self.guess_phrase,
-            "lite_desc": "Guess the entire phrase.",
-            "full_desc": ["Guess the entire phrase."],
-            "possible_args": {'unknown': 'too many possibilities'},
-            "args_desc": {
-                '[PHRASE]': 'The exact phrase of what you think it says.'
-            },
-            "group_tag": "HMAN",
-            "examples": ['solve this is the puzzle'],
-            "font_color": t.rgb_to_hex(t.MUSTARD_YELLOW),
-            "back_color": t.rgb_to_hex(t.BLACK)}
+        self.helper_commands = bind_commands(HANGMAN_COMMANDS, {
+            'guess': self.guess_letter,
+            'solve': self.guess_phrase,
+        })
         self.gaim_phrase = random.choice(PHRASE_LIST)
         print(self.gaim_phrase)
         self.hidden_dict = {'t': "◙", 'h': "◙", 'i': "◙", 's': "◙"}

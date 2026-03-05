@@ -1,8 +1,8 @@
 import datetime
 import random
-from tkinter import END
 from typing import Optional
 
+from helpers.registries.command_definitions import bind_commands, TEXIOTY_COMMANDS
 from settings import themery as t, utils as u
 import texity
 import texoty
@@ -71,53 +71,12 @@ class TexiotyHelper:
     def __init__(self, txo: texoty.TEXOTY, txi: texity.TEXITY):
         self.txo = txo
         self.txi = txi
-        self.helper_commands = {
-            "welcome": {
-                'name': 'welcome',
-                'usage': '"welcome"',
-                'call_func': self.welcome_message,
-                'lite_desc': 'Displays a welcoming message.',
-                'full_desc': ['Displays a welcoming message with a few commands to get started.',
-                              'Available at any point using the system.'],
-                'possible_args': {' - ': 'No arguments available.'},
-                'args_desc': {' - ': ['No arguments available.', None]},
-                'examples': ['welcome'],
-                'group_tag': 'HLPR',
-                'font_color': u.rgb_to_hex(t.GREEN_YELLOW),
-                'back_color': u.rgb_to_hex(t.BLACK)
-            },
-            "commands": {
-                'name': 'commands',
-                'usage': '"commands"',
-                'call_func': self.display_all_available_commands,
-                'lite_desc': 'Displays available commands.',
-                'full_desc': ['Displays all commands available to use in the active Texioty mode.',
-                              'Available at any point using the system.'],
-                'possible_args': {' - ': 'No arguments available.'},
-                'args_desc': {' - ': 'No arguments available.'},
-                'examples': ['commands'],
-                'group_tag': 'HLPR',
-                'font_color': u.rgb_to_hex(t.GREEN_YELLOW),
-                'back_color': u.rgb_to_hex(t.BLACK)
-            },
-            "help": {
-                'name': 'help',
-                'usage': '"help (GROUP_TAG) (COMMAND_NAME)"',
-                'call_func': self.display_help_message,
-                'lite_desc': 'Displays a helpful message.',
-                'full_desc': ['Displays some helpful tips and info based on the active Texioty mode.',
-                              'Available at any point using the system.'],
-                'possible_args': {'(GROUP_TAG)': self.txo.master.active_helpers,
-                                  '(COMMAND_NAME)': list(self.txo.master.command_registry.commands.keys())},
-                'args_desc': {' - ': ['No argument needed.', None],
-                              '(GROUP_TAG)': ['Group tag for getting help with.', str],
-                              '(COMMAND_NAME)': ['Name of the command to get help with.', str]},
-                'examples': ['help help', 'help', 'help HLPR', 'help commands'],
-                'group_tag': 'HLPR',
-                'font_color': u.rgb_to_hex(t.GREEN_YELLOW),
-                'back_color': u.rgb_to_hex(t.BLACK)
-            }
-        }
+
+        self.helper_commands = bind_commands(TEXIOTY_COMMANDS,{
+            'welcome': self.welcome_message,
+            'help': self.display_help_message,
+            'commands': self.display_all_available_commands,
+        })
 
     def priont_block_font(self, blk_word: str):
         top_line = ''

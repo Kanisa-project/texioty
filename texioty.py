@@ -4,15 +4,10 @@ import random
 import tkinter as tk
 from typing import Callable, Dict
 
-from helpers.pijun import PijunCooper
-from helpers.promptaires.digiary.digiary import Digiary
-from helpers.promptaires.prompt_helper import UserResponse, ResponseType, Question
+from helpers.promptaires.prompt_helper import ResponseType, Question
 from helpers.registries.command_registry import CommandRegistry
-from helpers.registries.gaim_registry import GaimRegistry
-from helpers.tex_helper import TexiotyHelper
 from settings import utils as u
 from settings import themery as t, konfig as k, alphanumers as a
-from helpers.promptaires.profilizer import PROFILE_NAMING_KEYS
 
 import texoty
 import texity
@@ -144,9 +139,12 @@ class Texioty(tk.LabelFrame):
                                             # f'{random.randint(0, 6)}.{random.randint(0, 6)}')
 
     def add_command_group(self, group_of_cmds: dict):
-        # print(group_of_cmds)
+        """
+        Add a group of commands to the command registry.
+        """
         for command in group_of_cmds:
-            # print("COM", command)
+            self.texoty.priont_string(f"Adding {command} to Texioty...")
+
             self.command_registry.add_command_dict(group_of_cmds[command])
 
     def remove_commands(self):
@@ -171,7 +169,6 @@ class Texioty(tk.LabelFrame):
         self.remove_commands()
         self.add_command_group(self.helper_commands_dict)
         for key, helper in self.helper_registry.get_all_helpers().items():
-            # print(key, helper)
             self.register_helper_commands(key)
 
     def close_program(self):

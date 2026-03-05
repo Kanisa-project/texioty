@@ -129,14 +129,7 @@ def pixtrude_foto(img: Image.Image, profile_dict: dict) -> Image.Image:
     return extruders.extrude_noodle(img, profile_dict)
 
 def dutched_foto(img: Image.Image, profile_dict) -> Image.Image:
-    prof_keys = list(profile_dict.keys())
-    if "oven_temp" in prof_keys:
-        img = ovens.preheat_oven(img, profile_dict['oven_temp'])
-    if "sheet_pan_size" in prof_keys:
-        img = ovens.setup_sheet_pan(img, profile_dict['sheet_pan_size'])
-    if "oven_timer" in prof_keys:
-        img = ovens.insert_sheet_pan(img, profile_dict['oven_timer'])
-    return img
+    return ovens.dutch_up_foto(img, profile_dict)
 
 def stirmix_foto(img: Image.Image, profile_dict) -> Image.Image:
     return mixers.mix_it(img, profile_dict)

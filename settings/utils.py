@@ -243,6 +243,6 @@ def retrieve_tcg_profiles(tcg_to_get: str) -> dict:
         return data
 
 def retrieve_worx_profiles(equipment: str) -> dict:
-    with open(f'helpers/promptaires/worx_hop/equipments/{equipment}.json') as json_equip:
+    with open(f'helpers/promptaires/worx_hop/worx_profiles/{equipment}.json') as json_equip:
         data = json.load(json_equip)
         return data

@@ -1,13 +1,15 @@
+import json
 import os
 import socket
 import subprocess
 import threading
 import time
-from typing import Optional
+from typing import Optional, Any, Dict
 
+from .registries.command_definitions import bind_commands, PIJUN_COMMANDS
 # from texioty import texoty, texity
 from .tex_helper import TexiotyHelper
-from settings import themery as t
+# from settings import themery as t
 
 POLL_INTERVAL = 1.0
 
@@ -16,6 +18,7 @@ def list_interfaces():
     try:
         return [n for n in os.listdir(base) if os.path.isdir(os.path.join(base, n))]
     except Exception as e:
+        print(f"Error listing interfaces: {e}")
         return []
 
 def read_file(path):
@@ -23,7 +26,8 @@ def read_file(path):
         # os.chmod(path, 0o666)
         with open(path, 'r') as f:
             return f.read().strip()
-    except Exception:
+    except Exception as e:
+        print(f"Error reading file {path}: {e}")
         return None
 
 def iface_carrier(iface):
@@ -38,7 +42,8 @@ def iface_ips(iface):
     try:
         out = subprocess.check_output(['ip', '-4', 'addr', 'show', 'dev', iface], text=True,
                                       stderr=subprocess.DEVNULL)
-    except Exception:
+    except Exception as e:
+        print(f"Error getting IPs for {iface}: {e}")
         return []
     addrs = []
     for line in out.splitlines():
@@ -111,124 +116,191 @@ class CoopWatcher(threading.Thread):
         self._stop.set()
 
 
-class PijunCooper(TexiotyHelper):
-    def __init__(self, txo, txi,  host='127.0.0.1', port=8008):
+class Pijun(TexiotyHelper):
+    def __init__(self, txo, txi, pijun_id: int = 0):
         """
         Allows for other devices to send a pijun to a coop server.
         """
         super().__init__(txo, txi)
-        self.buff_size = 1024
-        self.pijun_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.coop_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.pijun_id = pijun_id
+        self.buff_size = 2048
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.timeout = 2.0
+        self.socket.settimeout(self.timeout)
+        self.helper_commands = bind_commands(PIJUN_COMMANDS, {
+            "send": self.send_message,
+            "deliver": self.send_game_data
+        })
 
-        self.coop_address = ("7.41.241.42", 8080)
-        self.pijun_address = ("4.20.60.9", 8020)
-        self.pijuns = {}
-        self.pijun_addresses = {}
-        self.watcher = CoopWatcher(self.on_pijun_change, poll_interval=POLL_INTERVAL)
-        self.watcher.start()
-        self.helper_commands['coop'] = {"name": "coop",
-                                        "usage": "'coop [0-255] [GAIM_ENGINE]'",
-                                        "call_func": self.host_dovecot,
-                                        "lite_desc": "Host a coop server for pijuns.",
-                                        "full_desc": ["Host a coop server for pijuns to play and poop in."],
-                                        "possible_args": {},
-                                        "args_desc": {'[0-255]': ['The coop number.', int],
-                                                      '[GAIM_ENGINE]': ['The gaim engine to run in the coop.', str]},
-                                        'examples': ['coop 42 trailin', 'coop 84 slinger'],
-                                        "group_tag": "PIJN",
-                                        "font_color": t.rgb_to_hex(t.PIGEON_GREY),
-                                        "back_color": t.rgb_to_hex(t.BLACK)}
-        self.helper_commands['pijun'] = {"name": "pijun",
-                                         "usage": "'pijun [0-255] [enter/leave] (0-255)'",
-                                         "call_func": self.send_pijun,
-                                         "lite_desc": "Send a pijun to a coop server.",
-                                         "full_desc": ["Find a pijun to send.", "(0-255) is only for entering a coop."],
-                                         "possible_args": {},
-                                         "args_desc": {'[0-255]': ['The pijun number.', int],
-                                                       '[enter/leave]': ['Enter or leave a coop.', str],
-                                                       '(0-255)': ['The coop number to join.', int]},
-                                         'examples': ['pijun 74 enter 42', 'pijun 121 leave'],
-                                         "group_tag": "PIJN",
-                                         "font_color": t.rgb_to_hex(t.PIGEON_GREY),
-                                         "back_color": t.rgb_to_hex(t.BLACK)}
+
+        # self.pijun_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # self.coop_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        #
+        # self.coop_address = ("7.41.241.42", 8080)
+        # self.pijun_address = ("4.20.60.9", 8020)
+        # self.pijuns = {}
+        # self.pijun_addresses = {}
+        # self.watcher = CoopWatcher(self.on_pijun_change, poll_interval=POLL_INTERVAL)
+        # self.watcher.start()
+        # self.helper_commands['coop'] = {"name": "coop",
+        #                                 "usage": "'coop [0-255] [GAIM_ENGINE]'",
+        #                                 "call_func": self.host_dovecot,
+        #                                 "lite_desc": "Host a coop server for pijuns.",
+        #                                 "full_desc": ["Host a coop server for pijuns to play and poop in."],
+        #                                 "possible_args": {},
+        #                                 "args_desc": {'[0-255]': ['The coop number.', int],
+        #                                               '[GAIM_ENGINE]': ['The gaim engine to run in the coop.', str]},
+        #                                 'examples': ['coop 42 trailin', 'coop 84 slinger'],
+        #                                 "group_tag": "PIJN",
+        #                                 "font_color": t.rgb_to_hex(t.PIGEON_GREY),
+        #                                 "back_color": t.rgb_to_hex(t.BLACK)}
+        # self.helper_commands['pijun'] = {"name": "pijun",
+        #                                  "usage": "'pijun [0-255] [enter/leave] (0-255)'",
+        #                                  "call_func": self.send_pijun,
+        #                                  "lite_desc": "Send a pijun to a coop server.",
+        #                                  "full_desc": ["Find a pijun to send.", "(0-255) is only for entering a coop."],
+        #                                  "possible_args": {},
+        #                                  "args_desc": {'[0-255]': ['The pijun number.', int],
+        #                                                '[enter/leave]': ['Enter or leave a coop.', str],
+        #                                                '(0-255)': ['The coop number to join.', int]},
+        #                                  'examples': ['pijun 74 enter 42', 'pijun 121 leave'],
+        #                                  "group_tag": "PIJN",
+        #                                  "font_color": t.rgb_to_hex(t.PIGEON_GREY),
+        #                                  "back_color": t.rgb_to_hex(t.BLACK)}
 
     def display_help_message(self, group_tag: Optional[str] = None):
         super().display_help_message(group_tag)
 
-    def enter_dovecot(self, host: str, port: str):
-        print(f"trying to enter to {host} {port}")
-        self.coop_socket.bind((host, int(port)))
-        self.txo.priont_string(f"coop socket bound to {host}:{port}")
-        coop_thread = threading.Thread(target=self.coop_receive_data)
-        coop_thread.start()
-        self.txo.priont_string("coop_thread_started")
-
-    def leave_dovecot(self, host: str, port: str):
+    def send_message(self, message: str, host: str, port: str):
         try:
             port = int(port)
         except ValueError:
-            port = 8008
-        address = (host, port)
-        self.coop_socket.sendto(bytes("Goodbye, I am leaving.", "utf-8"), address)
-        self.unassign_ip("enp4s0")
-        self.coop_socket.close()
-        self.txo.priont_string(f"coop socket sent goodbye to {address}")
+            port = 8020
+            self.txo.priont_string("Invalid port number. Using default port 8020.")
 
-    def send_pijun(self, host: str, port: str):
+        address = (host, port)
+        payload = {
+            "type": "message",
+            "pijun_id": self.pijun_id,
+            "data": message
+        }
+
+        try:
+            self.socket.sendto(json.dumps(payload).encode('utf-8'), address)
+        except Exception as e:
+            self.txo.priont_string(f"Error sending message: {e}")
+            print(f"Error sending message: {e}")
+
+    def send_game_data(self, game_data: str, host: str, port: str):
         try:
             port = int(port)
         except ValueError:
-            port = 8008
+            port = 8210
+            self.txo.priont_string("Invalid port number. Using default port 8210.")
+
         address = (host, port)
-        self.pijun_socket.sendto(bytes(f"Hello, I am {self.pijun_address} pijun.", "utf-8"), address)
-
-    def coop_receive_data(self):
-        while True:
-            data, addr = self.coop_socket.recvfrom(self.buff_size)
-            if not data:
-                break
-            self.txo.priont_string(data.decode())
-            self.txo.priont_string(f"...received from {addr}")
-            print(data.decode())
-
-    def on_pijun_change(self, status):
-        print("Status", status)
-        for iface in sorted(status.keys()):
-            info = status[iface]
-            code = info.get('code', "unknown")
-            text = info.get('text', "")
-            if "(no IP)" in text:
-                # self.texoty.priont_string("No IP detected")
-                self.assign_ip(iface)
-            self.txo.priont_string(f"{iface}: {code} {text}")
-
-    def assign_ip(self, iface):
-        """Assign an IP address to a given interface."""
         try:
-            subprocess.run(["sudo", "ip", "addr", "add", self.coop_address[0], "dev", iface], check=True)
-            self.txo.priont_string(f"{self.coop_address[0]} assigned to {iface}")
-        except Exception as e:
-            print(f"Error assigning {self.coop_address[0]}: {e}")
+            parsed = json.loads(game_data)
+        except json.JSONDecodeError as e:
+            self.txo.priont_string(f"Error parsing game data: {e}")
+            return
 
-    def unassign_ip(self, iface):
+        payload = {
+            "type": "game_data",
+            "pijun_id": self.pijun_id,
+            "data": parsed
+        }
+
         try:
-            subprocess.run(["sudo", "ip", "addr", "del", self.coop_address, "dev", iface], check=True)
-            self.txo.priont_string(f"{self.coop_address} unassigned from {iface}")
+            self.socket.sendto(json.dumps(payload).encode('utf-8'), address)
+            self.txo.priont_string(f"Game data sent to {host}:{port}")
         except Exception as e:
-            print(f"Error unassigning {self.coop_address}: {e}")
+            self.txo.priont_string(f"Error sending game data: {e}")
+            print(f"Error sending game data: {e}")
 
-    def host_dovecot(self, coop_num: str, gaim_engine: str):
-        address = (f"7.41.241.{coop_num}", 8080)
-        print(f"trying to bind to {address}")
-        self.txo.priont_string(f"coop socket bound to {address} for playing {gaim_engine}")
-        self.txo.priont_string("coop_thread_started")
-        if gaim_engine == "slinger":
-            self.start_slinger_coop()
+    def send_raw(self, payload: Dict[str, Any], host: str, port: str):
+        try:
+            address = (host, int(port))
+            self.socket.sendto(json.dumps(payload).encode('utf-8'), address)
+            return True
+        except Exception as e:
+            self.txo.priont_string(f"Error sending raw data: {e}")
+            print(f"Error sending raw data: {e}")
+            return False
 
-
-    def start_slinger_coop(self):
-        self.txo.master.gaim_registry.start_game('slinger')
+    # def enter_dovecot(self, host: str, port: str):
+    #     print(f"trying to enter to {host} {port}")
+    #     self.coop_socket.bind((host, int(port)))
+    #     self.txo.priont_string(f"coop socket bound to {host}:{port}")
+    #     coop_thread = threading.Thread(target=self.coop_receive_data)
+    #     coop_thread.start()
+    #     self.txo.priont_string("coop_thread_started")
+    #
+    # def leave_dovecot(self, host: str, port: str):
+    #     try:
+    #         port = int(port)
+    #     except ValueError:
+    #         port = 8008
+    #     address = (host, port)
+    #     self.coop_socket.sendto(bytes("Goodbye, I am leaving.", "utf-8"), address)
+    #     self.unassign_ip("enp4s0")
+    #     self.coop_socket.close()
+    #     self.txo.priont_string(f"coop socket sent goodbye to {address}")
+    #
+    # def send_pijun(self, host: str, port: str):
+    #     try:
+    #         port = int(port)
+    #     except ValueError:
+    #         port = 8008
+    #     address = (host, port)
+    #     self.pijun_socket.sendto(bytes(f"Hello, I am {self.pijun_address} pijun.", "utf-8"), address)
+    #
+    # def coop_receive_data(self):
+    #     while True:
+    #         data, addr = self.coop_socket.recvfrom(self.buff_size)
+    #         if not data:
+    #             break
+    #         self.txo.priont_string(data.decode())
+    #         self.txo.priont_string(f"...received from {addr}")
+    #         print(data.decode())
+    #
+    # def on_pijun_change(self, status):
+    #     print("Status", status)
+    #     for iface in sorted(status.keys()):
+    #         info = status[iface]
+    #         code = info.get('code', "unknown")
+    #         text = info.get('text', "")
+    #         if "(no IP)" in text:
+    #             # self.texoty.priont_string("No IP detected")
+    #             self.assign_ip(iface)
+    #         self.txo.priont_string(f"{iface}: {code} {text}")
+    #
+    # def assign_ip(self, iface):
+    #     """Assign an IP address to a given interface."""
+    #     try:
+    #         subprocess.run(["sudo", "ip", "addr", "add", self.coop_address[0], "dev", iface], check=True)
+    #         self.txo.priont_string(f"{self.coop_address[0]} assigned to {iface}")
+    #     except Exception as e:
+    #         print(f"Error assigning {self.coop_address[0]}: {e}")
+    #
+    # def unassign_ip(self, iface):
+    #     try:
+    #         subprocess.run(["sudo", "ip", "addr", "del", self.coop_address, "dev", iface], check=True)
+    #         self.txo.priont_string(f"{self.coop_address} unassigned from {iface}")
+    #     except Exception as e:
+    #         print(f"Error unassigning {self.coop_address}: {e}")
+    #
+    # def host_dovecot(self, coop_num: str, gaim_engine: str):
+    #     address = (f"7.41.241.{coop_num}", 8080)
+    #     print(f"trying to bind to {address}")
+    #     self.txo.priont_string(f"coop socket bound to {address} for playing {gaim_engine}")
+    #     self.txo.priont_string("coop_thread_started")
+    #     if gaim_engine == "slinger":
+    #         self.start_slinger_coop()
+    #
+    #
+    # def start_slinger_coop(self):
+    #     self.txo.master.gaim_registry.start_game('slinger')
 
     # def host_dovecot(self, host: str, port: str):
     #     try:

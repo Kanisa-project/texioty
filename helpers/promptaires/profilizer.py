@@ -1,23 +1,8 @@
-import os
 import random
-from typing import Callable, Any
+from typing import Callable
 
-from helpers.promptaires.prompt_helper import BasePrompt, QuestionType, ResponseType, \
-    dict_to_question_prompt_factory
+from helpers.promptaires.prompt_helper import BasePrompt, QuestionType, ResponseType, dict_to_question_prompt_factory
 
-PROFILE_NAMING_KEYS = {
-    "users": {
-        "texioty": "username",
-        "laser_tag": "tagger_name"
-    },
-    "foto_worx": {
-        "printer": ["server_name", "table_number"],
-        "friar": ["grease_temp", "basket_depth"],
-        "slicer": [],
-        "flatop": [],
-        "extruder": []
-    }
-}
 
 USER_PROFILE_DICT = {
     "texioty": {
@@ -181,6 +166,68 @@ FOTO_WORX_PROFILE_DICT = {
     }
 }
 
+TCG_PROFILE_DICT = {
+    "magic": {
+        "": "magic_string",
+        "question": "Which magic profile to make?",
+        "question_type": QuestionType.DECISIONING,
+        "default_response": "deckster",
+        "response_type": ResponseType.DECISION,
+        "decision_choices": ["deckster", "depicter", "puzzler", "downloader", "blender"]
+    },
+    "pokemon": {
+        "": "pokemon_string",
+        "question": "Which pokemon profile to make?",
+        "question_type": QuestionType.DECISIONING,
+        "default_response": "deckster",
+        "response_type": ResponseType.DECISION,
+        "decision_choices": ["deckster", "depicter", "puzzler", "downloader", "blender"]
+    },
+    "digimon": {
+        "": "digimon_string",
+        "question": "Which digimon profile to make?",
+        "question_type": QuestionType.DECISIONING,
+        "default_response": "deckster",
+        "response_type": ResponseType.DECISION,
+        "decision_choices": ["deckster", "depicter", "puzzler", "downloader", "blender"]
+    },
+    "lorcana": {
+        "": "lorcana_string",
+        "question": "Which lorcana profile to make?",
+        "question_type": QuestionType.DECISIONING,
+        "default_response": "deckster",
+        "response_type": ResponseType.DECISION,
+        "decision_choices": ["deckster", "depicter", "puzzler", "downloader", "blender"]
+    },
+    "yugioh": {
+        "": "yugioh_string",
+        "question": "Which yugioh profile to make?",
+        "question_type": QuestionType.DECISIONING,
+        "default_response": "deckster",
+        "response_type": ResponseType.DECISION,
+        "decision_choices": ["deckster", "depicter", "puzzler", "downloader", "blender"]
+    }
+}
+
+LAB_PROFILE_DICT = {
+    "tcg": {
+        "": "tcg_string",
+        "question": "Which trading card game to create for?",
+        "question_type": QuestionType.DECISIONING,
+        "default_response": "Pokemon",
+        "response_type": ResponseType.DECISION,
+        "decision_choices": ["Magic the Gathering", "Pokemon", "Digimon", "Lorcana", "Yu-Gi-Oh"]
+    },
+    "lab": {
+        "": "lab_string",
+        "question": "Which lab profile to make?",
+        "question_type": QuestionType.DECISIONING,
+        "default_response": "printer",
+        "response_type": ResponseType.DECISION,
+        "decision_choices": ["depicter", "blender", "deckster", "puzzler", "downloader"]
+    }
+}
+
 class Profilizer(BasePrompt):
     def __init__(self, txo, txi):
         super().__init__(txo, txi)
@@ -198,9 +245,14 @@ class Profilizer(BasePrompt):
             case 'foto_worx':
                 self.decide_fotoworx_profile()
             case 'tcg_lab':
-                pass
+                self.decide_tcg_lab_profile()
             case 'word_gaims':
                 self.decide_word_gaims_profile()
+
+    def decide_user_profile(self):
+        self.decide_decision("Which user profile to make", list(USER_PROFILE_DICT.keys()))
+        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+            self.txo.master.deciding_function = self.prompt_user_profile
 
     def decide_fotoworx_profile(self):
         """
@@ -210,6 +262,21 @@ class Profilizer(BasePrompt):
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
             self.txo.master.deciding_function = self.prompt_foto_worx_profile
 
+    def decide_tcg_lab_profile(self):
+        self.decide_decision("Which tcg lab profile to make", list(TCG_PROFILE_DICT.keys()))
+        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+            self.txo.master.deciding_function = self.prompt_tcg_lab_profile
+
+    def decide_word_gaims_profile(self):
+        self.decide_decision("Which word gaim for a new make", self.word_gaims)
+        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
+            self.txo.master.deciding_function = self.prompt_word_gaim_profile
+
+    def prompt_user_profile(self, user_type: str="texioty"):
+        question_dict = dict_to_question_prompt_factory(USER_PROFILE_DICT[user_type])
+        self.txo.master.change_current_mode("Questionnaire", self.helper_commands)
+        self.start_question_prompt(question_dict)
+
     def prompt_foto_worx_profile(self, worx_type: str="printer"):
         """
         Sets up the foto worx profile questions and starts the questionnaire.
@@ -218,30 +285,10 @@ class Profilizer(BasePrompt):
         self.txo.master.change_current_mode("Questionnaire", self.helper_commands)
         self.start_question_prompt(question_dict)
 
-    def decide_user_profile(self):
-        self.decide_decision("Which user profile to make", list(USER_PROFILE_DICT.keys()))
-        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-            self.txo.master.deciding_function = self.prompt_user_profile
-
-    def prompt_user_profile(self, user_type: str="Texioty"):
-        question_dict = dict_to_question_prompt_factory(USER_PROFILE_DICT[user_type])
+    def prompt_tcg_lab_profile(self, profile_type: str="tcg"):
+        question_dict = dict_to_question_prompt_factory(TCG_PROFILE_DICT)
         self.txo.master.change_current_mode("Questionnaire", self.helper_commands)
         self.start_question_prompt(question_dict)
-
-
-    # def prompt_lasertag_profile(self):
-    #     self.txo.master.change_current_mode("Questionnaire", self.helper_commands)
-    #     self.start_question_prompt({
-    #         "profile_name": ["What to name the profile?", "", f"laser_master{random.randint(0, 9999)}"],
-    #         "color_theme": ["Which color theme to use?", "", random.choice(['dark_moon', 'moon_light',
-    #                                                                         'space_shot', 'red_blue'])],
-    #         "confirming_function": ["Does this look good?", "", random.choice(['yes', 'no']), self.txo.master.create_profile],
-    #     })
-
-    def decide_word_gaims_profile(self):
-        self.decide_decision("Which word gaim for a new make", self.word_gaims)
-        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-            self.txo.master.deciding_function = self.prompt_word_gaim_profile
 
     def prompt_word_gaim_profile(self, word_gaim: str):
         match word_gaim:
@@ -257,12 +304,7 @@ class Profilizer(BasePrompt):
 
     def prompt_new_hangman(self):
         self.txo.master.change_current_mode("Questionnaire", self.helper_commands)
-        self.start_question_prompt({
-            "phrase_length": ["How long is this new phrase for hangman?", "", random.choice(['short_phrase', 'long_phrase', 'single_word'])],
-            "category": ["What category would you categorize the new phrase?", "", random.choice(["sports", "vehicles", "plants"])],
-            "new_phrase": ["What is the new phrase to add?", "", "new"*random.randint(5, 10)],
-            "confirming_function": ["Does this look good?", "", random.choice(['yes', 'no']), self.save_new_hangman],
-        })
+        self.start_question_prompt()
 
     def save_new_hangman(self, yesno: str):
         pass

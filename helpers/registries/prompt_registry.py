@@ -10,6 +10,8 @@ from helpers.tex_helper import TexiotyHelper
 from settings import themery as t, utils as u
 from helpers.promptaires.worx_hop.foto_worx import FotoWorxHop
 from helpers.promptaires.profilizer import Profilizer
+from helpers.registries.command_definitions import (TEXIOTY_COMMANDS, PROMPT_COMMANDS, DIRY_COMMANDS,
+                                                    bind_commands, merge_command_groups)
 
 LAB_OPTIONS = ['Depictinator{}',
                'Card%Puzzler(]',
@@ -28,61 +30,29 @@ FUNCFOTO_OPTIONS = ['Flatop_XT 2200',
 PROFILIZER_OPTIONS = ['users',
                       'foto_worx',
                       'tcg_lab',
-                      'beop_boeps'
+                      'beop_boeps',
                       'word_gaims']
 
 class PromptRegistry(TexiotyHelper):
     def __init__(self, txo: texoty.TEXOTY, txi: texity.TEXITY):
         super().__init__(txo, txi)
-        self.txo = txo
-        self.txi = txi
-        self.in_questionnaire_mode = False
-        self.current_prompt = "N/A"
         self.tcg_lab = TCGLabby(txo, txi)
         self.foto_worx = FotoWorxHop(txo, txi)
         self.profilemake = Profilizer(txo, txi)
         self.k_wallet = KanisaWallet(txo, txi)
         self.arc_api = ArcApi(txo, txi)
         self.beep_boops = BeepBoops(txo, txi)
-        self.helper_commands = self.helper_commands | self.beep_boops.helper_commands | self.arc_api.helper_commands
-        self.helper_commands["tcg_lab"] = {
-            "name": "tcg_lab",
-            "usage": '"tcg_lab"',
-            "call_func": self.start_tcg_lab_prompt,
-            "lite_desc": "Enter the TCG lab.",
-            "full_desc": ["Entering the TCG lab allows a person to make card game stuff.",
-                          "Randomized decks, abstract art and word games from cards."],
-            "possible_args": {' - ': 'No arguments available.'},
-            "args_desc": {' - ': ['No arguments available.', None]},
-            "examples": ['tcg_lab'],
-            "group_tag": "PRUN",
-            "font_color": u.rgb_to_hex(t.KHAKI),
-            "back_color": u.rgb_to_hex(t.BLACK)}
-        self.helper_commands["foto_worx"] = {
-            "name": "foto_worx",
-            "usage": '"foto_worx"',
-            "call_func": self.start_worxhop_prompt,
-            "lite_desc": "Work in the foto hop.",
-            "full_desc": ["Designed after restaurant equipment, it manipulates fotoes.",],
-            "possible_args": {' - ': 'No arguments available.'},
-            "args_desc": {' - ': ['No arguments available.', None]},
-            "examples": ['foto_worx'],
-            "group_tag": "PRUN",
-            "font_color": u.rgb_to_hex(t.KHAKI),
-            "back_color": u.rgb_to_hex(t.BLACK)}
-        self.helper_commands["profile_make"] = {
-            "name": "profile_make",
-            "usage": '"profile_make"',
-            "call_func": self.start_profiler_prompt,
-            "lite_desc": "Make some type of profile.",
-            "full_desc": ["Make some type of profile.",],
-            "possible_args": {' - ': 'No arguments available.'},
-            "args_desc": {' - ': ['No arguments available.', None]},
-            "examples": ['profile_make'],
-            "group_tag": "PRUN",
-            "font_color": u.rgb_to_hex(t.KHAKI),
-            "back_color": u.rgb_to_hex(t.BLACK)
-        }
+        all_prompt_commands = merge_command_groups(PROMPT_COMMANDS, DIRY_COMMANDS, TEXIOTY_COMMANDS)
+        self.helper_commands = bind_commands(all_prompt_commands,{
+            'welcome': self.welcome_message,
+            'help': self.display_help_message,
+            'commands': self.display_all_available_commands,
+            'tcg_lab': self.start_tcg_lab_prompt,
+            'foto_worx': self.start_worxhop_prompt,
+            'profile_make': self.start_profiler_prompt
+        })
+        self.in_questionnaire_mode = False
+        self.current_prompt = "N/A"
 
     def start_tcg_lab_prompt(self):
         self.tcg_lab.decide_decision("What lab would you like to work in", LAB_OPTIONS, 'tcg_lab')

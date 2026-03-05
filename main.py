@@ -6,6 +6,8 @@ from helpers.registry_manager import HelperRegistry, HelperConfig
 from helpers.promptaires.digiary.digiary import Digiary
 from helpers.registries.gaim_registry import GaimRegistry
 from helpers.registries.prompt_registry import PromptRegistry
+from helpers.dovecote import Dovecot, NetworkWatcher
+from helpers.pijun import Pijun
 from settings.utils import check_file_exists
 from settings import konfig as k
 
@@ -52,6 +54,20 @@ class Application(tk.Frame):
         self.helper_registry.register(HelperConfig(
             tag="PRUN",
             class_ref=PromptRegistry,
+            priority=1,
+            enabled=True,
+            dependencies=[]
+        ))
+        self.helper_registry.register(HelperConfig(
+            tag="PIJN",
+            class_ref=Pijun,
+            priority=1,
+            enabled=True,
+            dependencies=[]
+        ))
+        self.helper_registry.register(HelperConfig(
+            tag="DOVE",
+            class_ref=Dovecot,
             priority=1,
             enabled=True,
             dependencies=[]

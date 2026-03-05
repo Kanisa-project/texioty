@@ -1,0 +1,29 @@
+{
+  "cookies": {
+    "sheet_pan_size": {
+      "width": 11,
+      "length": 6,
+      "spacing": 9
+    },
+    "oven_temp": 350,
+    "oven_timer": 15.3
+  },
+  "fish_sticks": {
+    "sheet_pan_size": {
+      "width": 8,
+      "length": 4,
+      "spacing": 2
+    },
+    "oven_temp": 420,
+    "oven_timer": 5.3
+  },
+  "meatballs": {
+    "sheet_pan_size": {
+      "width": 19,
+      "length": 3,
+      "spacing": 5
+    },
+    "oven_temp": 280,
+    "oven_timer": 13.2
+  }
+}

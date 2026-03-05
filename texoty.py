@@ -87,7 +87,7 @@ class TEXOTY(Text):
         if tag_name not in self._tag_cache:
             try:
                 self.tag_configure(tag_name, foreground=fg_color, background=bg_color)
-            except Exception:
+            finally:
                 self.tag_configure(tag_name, foreground=str(fg_color), background=str(bg_color))
             self._tag_cache.add(tag_name)
         self.tag_add(tag_name, start_index, end_index)
@@ -155,7 +155,7 @@ class TEXOTY(Text):
 
     def priont_command_lite(self, command: texity.Command):
         """
-        Display a command on Texoty in a stylized and slightly complicated fashion.
+        Display a command with its lite description.
         :param command:
         :return:
         """
@@ -165,6 +165,9 @@ class TEXOTY(Text):
         self.yview(END)
 
     def priont_command_midd(self, command: texity.Command):
+        """
+        Display a command with its lite description and some extra info.
+        """
         self.priont_command_colorized(f'\n{command.name}╕', command.font_color, command.back_color)
         help_message_text = f'{" "*len(command.name)}╘► {command.lite_desc}'
         self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
@@ -176,7 +179,7 @@ class TEXOTY(Text):
 
     def priont_command_full(self, command: texity.Command):
         """
-        Display a command on Texoty in a stylized and slightly complicated fashion.
+        Display a command with its full description and examples.
         :param command:
         :return:
         """
@@ -263,23 +266,6 @@ class TEXOTY(Text):
         self.insert(END, striong, tag_name)
         self.insert(END, '\n')
         self.yview(END)
-
-    # def priont_echo(self, striong: str, text_color='', bg_color=''):
-    #     """
-    #     Display a striong on texoty in the color of font_color.
-    #
-    #     @param striong:
-    #     @param bg_color:
-    #     @param text_color:
-    #     """
-    #     tag_name = f'{bg_color}_{text_color}'
-    #     self.tag_configure(tag_name, foreground=text_color, background=bg_color)
-    #     start_pos = f'1.0'
-    #     end_pos = f'1.{len(striong)}'
-    #     self.tag_add(tag_name, start_pos, end_pos)
-    #     self.insert(END, striong, tag_name)
-    #     self.insert(END, '\n')
-    #     self.yview(END)
 
     def priont_command_colorized(self, striong: str, text_color='', bg_color=''):
         """
@@ -372,14 +358,3 @@ class TEXOTY(Text):
         """
         line_start_index = f"{line_number}.0"
         self.insert(line_start_index, text)
-
-    def set_char_on_line(self, x_loc, y_loc, char="┐"):
-        self.insert(f"{x_loc}.{y_loc}", char)
-
-    def priont_bool(self, boiol: bool, parent_key=None):
-        pass
-
-
-    def priont(self, text: str, y_loc: int, x_loc: int):
-        insert_index = f"{y_loc}.{x_loc}"
-        self.insert(float(insert_index), text)

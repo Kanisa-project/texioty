@@ -65,55 +65,55 @@ def get_linux_status():
         status[iface] = {'carrier': carrier, 'oper': oper, 'ips': ips}
     return status
 
-def interpret_state(info):
-    carrier = info.get('carrier')
-    oper = info.get('oper')
-    ips = info.get('ips', [])
-    if carrier is False or (oper and oper.lower() in ("down", "no-carrier")):
-        return "no_link", "Cable unplugged"
-    if carrier is True:
-        if ips:
-            return "connected_with_ip", f"Connected with IP {', '.join(ips)}"
-        return "cabled_detected_no_ip", "Cable detected (no IP)"
-    if oper and oper.lower() in ("up", "unknown", "dormant", "lowerlayerdown"):
-        if ips:
-            return "connected_with_ip", f"Connected with IP {', '.join(ips)}"
-        return "connected_no_ip", f"Operstate={oper} (no IP)"
-    if ips:
-        return "connected_with_ip", f"Has IP {', '.join(ips)}"
-    return "unknown", "Unknown"
+# def interpret_state(info):
+#     carrier = info.get('carrier')
+#     oper = info.get('oper')
+#     ips = info.get('ips', [])
+#     if carrier is False or (oper and oper.lower() in ("down", "no-carrier")):
+#         return "no_link", "Cable unplugged"
+#     if carrier is True:
+#         if ips:
+#             return "connected_with_ip", f"Connected with IP {', '.join(ips)}"
+#         return "cabled_detected_no_ip", "Cable detected (no IP)"
+#     if oper and oper.lower() in ("up", "unknown", "dormant", "lowerlayerdown"):
+#         if ips:
+#             return "connected_with_ip", f"Connected with IP {', '.join(ips)}"
+#         return "connected_no_ip", f"Operstate={oper} (no IP)"
+#     if ips:
+#         return "connected_with_ip", f"Has IP {', '.join(ips)}"
+#     return "unknown", "Unknown"
 
-class CoopWatcher(threading.Thread):
-    """
-    Listen for ethernet connections and trigger callbacks when changes occur.
-    """
-    def __init__(self, callback, poll_interval=POLL_INTERVAL):
-        super().__init__(daemon=True)
-        self.callback = callback
-        self.poll_interval = poll_interval
-        self._stop = threading.Event()
-        self.last = {}
-
-    def run(self):
-        while not self._stop.is_set():
-            # print('CoopWatcher running.')
-            try:
-                raw = get_linux_status()
-                interp = {}
-                for iface, info in raw.items():
-                    code, text = interpret_state(info)
-                    interp[iface] = {"code": code, "text": text}
-                    # print(interp[iface])
-                if interp != self.last:
-                    self.callback(interp)
-                    self.last = interp
-            except Exception as e:
-                self.callback({"__error__": {"code": "unknown", "text": str(e)}})
-                print(f"Error in CoopWatcher: {e}")
-            time.sleep(self.poll_interval)
-
-    def stop(self):
-        self._stop.set()
+# class CoopWatcher(threading.Thread):
+#     """
+#     Listen for ethernet connections and trigger callbacks when changes occur.
+#     """
+#     def __init__(self, callback, poll_interval=POLL_INTERVAL):
+#         super().__init__(daemon=True)
+#         self.callback = callback
+#         self.poll_interval = poll_interval
+#         self._stop = threading.Event()
+#         self.last = {}
+#
+#     def run(self):
+#         while not self._stop.is_set():
+#             # print('CoopWatcher running.')
+#             try:
+#                 raw = get_linux_status()
+#                 interp = {}
+#                 for iface, info in raw.items():
+#                     code, text = interpret_state(info)
+#                     interp[iface] = {"code": code, "text": text}
+#                     # print(interp[iface])
+#                 if interp != self.last:
+#                     self.callback(interp)
+#                     self.last = interp
+#             except Exception as e:
+#                 self.callback({"__error__": {"code": "unknown", "text": str(e)}})
+#                 print(f"Error in CoopWatcher: {e}")
+#             time.sleep(self.poll_interval)
+#
+#     def stop(self):
+#         self._stop.set()
 
 
 class Pijun(TexiotyHelper):

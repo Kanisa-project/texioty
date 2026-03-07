@@ -220,6 +220,7 @@ class Dovecot(TexiotyHelper):
         self.port = port
         self.buff_size = 2048
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.settimeout(2.0)
 
         self.connected_pijuns: Dict[int, Dict[str, Any]] = {}
         self.message_board: List[Dict[str, Any]] = []
@@ -245,6 +246,10 @@ class Dovecot(TexiotyHelper):
         except ValueError:
             self.txo.priont_string("Invalid coop number. Please enter a number between 0 and 255.")
             return
+        if dovecot_num < 0 or dovecot_num > 255:
+            self.txo.priont_string("Invalid coop number. Please enter a number between 0 and 255.")
+            return
+
         self.dovecot_id = dovecot_num
         target_ip = f"7.41.241.{dovecot_num}"
         address = (target_ip, 8080)
@@ -258,16 +263,19 @@ class Dovecot(TexiotyHelper):
             self.txo.priont_string(f"Dovecot server bound to {address}")
             self._running = True
             self.receiver_thread = threading.Thread(target=self._receive_pijuns, daemon=True)
-            self.txo.priont_string(f"Receiver thread created")
             self.receiver_thread.start()
-            self.txo.priont_string(f"Dovecot server started on {address}")
+            self.txo.priont_string(f"Dovecot listening for pijuns on {address}")
             if gaim_engine:
                 self.start_game_session(gaim_engine)
+        except OSError as e:
+            self.txo.priont_string(f"Error binding to {address}: {e}")
+            self._running = False
         except Exception as e:
             self.txo.priont_string(f"Error starting Dovecot server: {e}")
             self._running = False
 
     def _receive_pijuns(self):
+        self.txo.priont_string("Dovecot server is listening for pijuns/messages...")
         while self._running:
             try:
                 data, addr = self.socket.recvfrom(self.buff_size)
@@ -277,11 +285,14 @@ class Dovecot(TexiotyHelper):
                     payload = json.loads(data.decode('utf-8'))
                     self._handle_pijun_payload(payload, addr)
                 except json.JSONDecodeError:
-                    self._handle_raw_message(data.decode('utf-8'), addr)
+                    self.txo.priont_string(f"Received invalid JSON: {data.decode('utf-8')}")
+                    self._handle_raw_message(data.decode('utf-8', errors='ignore'), addr)
             except socket.timeout:
                 continue
             except Exception as e:
-                print(f"Error receiving pijun: {e}")
+                if self._running:
+                    self.txo.priont_string(f"Error receiving pijun: {e}")
+                    print(f"Error receiving pijun: {e}")
 
     def _handle_pijun_payload(self, payload: Dict[str, Any], addr: tuple):
         payload_type = payload.get('type', 'unknown')
@@ -313,7 +324,8 @@ class Dovecot(TexiotyHelper):
         self.message_board.append(entry)
         if len(self.message_board) > MESSAGE_BUFFER_SIZE:
             self.message_board.pop(0)
-        self.txo.priont_string(f"[{pijun_id or addr[0]}]: {entry}")
+        source_label = f"Pijun {pijun_id}" if pijun_id is not None else f"Client {addr[0]}"
+        self.txo.priont_string(f"[{source_label}]: {data}")
 
     def _handle_game_data(self, pijun_id: Optional[int], data: Dict[str, Any], addr: tuple):
         self.txo.priont_string(f"Game data from {pijun_id}: " )
@@ -403,7 +415,11 @@ class Dovecot(TexiotyHelper):
                 self.txo.priont_string(f"Assigned IP {target_ip} to interface {iface}")
                 return iface
             except subprocess.CalledProcessError as e:
-                print(f"Error assigning IP {target_ip} to interface {iface}: {e}")
+                if "File exists" not in str(e.stderr):
+                    self.txo.priont_string(f"Error assigning IP {target_ip} to interface {iface}: {e}")
+                else:
+                    self.txo.priont_string(f"IP {target_ip} already assigned to interface {iface}")
+                    return iface
                 continue
             except Exception as e:
                 print(f"Error assigning IP {target_ip} to interface {iface}: {e}")

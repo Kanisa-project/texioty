@@ -438,10 +438,18 @@ class Dovecot(TexiotyHelper):
             self.connected_pijuns.pop(pijun_id, None)
 
     def _find_and_assign_ip(self, target_ip):
-        interfaces = list_interfaces()
+        interfaces = [iface for iface in list_interfaces() if iface != "lo"]
+
+        def iface_priority(iface: str) -> tuple[int, str]:
+            if iface.startswith(("enp", "eth")):
+                return 0, iface
+            elif iface.startswith(("wlan", "wlp")):
+                return 1, iface
+            return 2, iface
+
+        interfaces.sort(key=iface_priority)
+
         for iface in interfaces:
-            if iface == "lo":
-                continue
             try:
                 subprocess.run(
                     ["sudo", "ip", "addr", "add", f"{target_ip}/24", "dev", iface],

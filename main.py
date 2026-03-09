@@ -1,16 +1,15 @@
 import os
 import tkinter as tk
-import texioty
+from src.texioty.core import texioty
 
-from helpers.registry_manager import HelperRegistry, HelperConfig
-from helpers.promptaires.digiary.digiary import Digiary
-from helpers.registries.gaim_registry import GaimRegistry
-from helpers.registries.prompt_registry import PromptRegistry
-from helpers.dovecote import Dovecot, NetworkWatcher
-from helpers.pijun import Pijun
-from settings.utils import check_file_exists
-from settings import konfig as k
-
+from src.texioty.helpers.registry_manager import HelperRegistry, HelperConfig
+from src.texioty.helpers.promptaires.digiary.digiary import Digiary
+from src.texioty.helpers.registries.gaim_registry import GaimRegistry
+from src.texioty.helpers.registries.prompt_registry import PromptRegistry
+from src.texioty.helpers.dovecote import Dovecot
+from src.texioty.helpers.pijun import Pijun
+from src.texioty.settings.utils import check_file_exists
+from src.texioty.settings import konfig as k
 
 
 class Application(tk.Frame):
@@ -41,6 +40,9 @@ class Application(tk.Frame):
         else:
             pass
             # self.txty.active_helper_dict["PRUN"][0].profilemake.prompt_texioty_profile()
+
+    def configure_window(self):
+        pass
 
     def _register_helpers(self):
         """Register all available helpers in the registry."""

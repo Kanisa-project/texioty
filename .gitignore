@@ -1,1 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.idea/
+
+# Build/package
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Runtime
+runtime/
+.temp/
+*.log
+
+# Environment
 .env
+
+# OS noise
+.DS_Store
+Thumbs.db

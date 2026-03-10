@@ -162,7 +162,7 @@ class Pijun(TexiotyHelper):
             self.txo.priont_string("Not currently connected to a coop server.")
             return
 
-        payload = self._build_payload("leave", {
+        payload = self._build_payload("leave_coop", {
             "session_id": self.connected_coop.get("session_id"),
             "reason": reason
         })
@@ -205,21 +205,21 @@ class Pijun(TexiotyHelper):
     def _handle_server_payload(self, payload: Dict[str, Any], addr: tuple):
         payload_type = payload.get('type')
         data = payload.get('data', {})
+        request_id = payload.get('request_id')
+
+        if request_id:
+            self._resolve_pending_request(request_id, payload)
 
         if payload_type == 'host_state':
             self.host_state = data
             if self.connected_coop:
                 self.connected_coop['last_seen'] = time.time()
             self._apply_host_state(data)
-        elif payload_type == 'enter_ack':
-            self.host_state = data.get('host_state')
-            if self.host_state:
-                self._apply_host_state(self.host_state)
         elif payload_type == 'enter_reject':
             reason = data.get('reason', 'Join rejected')
             self.txo.priont_string(f"Failed to join coop server: {reason}")
         elif payload_type == 'message':
-            message = data.get('data', '')
+            message = data.get('message', data.get('data', ''))
             self.txo.priont_string(f"[Coop]: {message}")
 
 
@@ -233,37 +233,41 @@ class Pijun(TexiotyHelper):
             self.txo.priont_string(f"Engine: {engine}")
 
 
-    def send_message(self, message: str, host: str, port: str):
+    def send_message(self, message: str, host: Optional[str], port: str = "8080"):
         if not message or not message.strip():
             self.txo.priont_string("No message provided.")
             return
+
+        if self.connected_coop:
+            host = host or self.connected_coop.get("host")
+            port_value = self.connected_coop.get("port", 8080)
+        else:
+            port_value = port
         try:
-            port = int(port)
+            port_value = int(port_value)
         except ValueError:
-            port = 8020
-            self.txo.priont_string("Invalid port number. Using default port 8020.")
-        if port < 1 or port > 65535:
+            port_value = 8080
+            self.txo.priont_string("Invalid port number. Using default port 8080.")
+        if port_value < 1 or port_value > 65535:
             self.txo.priont_string("Invalid port number. Must be between 1 and 65535.")
             return
+        if not host:
+            self.txo.priont_string("No host specified. Please specify a host to send the message to.")
+            return
 
-        address = (host, port)
-        payload = {
-            "type": "message",
-            "pijun_id": self.pijun_id,
-            "data": message
-        }
+        payload = self._build_payload("message", {
+            "message": message
+        })
 
         try:
-            self.socket.sendto(json.dumps(payload).encode('utf-8'), address)
-            self.txo.priont_string(f"Message sent to {host}:{port}")
+            self.socket.sendto(json.dumps(payload).encode('utf-8'), (host, port_value))
+            print(f"Message sent to {host}:{port}")
             print(f"Message sent: {message[:50]}...")
         except socket.gaierror as e:
-            self.txo.priont_string(f"Error resolving host: {e}")
             print(f"Error resolving host: {e}")
         except OSError as e:
-            self.txo.priont_string(f"Network error sending to {host}:{port}: {e}")
+            print(f"Network error sending to {host}:{port}: {e}")
         except Exception as e:
-            self.txo.priont_string(f"Error sending message: {e}")
             print(f"Error sending message: {e}")
 
     def send_game_data(self, game_data: str, host: str, port: str):

@@ -162,7 +162,7 @@ class Dovecot(TexiotyHelper):
         self.bound_iface: Optional[str] = None
         self.bound_address: Optional[tuple[str, int]] = None
         self.host_state_version = 0
-        self.stale_timeout = 15.0
+        self.stale_timeout = 300.0
 
         self.watcher = NetworkWatcher(self.on_network_change, poll_interval=POLL_INTERVAL)
         self.watcher.start()
@@ -317,7 +317,8 @@ class Dovecot(TexiotyHelper):
             self._handle_leave_coop(pijun_id, data)
             return
         if payload_type == 'message':
-            self._log_message(pijun_id, data, addr)
+            message_text = data.get('message', '') if isinstance(data, dict) else str(data)
+            self._log_message(pijun_id, message_text, addr)
         elif payload_type == 'game_data':
             self._handle_game_data(pijun_id, data, addr)
 
@@ -425,7 +426,11 @@ class Dovecot(TexiotyHelper):
     def broadcast_message(self, message: str):
         payload = {
             'type': 'message',
-            'message': message
+            "protocol": 1,
+            "timestamp": time.time(),
+            "data": {
+                "message": message
+            }
         }
         pijun_ids_to_remove = []
         for pijun_id, info in self.connected_pijuns.items():

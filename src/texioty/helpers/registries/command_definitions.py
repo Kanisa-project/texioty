@@ -50,7 +50,7 @@ TEXIOTY_COMMANDS: Dict[str, Dict[str, Any]] = {
     }
 
 DIRY_COMMANDS: Dict[str, Dict[str, Any]] = {
-    "dear_sys":{
+    "dear_sys,":{
         "name": "dear_sys,",
         "usage": '"dear_sys,"',
         "call_func": None,
@@ -233,12 +233,12 @@ DOVECOT_COMMANDS= {
     },
     'message': {
         'name': 'message',
-        'usage': '"message [text]"',
+        'usage': '"message [TEXT]"',
         'call_func': None,
         'lite_desc': 'Send a message to all pijuns.',
         'full_desc': ['Send a message to all pijuns.'],
         'possible_args': {},
-        'args_desc': {'[text]': 'The text to send to all pijuns.'},
+        'args_desc': {'[TEXT]': 'The text to send to all pijuns.'},
         'examples': ['message "Hello, world!"'],
         'group_tag': 'DOVE',
         'font_color': u.rgb_to_hex(t.PIGEON_GREY),
@@ -279,6 +279,133 @@ HANGMAN_COMMANDS: Dict[str, Dict[str, Any]] = {
         "font_color": t.rgb_to_hex(t.MUSTARD_YELLOW),
         "back_color": t.rgb_to_hex(t.BLACK)
     }
+}
+
+BATTLESHIP_COMMANDS: Dict[str, Dict[str, Any]] = {
+    "show" : {
+        "name": "show",
+        "usage": "'show'",
+        "call_func": None,
+        "lite_desc": "Show the current game.",
+        "full_desc": [],
+        "possible_args": {},
+        "args_desc": {},
+        "examples": ["show"],
+        "group_tag": "BTSH",
+        "font_color": t.rgb_to_hex(t.LIGHT_SEA_GREEN),
+        "back_color": t.rgb_to_hex(t.BLACK)
+    },
+    "fire" : {
+        "name": "fire",
+        "usage": "'fire [COORD]'",
+        "call_func": None,
+        "lite_desc": "Fire a shot at a location.",
+        "full_desc": [],
+        "possible_args": {},
+        "args_desc": {},
+        "examples": ["fire A2"],
+        "group_tag": "BTSH",
+        "font_color": t.rgb_to_hex(t.LIGHT_SEA_GREEN),
+        "back_color": t.rgb_to_hex(t.BLACK)
+    },
+    "boards" : {
+        "name": "boards",
+        "usage": "'boards'",
+        "call_func": None,
+        "lite_desc": "List available saved boards.",
+        "full_desc": [],
+        "possible_args": {},
+        "args_desc": {},
+        "examples": ["boards"],
+        "group_tag": "BTSH",
+        "font_color": t.rgb_to_hex(t.LIGHT_SEA_GREEN),
+        "back_color": t.rgb_to_hex(t.BLACK)
+    },
+    "use" : {
+        "name": "use",
+        "usage": "'use [PLAYER_BOARD] (ENEMY_BOARD)'",
+        "call_func": None,
+        "lite_desc": "Fire a shot at a location.",
+        "full_desc": [],
+        "possible_args": {},
+        "args_desc": {},
+        "examples": ["use alpha", "use echo romeo"],
+        "group_tag": "BTSH",
+        "font_color": t.rgb_to_hex(t.LIGHT_SEA_GREEN),
+        "back_color": t.rgb_to_hex(t.BLACK)
+    },
+    "build": {
+        "name": "build",
+        "usage": "'build [BOARD_NAME]'",
+        "call_func": None,
+        "lite_desc": "Build a board for battleship.",
+        "full_desc": [],
+        "possible_args": {},
+        "args_desc": {
+            "[BOARD_NAME]": ["Name of the board to create", str]
+        },
+        "examples": ["build alpha"],
+        "group_tag": "BTSH",
+        "font_color": t.rgb_to_hex(t.LIGHT_SEA_GREEN),
+        "back_color": t.rgb_to_hex(t.BLACK)
+    },
+    "place": {
+        "name": "place",
+        "usage": "'place [COORDS] [DIRECTION] [LENGTH]'",
+        "call_func": None,
+        "lite_desc": "Place a ship while building a board.",
+        "full_desc": [],
+        "possible_args": {},
+        "args_desc": {
+            "[COORDS]": ["Starting place of ship.", str],
+            "[DIRECTION]": ["Direction of ship 'n', 's', 'e', 'w'.", str],
+            "[LENGTH]": ["Length of ship to place.", int]
+        },
+        "examples": ["place D3 h 3", "place C4 v 4"],
+        "group_tag": "BTSH",
+        "font_color": t.rgb_to_hex(t.LIGHT_SEA_GREEN),
+        "back_color": t.rgb_to_hex(t.BLACK)
+    },
+    "showbuild": {
+        "name": "showbuild",
+        "usage": "'showbuild'",
+        "call_func": None,
+        "lite_desc": "Show the current placed ships being built.",
+        "full_desc": [],
+        "possible_args": {},
+        "args_desc": {},
+        "examples": ["showbuild"],
+        "group_tag": "BTSH",
+        "font_color": t.rgb_to_hex(t.LIGHT_SEA_GREEN),
+        "back_color": t.rgb_to_hex(t.BLACK)
+    },
+    "clearbuild": {
+        "name": "clearbuild",
+        "usage": "'clearbuild'",
+        "call_func": None,
+        "lite_desc": "Clear the current board being built.",
+        "full_desc": [],
+        "possible_args": {},
+        "args_desc": {},
+        "examples": ["clearbuild"],
+        "group_tag": "BTSH",
+        "font_color": t.rgb_to_hex(t.LIGHT_SEA_GREEN),
+        "back_color": t.rgb_to_hex(t.BLACK)
+    },
+    "saveboard": {
+        "name": "saveboard",
+        "usage": "'saveboard'",
+        "call_func": None,
+        "lite_desc": "Save the current board being built.",
+        "full_desc": [],
+        "possible_args": {},
+        "args_desc": {},
+        "examples": ["saveboard alpha"],
+        "group_tag": "BTSH",
+        "font_color": t.rgb_to_hex(t.LIGHT_SEA_GREEN),
+        "back_color": t.rgb_to_hex(t.BLACK)
+    }
+
 }
 
 def bind_commands(command_dict: Dict[str, Dict[str, Any]],

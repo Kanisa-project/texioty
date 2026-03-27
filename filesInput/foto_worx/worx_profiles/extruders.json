@@ -1,0 +1,26 @@
+{
+  "wheat": {
+    "noodle_base": "spaghetti",
+    "noodle_size": {
+      "length": 8,
+      "thickness": 3,
+      "is_spiral": false
+    }
+  },
+  "rice": {
+    "noodle_base": "vermicelli",
+    "noodle_size": {
+      "length": 7,
+      "thickness": 1,
+      "is_spiral": false
+    }
+  },
+  "starch": {
+    "noodle_base": "cellophane",
+    "noodle_size": {
+      "length": 6,
+      "thickness": 8,
+      "is_spiral": true
+    }
+  }
+}

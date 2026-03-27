@@ -1,5 +1,6 @@
 import random
 from enum import Enum
+from pathlib import Path
 from typing import Optional, List, Callable, Tuple, Dict, TYPE_CHECKING
 from dataclasses import dataclass
 
@@ -7,7 +8,7 @@ from PIL import Image
 
 from src.texioty.helpers.tex_helper import TexiotyHelper
 from tkinter import END, PhotoImage
-from src.texioty.settings.utils import clamp
+from src.texioty.settings.utils import clamp, safe_filename, output_path, ensure_parent_dir
 
 if TYPE_CHECKING:
     from src.texioty.core.texity import TEXITY
@@ -99,6 +100,7 @@ def dict_to_question_prompt_factory(listed_dict: Dict[str, dict]) -> dict[str, Q
 class BasePrompt(TexiotyHelper):
     def __init__(self, txo: "TEXOTY", txi: "TEXITY", prompt_name: str = "BasePrompt"):
         super().__init__(txo, txi)
+        self.current_decision_title = None
         self.in_questionnaire_mode = None
         self.in_decisioning_mode = None
         self.txo = txo
@@ -108,7 +110,13 @@ class BasePrompt(TexiotyHelper):
         self.question_keys = []
         self.current_question_index = 0
         self.current_options_page = 0
+        self.paged_options = []
         self.decision_images = []
+        self.current_decision_question = ""
+
+    def _set_deciding_function(self, func: Callable) -> None:
+        if self.txo.master.deciding_function is None or callable(self.txo.master.deciding_function):
+            self.txo.master.deciding_function = func
 
     def display_loose_question(self):
         pass
@@ -121,7 +129,7 @@ class BasePrompt(TexiotyHelper):
 
     def start_question_prompt(self, question_dict: Dict[str, Question], clear_txo=False):
         """
-        Checks if Textioty is already in a questionnaire prompt. If not, sets up the first question and starts the
+        Checks if Texioty is already in a questionnaire prompt. If not, sets up the first question and starts the
         prompt to receive answers. Anything typed and sent in Texity will be saved as answers for the prompt questions.
         :param question_dict: Dictionary of questions, consider making a dataclass.
         :param clear_txo: Clears the Texioty header before starting the questionnaire prompt.
@@ -131,8 +139,6 @@ class BasePrompt(TexiotyHelper):
             self.txo.clear_add_header()
         if not self.in_questionnaire_mode:
             self.question_prompt_dict = question_dict
-            # self.response_dict = question_dict
-            # self.response_dict['confirming_function'] = self.txo.master.create_profile
             self.question_keys = list(question_dict.keys())
             self.in_questionnaire_mode = True
             self.current_question_index = 0
@@ -144,13 +150,15 @@ class BasePrompt(TexiotyHelper):
     def display_foto_option_question(self, question: str, avail_options: list, titled: str = "basic"):
         self.in_decisioning_mode = True
         self.txo.master.change_current_mode("Decisioning", self.helper_commands)
-        self.txo.clear_no_header()
-        for i in range(self.txo.texoty_h-len(avail_options)):
-            self.txo.priont_string(' '*(self.txo.texoty_w-2)+'\n')
-        self.display_title(titled, False)
-        available_opts = pagify_available_options(avail_options)
-        self.priont_available_fotoes_by_page(available_opts)
-        self.txo.priont_string(question)
+
+        self.paged_options = pagify_available_options(avail_options)
+        self.current_options_page = 0
+        self.current_decision_title = titled
+        self.current_decision_question = question
+        self.txi.page_change_handler = self.decisioning_page_change
+
+        self.txo.clear_add_header()
+        self._render_current_option_page()
 
     def display_option_question(self, titled: str, question: str, avail_options: list):
         """
@@ -162,37 +170,55 @@ class BasePrompt(TexiotyHelper):
         self.in_decisioning_mode = True
         self.txo.master.change_current_mode("Decisioning", self.helper_commands)
         self.txo.clear_no_header()
-        self.txi.current_possible_options = avail_options
-        for i in range(self.txo.texoty_h-len(avail_options)):
-            self.txo.priont_string(' '*(self.txo.texoty_w-2)+'\n')
-        self.display_title(titled, False)
-        self.priont_available_options_by_page([avail_options])
 
-        self.txo.priont_string(question)
-        self.txi.bind_new_options(avail_options)
+        self.paged_options = pagify_available_options(avail_options)
+        self.current_options_page = 0
+        self.current_decision_title = titled
+        self.current_decision_question = question
+        self.txi.page_change_handler = self.decisioning_page_change
+        self._render_current_option_page()
         return 0
 
     def priont_available_options_by_page(self, paged_options: list):
         current_options = paged_options[self.current_options_page]
+        self.txi.bind_new_options(current_options)
+
         for i, option in enumerate(current_options):
             self.txo.priont_string(f"{i} - {option}")
 
     def priont_available_fotoes_by_page(self, paged_options: list):
-        current_options = random.choice(paged_options)
-        print("CUROPTS", current_options)
+        current_options = paged_options[self.current_options_page]
         self.decision_images = []
         self.txi.bind_new_options(current_options)
 
-        for i, save_path in enumerate(current_options):
-            save_name = "foto_opt_" + str(i) + ".png"
-            foto_name = save_path.split("/")[-1]
-            foto = Image.open(save_path)
-            save_path = f"helpers/promptaires/worx_hop/fotoes/{save_name}"
-            foto_option = resize_foto(foto, (64, 64))
-            foto_option.save(save_path)
-            self.decision_images.append(PhotoImage(file=save_path))
-            # print(self.decision_images[i], "DECISION IMG")
+        for i, source_path in enumerate(current_options):
+            foto_name = Path(source_path).name
+            source_image = Image.open(source_path)
+
+            safe_name = safe_filename(Path(source_path).stem)
+            cached_path = ensure_parent_dir(
+                output_path("cache", "prompt_images", f"{safe_name}_{i}.png")
+            )
+
+            foto_option = resize_foto(source_image, (64, 64))
+            foto_option.save(cached_path)
+
+            self.decision_images.append(PhotoImage(file=cached_path))
             self.txo.priont_foto_option(i, foto_name, self.decision_images[i])
+
+    def _current_page_has_image_paths(self) -> bool:
+        current_options = self.paged_options[self.current_options_page]
+        image_suffixes = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"}
+
+        if not current_options:
+            return False
+
+        return all(
+            isinstance(option, str)
+            and Path(option).suffix.lower() in image_suffixes
+            and Path(option).is_file()
+            for option in current_options
+        )
 
     def display_question(self):
         """Displays a question from the loaded questionnaire prompt dictionary."""
@@ -240,24 +266,57 @@ class BasePrompt(TexiotyHelper):
         """
         self.txi.isDecidingDecision = True
         self.display_option_question(titled,
-                                     input_question + f", (0-{len(possible_options) - 1})? ",
+                                     input_question,
                                      possible_options)
 
     def decide_foto_decision(self, input_question: str, possible_options: list, titled='basic'):
         self.txi.isDecidingDecision = True
-        self.display_foto_option_question(input_question + f", (0-{len(possible_options) - 1})? ", possible_options, titled)
+        self.display_foto_option_question(input_question, possible_options, titled)
 
     def decisioning_page_change(self, page_num):
+        if not self.paged_options:
+            return
+
+        last_page_index = len(self.paged_options) - 1
+
         try:
             page_num = int(page_num)
-            self.current_options_page = clamp(page_num, 0, len(self.txi.current_possible_options)-1)
+            self.current_options_page = clamp(page_num, 0, last_page_index)
         except ValueError:
             if page_num == '+':
-                self.current_options_page += 1
+                self.current_options_page = clamp(self.current_options_page + 1, 0, last_page_index)
             elif page_num == '-':
-                self.current_options_page -= 1
+                self.current_options_page = clamp(self.current_options_page - 1, 0, last_page_index)
+            elif page_num == '*':
+                self.current_options_page = random.randint(0, last_page_index)
+            elif page_num == '/':
+                self.current_options_page = last_page_index
             else:
                 raise ValueError("Invalid page number.")
+
+        self.txo.clear_add_header()
+        self._render_current_option_page()
+
+    def _render_current_option_page(self):
+        current_options = self.paged_options[self.current_options_page]
+        page_info = f"Page {self.current_options_page+1}/{len(self.paged_options)}"
+        question_line = f"{self.current_decision_question}?\n[{page_info}]"
+
+        title_height = 5
+        bottom_block_height = 6 + len(current_options)
+        blank_lines = max(0, self.txo.texoty_h - title_height - bottom_block_height)
+
+        self.display_title(self.current_decision_title, False)
+
+        for _ in range(blank_lines):
+            self.txo.priont_string('')
+
+        self.txo.priont_string(question_line)
+
+        if self._current_page_has_image_paths():
+            self.priont_available_fotoes_by_page(self.paged_options)
+        else:
+            self.priont_available_options_by_page(self.paged_options)
 
 
 def pagify_available_options(available_options: list) -> list:
@@ -265,17 +324,12 @@ def pagify_available_options(available_options: list) -> list:
     Take in all options and return a list of lists for all options.
     :param available_options: Entire list of options
     """
-    paged_options = []
     if len(available_options) <= 10:
         return [available_options]
-    while len(available_options) > 10:
-        page = []
-        while len(page) < 10:
-            page.append(available_options[0])
-            available_options.remove(available_options[0])
-        paged_options.append(page)
-    paged_options.append(available_options)
-    print("PAG", paged_options)
+
+    paged_options = []
+    for i in range(0, len(available_options), 10):
+        paged_options.append(available_options[i:i+10])
     return paged_options
 
 

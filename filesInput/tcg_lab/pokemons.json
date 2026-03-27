@@ -1,0 +1,18 @@
+{
+  "snorlax": {
+    "card_criteria": {
+      "name": "Snorlax",
+      "rarity": "Rare",
+      "type": "Pokemon"
+    }
+  },
+  "jigglypuff": {
+    "card_criteria": {
+      "name": "Jigglypuff",
+      "rarity": "Common",
+      "type": "Pokemon",
+      "set_code": "JU#54",
+      "artist": "Kagemaru Himeno"
+    }
+  }
+}

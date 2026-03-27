@@ -1,5 +1,7 @@
 import glob
+import os
 import tkinter
+from pathlib import Path
 from typing import Callable
 
 from src.texioty.helpers.promptaires.prompt_helper import BasePrompt
@@ -48,15 +50,62 @@ class FotoWorxHop(BasePrompt):
                 self.equipt_saved_name = "micksed"
         self.decide_image_for_cook()
 
+    def _base_image_dirs(self) -> list[Path]:
+        candidate_dirs = [
+            Path(u.input_path("foto_worx", "fotoes")),
+            Path(u.input_path("foto_worx", "images")),
+            Path(u.asset_path("foto_worx", "fotoes")),
+            Path(u.asset_path("images", "foto_worx")),
+            Path("src/texioty/helpers/promptaires/worx_hop/fotoes"),
+        ]
+
+        seen = set()
+        unique_dirs = []
+        for directory in candidate_dirs:
+            normalized = os.path.normpath(str(directory))
+            if normalized not in seen:
+                seen.add(normalized)
+                unique_dirs.append(directory)
+
+        return unique_dirs
+
+    def _base_image_options(self) -> list[str]:
+        image_options = []
+
+        for foto_dir in self._base_image_dirs():
+            if not foto_dir.exists():
+                continue
+
+            for pattern in ("base_img*.jpeg", "base_img*.png", "base_img*.jpg"):
+                image_options.extend(sorted(str(path) for path in foto_dir.glob(pattern)))
+
+        seen = set()
+        unique_options = []
+        for image_path in image_options:
+            normalized = os.path.normpath(image_path)
+            if normalized not in seen:
+                seen.add(normalized)
+                unique_options.append(image_path)
+
+        return unique_options
+
     def decide_image_for_cook(self):
-        self.decide_foto_decision("What image to cook with", glob.glob('helpers/promptaires/worx_hop/fotoes/base_img*.jpeg'), "foto_opt")
+        image_options = self._base_image_options()
+        self.decide_foto_decision("What image to cook with", image_options, "foto_opt")
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
             self.txo.master.deciding_function = self.image_to_station
 
 
     def image_to_station(self, image_path):
         self.cook_image = Image.open(image_path)
-        self.decide_decision("At the station", list(u.retrieve_worx_profiles(self.current_equipment).keys()))
+        try:
+            profiles = u.retrieve_worx_profiles(self.current_equipment)
+        except FileNotFoundError as exc:
+            self.txo.update_header_status(bottom_status="Profile file not found.")
+            print(exc)
+            self.txo.master.deciding_function = None
+            return
+        self.decide_decision("At the station", list(profiles.keys()))
         if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
             self.txo.master.deciding_function = self.set_foto_profile_dict
 
@@ -82,15 +131,24 @@ class FotoWorxHop(BasePrompt):
 
     def create_foto_iterations(self, equipment_func: Callable):
         self.order_up_images = []
-        save_path = f"helpers/promptaires/worx_hop/fotoes/"
         for i in range(5):
             save_name = f"{self.equipt_saved_name}{i}.png"
             serving_name = f"serving_{i}.png"
+
+            foto_output_path = u.ensure_parent_dir(
+                u.output_path("foto_worx", "exports", self.current_equipment, save_name)
+            )
+            serving_output_path = u.ensure_parent_dir(
+                u.cache_path("foto_worx", self.current_equipment, serving_name)
+            )
+
             foto = equipment_func(self.cook_image, self.foto_profile_dict)
             foto_serving = resize_foto(foto, (128, 128))
-            foto.save(save_path + save_name)
-            foto_serving.save(save_path + serving_name)
-            self.order_up_images.append(tkinter.PhotoImage(file=save_path + serving_name))
+
+            foto.save(foto_output_path)
+            foto_serving.save(serving_output_path)
+
+            self.order_up_images.append(tkinter.PhotoImage(file=serving_output_path))
             self.txo.image_create(tkinter.END, image=self.order_up_images[i])
 
 def resize_foto(foto: Image.Image, new_size: tuple[int, int]) -> Image.Image:

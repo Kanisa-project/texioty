@@ -3,6 +3,8 @@ from typing import List
 
 from PIL import Image, ImageDraw
 
+from src.texioty.settings import utils as u
+
 def extrude_noodle(img: Image.Image, noodle_profile: dict) -> Image.Image:
     w, h = img.size
     noodle_base = noodle_profile['noodle_base']
@@ -16,7 +18,11 @@ def extrude_noodle(img: Image.Image, noodle_profile: dict) -> Image.Image:
         y_start = random.randint(0, h-noodle_thickness)
         extruded_amount += int(noodle_length + noodle_thickness)
         a_noodle = noodle_box(img, y_start, noodle_thickness, noodle_length)
-        a_noodle.save(f"helpers/promptaires/worx_hop/fotoes/prepped/{noodle_base}_{extruded_amount}.png")
+        u.save_prepped_image(
+            a_noodle,
+            "extruders",
+            u.safe_filename(f"{noodle_base}_{noodle_thickness}_{noodle_length}.png")
+        )
     return img
 
 def noodle_box(img: Image.Image, y_start: int, nood_thick: int, nood_len: int) -> Image.Image:

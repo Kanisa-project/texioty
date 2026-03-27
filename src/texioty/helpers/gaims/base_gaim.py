@@ -78,7 +78,39 @@ class BaseGaim(TexiotyHelper):
         self.helper_commands = self.helper_commands | self.gaim_commands
         self.game_state = {}
 
+    def get_header_title(self) -> str:
+        return self.game_name
+
+    def get_header_right_status(self) -> str:
+        return ""
+
+    def get_header_bottom_status(self) -> str:
+        return ""
+
+    def get_header_state(self) -> dict[str, str]:
+        return{
+            "title": self.get_header_title(),
+            "right_status": self.get_header_right_status(),
+            "bottom_status": self.get_header_bottom_status()
+        }
+
+    def render_with_header(self):
+        header_state = self.get_header_state()
+        self.txo.clear_add_header(
+            header_msg=header_state["title"],
+            right_status=header_state["right_status"],
+            bottom_status=header_state["bottom_status"]
+        )
+
+    def refresh_header_status(self):
+        header_state = self.get_header_state()
+        self.txo.update_header_status(
+            right_status=header_state["right_status"],
+            bottom_status=header_state["bottom_status"]
+        )
+
     def new_game(self):
+        self.render_with_header()
         self.txo.priont_string(f"Starting a new {self.game_name} game.")
 
     def save_game(self):
@@ -122,15 +154,12 @@ class BaseGaim(TexiotyHelper):
 
     def welcome_message(self, welcoming_msgs: Optional[list] = None):
         """Generic welcoming message."""
-        self.txo.clear_add_header(f"{self.game_name}")
+        self.render_with_header()
         self.txo.priont_string(f'Welcome to {self.game_name}!')
 
     def display_help_message(self, group_tag: Optional[str] = None):
         """Generic help message."""
         super().display_help_message(group_tag)
-        # self.txo.priont_string("Using the 'commands' command will display a list of available commands.")
-        # self.txo.priont_string("Using the 'welcome' command will show the welcome message and some directions.")
-
 
     def display_all_available_commands(self):
         super().display_all_available_commands()
@@ -138,8 +167,9 @@ class BaseGaim(TexiotyHelper):
     def stop_game(self):
         txty = self.txo.master
         print("STOPPING", self.game_name)
+        game_registry = txty.helper_registry.get_helper("GAIM")
+        game_registry.reset_game_session()
         txty.default_mode()
-        txty.active_helper_dict['GAIM'][0].current_gaim = None
 
 def sanitize_filename(filename: str) -> str:
     return ''.join(c for c in filename if c.isalnum() or c in ("_", "-")).rstrip()

@@ -85,9 +85,9 @@ class TexiotyHelper:
         mid_line = ''
         bot_line = ''
         for letter in blk_word:
-            top_line += " " + BLOCK_CHAR_DICT[letter][0] + " "
-            mid_line += " " + BLOCK_CHAR_DICT[letter][1] + " "
-            bot_line += " " + BLOCK_CHAR_DICT[letter][2] + " "
+            top_line += " " + BLOCK_CHAR_DICT[letter.lower()][0] + " "
+            mid_line += " " + BLOCK_CHAR_DICT[letter.lower()][1] + " "
+            bot_line += " " + BLOCK_CHAR_DICT[letter.lower()][2] + " "
         self.txo.priont_string(top_line)
         self.txo.priont_string(mid_line)
         self.txo.priont_string(bot_line)
@@ -101,6 +101,7 @@ class TexiotyHelper:
         """
         if clear_it:
             self.txo.clear_no_header()
+        self.txo.priont_string('')
         self.txo.priont_string(random.choice('─━═_')*(len(title_word)*5))
         self.priont_block_font(title_word)
         self.txo.priont_string(random.choice('─━═_')*(len(title_word)*5))
@@ -140,13 +141,15 @@ class TexiotyHelper:
         """Prints out all the commands that are available."""
         self.txo.clear_no_header()
         available_commands = self.txo.master.command_registry.commands
-        # print(available_commands)
-        for helper_group in self.txo.master.active_helpers:
-            print(helper_group)
+
+        grouped_commands = {}
+        for command_name, command_info in available_commands.items():
+            grouped_commands.setdefault(command_info.group_tag, []).append(command_name)
+
+        for helper_group in sorted(grouped_commands):
             self.txo.helper_tag_break(helper_group)
-            for command in available_commands:
-                if available_commands[command].group_tag == helper_group:
-                    self.txo.priont_command_lite(self.txo.master.command_registry.commands[command])
+            for command_name in sorted(grouped_commands[helper_group]):
+                self.txo.priont_command_lite(available_commands[command_name])
 
     def welcome_message(self):
         """

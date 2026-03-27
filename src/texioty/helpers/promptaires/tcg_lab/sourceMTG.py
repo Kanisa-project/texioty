@@ -28,13 +28,19 @@ COLOR_DICT = {
 }
 
 MAGIC_TEMPLATES = {
-    "all_cards": ["number", "name", "color", "type", "rarity", "artist", "set_code"],
-    "land_cards": ["number", "name", "color", "rarity", "special_effect"],
-    "creature_cards": ["number", "strength", "toughness", "abilities", "name", "color", "rarity"],
-    "enchantment_cards": ["number", "effects", "name", "rarity"],
-    "artifact_cards": ["number", "effects", "name", "rarity"],
-    "instant_cards": ["number", "effects", "name", "rarity"],
-    "sorcery_cards": ["number", "effects", "name", "rarity"]
+    "all_cards": {
+        "source_id": [],
+        "source_tcg": [],
+        "name": [],
+        "type": [],
+        "rarity": [],
+        "color": [],
+        "artist": [],
+        "set_code": [],
+        "image_url": [],
+        "local_image_path": [],
+        "raw_data": []
+    }
 }
 
 # OLD_MAGIC_TEMPLATES = {
@@ -458,7 +464,7 @@ class SourceMTG(SourceTCG):
 
     def _init_mtg_database(self):
         try:
-            db_path = Path('magic_cards.db')
+            db_path = Path(__file__).resolve().parent / "cards" / "databases" / "magic_cards.db"
             if not db_path.exists():
                 self.db_helper = DatabaseHelper(str(db_path))
                 self.db_helper.create_tables_from_templates(MAGIC_TEMPLATES)
@@ -503,8 +509,8 @@ class SourceMTG(SourceTCG):
             logger.error(f"Error gathering resource cards: {e}")
             return []
 
-    def gather_all_enchantment_cards(self, enchantment_criteria: Dict,
-                                  tcg_type: Optional[str] = None) -> List[Card]:
+    @staticmethod
+    def gather_enchantment_cards(enchantment_criteria: Dict, tcg_type: Optional[str] = None) -> List[Card]:
         try:
             query = mtgsdk.Card.where(type="Enchantment")
             if enchantment_criteria.get("colors"):
@@ -577,20 +583,21 @@ class SourceMTG(SourceTCG):
             return []
 
     def get_card_batch(self, card_criteria: Dict) -> List[Card]:
-        print("CRITERIA-TYPE", card_criteria.get('type', 'has no type'))
+        print("CRITERIA-TYPE", card_criteria)
         if "Creature" in card_criteria.get('type', ''):
             return self.gather_all_creature_cards(card_criteria)
         if "Land" in card_criteria.get('type', ''):
             return self.gather_all_resource_cards(card_criteria)
         if "Instant" in card_criteria.get('type', ''):
-            return self.gather_all_temporary_cards(card_criteria)
+            return self.gather_instant_cards(card_criteria)
         if "Sorcery" in card_criteria.get('type', ''):
-            return self.gather_all_temporary_cards(card_criteria)
+            return self.gather_sorcery_cards(card_criteria)
         if "Artifact" in card_criteria.get('type', ''):
             return self.gather_all_permanent_cards(card_criteria)
         if "Enchantment" in card_criteria.get('type', ''):
-            return self.gather_all_enchantment_cards(card_criteria)
-        return []
+            return self.gather_enchantment_cards(card_criteria)
+        else:
+            return []
 
     def add_card_to_database(self, new_card: Card) -> bool:
         try:
@@ -660,47 +667,63 @@ class SourceMTG(SourceTCG):
             logger.error(f"Error generating random deck: {e}")
             return []
 
-    def gather_correct_cards(self, card_criteria: dict):
-        search_criteria = {}
-        if 'name' in card_criteria:
-            search_criteria['name'] = card_criteria['name']
-        if 'color' in card_criteria:
-            search_criteria['color'] = card_criteria['color']
-        if 'rarity' in card_criteria:
-            search_criteria['rarity'] = card_criteria['rarity']
-        if 'artist' in card_criteria:
-            search_criteria['artist'] = card_criteria['artist']
-        if 'type' in card_criteria:
-            if 'Enchantment' in card_criteria['type']:
-                return gather_enchantment_cards()
-            if 'Creature' in card_criteria['type']:
-                pass
-            if 'Land' in card_criteria['type']:
-                pass
-            if 'Sorcery' in card_criteria['type']:
-                pass
-            if 'Instant' in card_criteria['type']:
-                pass
-            if 'Artifact' in card_criteria['type']:
-                pass
-            if 'Planeswalker' in card_criteria['type']:
-                pass
+    @staticmethod
+    def gather_instant_cards(card_criteria) -> List[Card]:
+        try:
+            query = mtgsdk.Card.where(type="Instant")
+            if card_criteria.get("colors"):
+                query = query.where(colors=card_criteria["colors"])
+            if card_criteria.get("name"):
+                query = query.where(name=card_criteria["name"])
+            if card_criteria.get("artist"):
+                query = query.where(artist=card_criteria["artist"])
+            if card_criteria.get("rarity"):
+                query = query.where(rarity=card_criteria["rarity"])
+            if card_criteria.get("set"):
+                query = query.where(set=card_criteria["set"])
+            return query.all()
+        except Exception as e:
+            logger.error(f"Error gathering instant cards: {e}")
+            return []
 
-def mtgcard_to_dict(mtgcard: Card) -> dict:
-    return {
-        'name': mtgcard.name,
-        'rarity': mtgcard.rarity,
-        'color': ', '.join(mtgcard.colors),
-        'artist': mtgcard.artist,
-        'type': mtgcard.type,
-        'set_code': mtgcard.set
-    }
+    @staticmethod
+    def gather_sorcery_cards(card_criteria) -> List[Card]:
+        try:
+            query = mtgsdk.Card.where(type="Sorcery")
+            if card_criteria.get("colors"):
+                query = query.where(colors=card_criteria["colors"])
+            if card_criteria.get("name"):
+                query = query.where(name=card_criteria["name"])
+            if card_criteria.get("artist"):
+                query = query.where(artist=card_criteria["artist"])
+            if card_criteria.get("rarity"):
+                query = query.where(rarity=card_criteria["rarity"])
+            if card_criteria.get("set"):
+                query = query.where(set=card_criteria["set"])
+            return query.all()
+        except Exception as e:
+            logger.error(f"Error gathering sorcery cards: {e}")
+            return []
 
-if __name__ == '__main__':
-    mtg = SourceMTG()
-    batch = mtg.get_card_batch({'rarity': 'Rare', 'colors': 'G', 'set': 'SHM', 'type': 'Creature'})
-    # batch = mtg.gather_all_enchantment_cards({'color': 'B', 'type': 'Enchantment'})
-    # batch = mtg.gather_all_enchantment_cards({'name': 'Goblin', 'type': 'Enchantment'})
-    card = random.choice(batch)
-    mtg.add_card_to_database(card)
-    mtg.download_card_batch([card])
+    @staticmethod
+    def card_to_dict(mtgcard: Card) -> dict:
+        return {
+            'source_id': f"{mtgcard.set}_{mtgcard.number}",
+            'name': mtgcard.name,
+            'type': mtgcard.type,
+            'rarity': mtgcard.rarity,
+            'color': ', '.join(mtgcard.colors) if isinstance(mtgcard.colors, list) else mtgcard.colors,
+            'artist': mtgcard.artist,
+            'set_code': mtgcard.set,
+            'image_url': mtgcard.image_url,
+            'number': mtgcard.number
+        }
+
+# if __name__ == '__main__':
+#     mtg = SourceMTG()
+    # batch = mtg.get_card_batch({'rarity': 'Rare', 'colors': 'G', 'set': 'SHM', 'type': 'Creature'})
+    # # batch = mtg.gather_all_enchantment_cards({'color': 'B', 'type': 'Enchantment'})
+    # # batch = mtg.gather_all_enchantment_cards({'name': 'Goblin', 'type': 'Enchantment'})
+    # card = random.choice(batch)
+    # mtg.add_card_to_database(card)
+    # mtg.download_card_batch([card])

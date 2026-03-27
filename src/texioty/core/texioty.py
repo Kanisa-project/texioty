@@ -140,8 +140,7 @@ class Texioty(tk.LabelFrame):
         Add a group of commands to the command registry.
         """
         for command in group_of_cmds:
-            self.texoty.priont_string(f"Adding {command} to Texioty...")
-
+            # self.texoty.priont_string(f"Adding {command} to Texioty...")
             self.command_registry.add_command_dict(group_of_cmds[command])
 
     def remove_commands(self):
@@ -203,10 +202,15 @@ class Texioty(tk.LabelFrame):
         :return:
         """
         prefix = ''
+        raw_input = self.texity.command_string_var.get().strip()
+        if raw_input == "commands":
+            self.execute_command("commands", [])
+            self.texity.command_string_var.set(prefix)
+            return
+
         match self.current_mode:
             case "Texioty":
                 parsed_input = self.texity.parse_input_command()
-                print("TXTY:", parsed_input)
                 if not parsed_input:
                     return
                 command = parsed_input[0]
@@ -226,16 +230,13 @@ class Texioty(tk.LabelFrame):
 
             case "Decisioning":
                 parsed_input = self.texity.parse_decision()
-                print("DECISIONED:", parsed_input, self.deciding_function)
                 if isinstance(self.deciding_function, Callable):
                     self.deciding_function(parsed_input)
-                    # self.deciding_function = None
                 else:
                     self.texoty.priont_string(f"Deciding function not set. {self.deciding_function}")
 
             case "Gaim":
                 parsed_input = self.texity.parse_gaim_command()
-                print("GAIM:", parsed_input)
                 if isinstance(parsed_input, str):
                     self.execute_command(parsed_input, [])
                 else:
@@ -268,7 +269,7 @@ class Texioty(tk.LabelFrame):
             self.texoty.priont_string(f"⦙⦓ Uhh, I don't recognize '{command}'")
         self.texity.full_command_list.append(self.texity.command_string_var.get())
         if self.current_mode == "Texioty":
-            self.texoty.priont_string(u.random_loading_phrase())
+            self.texoty.show_loading_phrase(u.random_loading_phrase())
 
     def log_profile_in(self, prof_name: str, prof_pass: str):
         """Check args[0] for a username and args[1] for a password. Logs in a profile if a match."""

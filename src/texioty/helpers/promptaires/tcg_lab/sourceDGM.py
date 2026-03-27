@@ -67,13 +67,18 @@ class SourceDGM(SourceTCG):
     def __init__(self):
         super().__init__()
         self.tcg_title_name = 'digimon'
-        db_path = Path(__file__).resolve().parent / "cards" / "databases" / "digimon_cards.db"
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-        if not db_path.exists():
-            self.db_helper = DatabaseHelper(str(db_path))
-            self.db_helper.create_tables_from_templates(DIGIMON_TEMPLATES)
-        else:
-            self.db_helper = DatabaseHelper(str(db_path))
+        self._init_digimon_database()
+
+    def _init_digimon_database(self):
+        try:
+            db_path = Path(__file__).resolve().parent / "cards" / "databases" / "digimon_cards.db"
+            if not db_path.exists():
+                self.db_helper = DatabaseHelper(str(db_path))
+                self.db_helper.create_tables_from_templates(DIGIMON_TEMPLATES)
+            else:
+                self.db_helper = DatabaseHelper(str(db_path))
+        except Exception as e:
+            print(f"Error initializing DGM database: {e}")
 
     def gather_correct_cards(self, card_criteria: dict):
         search_criteria = {}

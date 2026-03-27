@@ -1,0 +1,23 @@
+{
+  "cheese": {
+    "slice_item": "cheddar",
+    "slice_angle": 140,
+    "thickness": 3,
+    "amount": 71,
+    "portion_amount": 1.4
+  },
+  "protein": {
+    "slice_item": "turkey",
+    "slice_angle": 241,
+    "thickness": 6,
+    "amount": 24,
+    "portion_amount": 0.8
+  },
+  "bread": {
+    "slice_item": "baguette",
+    "slice_angle": 180,
+    "thickness": 9,
+    "amount": 86,
+    "portion_amount": 2.8
+  }
+}

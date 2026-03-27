@@ -6,6 +6,7 @@ from src.texioty.helpers.gaims.hangman import HangmanRunner
 from src.texioty.helpers.gaims.casino import CasinoRunner
 from src.texioty.helpers.gaims.candy_slinger import CandySlingerRunner
 from src.texioty.helpers.gaims.boston_trail import BostonTrail
+from src.texioty.helpers.gaims.battleship import BattleshipRunner
 
 
 class GaimRegistry(TexiotyHelper):
@@ -17,7 +18,8 @@ class GaimRegistry(TexiotyHelper):
         self.available_games = {"hangman": HangmanRunner,
                                 "casino": CasinoRunner,
                                 "slinger": CandySlingerRunner,
-                                "trailin": BostonTrail}
+                                "trailin": BostonTrail,
+                                "battleship": BattleshipRunner}
         self.helper_commands["start"] = {
                 "name": "start",
                 "usage": '"start [GAME_NAME]"',
@@ -33,14 +35,27 @@ class GaimRegistry(TexiotyHelper):
         }
         self.current_gaim = None
 
+    def reset_game_session(self):
+        self.in_game = False
+        self.current_gaim = None
+
+
     def start_game(self, args):
         print('start_args', args)
-        if args in list(self.available_games.keys()) and self.current_gaim is None:
-            self.in_game = True
-            print('in_game', self.in_game, self.current_gaim)
-            self.current_gaim = self.available_games[args](self.txo, self.txi)
-            print('current_gaim', self.current_gaim)
-            self.current_gaim.new_game()
-            self.txo.master.change_current_mode("Gaim",
-                                                self.current_gaim.gaim_commands | self.current_gaim.helper_commands)
+        if isinstance(args, list):
+            args = args[0] if args else None
+
+        if args not in self.available_games:
+            self.txo.priont_string(f"Invalid game name: {args}")
+            return
+
+        if self.current_gaim is not None:
+            self.txo.priont_string("A game is already in progress.")
+            return
+        self.in_game = True
+        self.current_gaim = self.available_games[args](self.txo, self.txi)
+        self.current_gaim.new_game()
+        self.txo.master.change_current_mode(
+            "Gaim",
+            self.current_gaim.gaim_commands | self.current_gaim.helper_commands)
         print("Game started.")

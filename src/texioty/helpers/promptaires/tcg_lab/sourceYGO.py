@@ -55,14 +55,19 @@ class SourceYGO(SourceTCG):
         super().__init__()
         self.base_url = 'https://db.ygoprodeck.com/api/v7/cardinfo.php'
         self.tcg_title_name = 'yugioh'
+        self._init_yugioh_database()
 
-        db_path = Path(__file__).resolve().parent / "cards" / "databases" / "yugioh_cards.db"
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-        if not db_path.exists():
-            self.db_helper = DatabaseHelper(str(db_path))
-            self.db_helper.create_tables_from_templates(YUGIOH_TEMPLATES)
-        else:
-            self.db_helper = DatabaseHelper(str(db_path))
+    def _init_yugioh_database(self):
+        try:
+            db_path = Path(__file__).resolve().parent / "cards" / "databases" / "yugioh_cards.db"
+
+            if not db_path.exists():
+                self.db_helper = DatabaseHelper(str(db_path))
+                self.db_helper.create_tables_from_templates(YUGIOH_TEMPLATES)
+            else:
+                self.db_helper = DatabaseHelper(str(db_path))
+        except Exception as e:
+            print(f"Error initializing YGO database: {e}")
 
         self.color_translation_dict = {
             'light': 'yellow',

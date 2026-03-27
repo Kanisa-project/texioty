@@ -5,11 +5,34 @@ import subprocess
 import threading
 import time
 from typing import Optional, Any, Dict
-
+from abc import ABC, abstractmethod
 from .registries.command_definitions import bind_commands, PIJUN_COMMANDS
 from .tex_helper import TexiotyHelper
 
 POLL_INTERVAL = 1.0
+
+class AbcPijun(ABC):
+    @property
+    @abstractmethod
+    def connected(self) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    def connect(self) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    def disconnect(self) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def send(self, payload: bytes) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    def receive(self) -> bytes | None:
+        raise NotImplementedError
+
 
 class Pijun(TexiotyHelper):
     def __init__(self, txo, txi, pijun_id: int = 0):
@@ -233,7 +256,7 @@ class Pijun(TexiotyHelper):
             self.txo.priont_string(f"Engine: {engine}")
 
 
-    def send_message(self, message: str, host: Optional[str], port: str = "8080"):
+    def send_message(self, message: str, host: Optional[str] = None, port: str = "8080"):
         if not message or not message.strip():
             self.txo.priont_string("No message provided.")
             return
@@ -259,14 +282,17 @@ class Pijun(TexiotyHelper):
             "message": message
         })
 
+        if self._send_payload(payload, host, port_value):
+            print(f"Message sent to {host}:{port_value}")
+
         try:
             self.socket.sendto(json.dumps(payload).encode('utf-8'), (host, port_value))
-            print(f"Message sent to {host}:{port}")
+            print(f"Message sent to {host}:{port_value}")
             print(f"Message sent: {message[:50]}...")
         except socket.gaierror as e:
             print(f"Error resolving host: {e}")
         except OSError as e:
-            print(f"Network error sending to {host}:{port}: {e}")
+            print(f"Network error sending to {host}:{port_value}: {e}")
         except Exception as e:
             print(f"Error sending message: {e}")
 

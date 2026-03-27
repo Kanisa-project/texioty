@@ -1,9 +1,9 @@
-from src.texioty.helpers.apis.arc_api import ArcApi
-from src.texioty.helpers.apis.digimon_api import DigimonAPIHelper
-from src.texioty.helpers.apis.lorcana_api import LorcanaAPIHelper
-from src.texioty.helpers.apis.mtg_api import MagicAPIHelper
-from src.texioty.helpers.apis.poketcg_api import PokeAPIHelper
-from src.texioty.helpers.apis.yugioh_api import YugiohAPIHelper
+# from src.texioty.helpers.apis.arc_api import ArcApi
+# from src.texioty.helpers.apis.digimon_api import DigimonAPIHelper
+# from src.texioty.helpers.apis.lorcana_api import LorcanaAPIHelper
+# from src.texioty.helpers.apis.mtg_api import MagicAPIHelper
+# from src.texioty.helpers.apis.poketcg_api import PokeAPIHelper
+# from src.texioty.helpers.apis.yugioh_api import YugiohAPIHelper
 from src.texioty.helpers.registries.base_registry import BaseRegistry
 from src.texioty.settings import themery as t, utils as u
 
@@ -11,14 +11,14 @@ from src.texioty.settings import themery as t, utils as u
 class ApiRegistry(BaseRegistry):
     def __init__(self, txo, txi):
         super().__init__(txo, txi)
-        self.current_catalog = {
-            "YGO": YugiohAPIHelper,
-            "MTG": MagicAPIHelper,
-            "PKM": PokeAPIHelper,
-            "DGM": DigimonAPIHelper,
-            "LCA": LorcanaAPIHelper,
-            "ARC": ArcApi
-        }
+        # self.current_catalog = {
+        #     "YGO": YugiohAPIHelper,
+        #     "MTG": MagicAPIHelper,
+        #     "PKM": PokeAPIHelper,
+        #     "DGM": DigimonAPIHelper,
+        #     "LCA": LorcanaAPIHelper,
+        #     "ARC": ArcApi
+        # }
 
         self.helper_commands['get_arc'] = {
                 'name': 'get_arc',

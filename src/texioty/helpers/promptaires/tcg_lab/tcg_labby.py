@@ -1,6 +1,5 @@
 import glob
 import math
-from typing import Callable
 from pathlib import Path
 from mtgsdk import Card
 from PIL import Image, ImageDraw
@@ -16,196 +15,314 @@ from src.texioty.helpers.promptaires.tcg_lab.sourceYGO import SourceYGO
 
 from src.texioty.helpers.gaims.wordsearch import create_wordsearch
 from src.texioty.helpers.gaims.hangman import generate_hidden_dictionary
-TCG_OPTIONS = ['Magic the Gathering',
-               'Pokemon',
-               'Lorcana',
-               'Yu-Gi-Oh',
-               'Digimon',
-               'All']
 
-# class TCGLaboratory(BasikWidget):
-#     def __init__(self, txo, txi):
-#         super().__init__(txo, txi)
-#         self.current_tcg = None
+TCG_OPTIONS = [
+    'Magic the Gathering',
+    'Pokemon',
+    'Lorcana',
+    'Yu-Gi-Oh',
+    'Digimon'
+]
 
-def tc_blender(tcg1: str, tcg2: str) -> Image.Image:
-    """Blend a TCG card from two different card games."""
-    print(tcg1, tcg2)
-    src1_img_list = glob.glob(f'config/cards{tcg1.split(" ")[0]}/*.*')
-    src2_img_list = glob.glob(f'config/cards{tcg2.split(" ")[0]}/*.*')
-    img1 = Image.open(random.choice(src1_img_list))
-    img2 = Image.open(random.choice(src2_img_list))
-    if img1.mode is "P":
-        img1 = img1.convert("RGBA")
-    img2 = img2.convert(img1.mode).resize(img1.size)
-    blended = blend_foto(img1, img2, 0.5)
-    return blended
+LAB_PROFILE_ROOT = Path("src/texioty/helpers/promptaires/tcg_lab/lab_profiles")
+TCG_PROFILE_ROOT = Path("src/texioty/helpers/promptaires/tcg_lab/tcg_profiles")
 
 
 class TCGLabby(BasePrompt):
     def __init__(self, txo, txi):
         super().__init__(txo, txi)
-        self.current_tcg = None
-        self.opts_to_profs_map = {
-            'Magic the Gathering': 'magics',
-            'Pokemon': 'pokemons',
-            'Lorcana': 'lorcanas',
-            'Yu-Gi-Oh': 'yugiohs',
-            'Digimon': 'digimons'
-        }
-        self.magic_api = SourceMTG()
-        self.pokemon_api = SourcePKM()
-        self.yugioh_api = SourceYGO()
-        self.digimon_api = SourceDGM()
-        self.lorcana_api = SourceLRCNA()
+        self.current_tcg: str | None = None
+        self.current_lab: str | None = None
+        self.current_profile_name: str | None = None
 
-    def laboratory(self, lab_funcs: str):
-        match lab_funcs:
+        self.sources = {
+            'Magic the Gathering': SourceMTG(),
+            'Pokemon': SourcePKM(),
+            # 'Lorcana': SourceLRCNA(),
+            # 'Yu-Gi-Oh': SourceYGO(),
+            # 'Digimon': SourceDGM()
+        }
+
+    def get_source_for_tcg(self, tcg_name: str):
+        source = self.sources.get(tcg_name)
+        if source is None:
+            raise ValueError(f"Unsupported TCG: {tcg_name}")
+        return source
+
+    def ingest_cards_for_profile(self, tcg_name: str, profile_name: str):
+        source = self.get_source_for_tcg(self._tcg_tag(tcg_name))
+        profile = self.load_tcg_profile(tcg_name, profile_name)
+        card_criteria = profile.get("card_criteria", profile)
+        print(card_criteria, "card CRIT")
+        raw_cards = source.get_card_batch(card_criteria)
+
+
+        if raw_cards is None:
+            raw_cards = []
+
+        if not isinstance(raw_cards, list):
+            raise TypeError(f"Expected a list of cards, got {type(raw_cards)}")
+
+        output_dir = f"filesOutput/tcg_lab/cards/{source.tcg_title_name}"
+        print(output_dir, "OPOUT")
+        ingested_count = 0
+        for raw_card in raw_cards:
+            raw_card = source.card_to_dict(raw_card)
+            source.ingest_card(raw_card, tcg_name, output_dir)
+            ingested_count += 1
+
+        self.txo.update_header_status(bottom_status=f"Ingested {ingested_count} cards for {tcg_name}/{profile_name}")
+
+    def download_cards(self, profile_name: str):
+        self.current_profile_name = profile_name
+        self.txo.priont_string(f"Ingesting {self.current_tcg} {profile_name}....")
+        self.ingest_cards_for_profile(self.current_tcg, profile_name)
+
+    def laboratory(self, lab_name: str):
+        self.current_lab = lab_name
+
+        match lab_name:
             case 'Depictinator{}':
                 self.decide_decision("Which card game to depict from", TCG_OPTIONS, 'depict')
-                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-                    self.txo.master.deciding_function = self.depictinator
-                    self.txo.priont_string(f"Now depicting {self.txo.master.deciding_function}")
+                self.txo.master.deciding_function = self.depictinator
             case 'Card%Puzzler(]':
                 self.decide_decision("Which card game to puzzle with", TCG_OPTIONS, 'puzzler')
-                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-                    self.txo.master.deciding_function = self.card_puzzler
-                    self.txo.priont_string("Now puzzlering ")
+                self.txo.master.deciding_function = self.card_puzzler
             case 'TC-Blender 690':
                 self.decide_decision("Which card games to blend together", TCG_OPTIONS, 'tc_blender')
-                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-                    self.txo.master.deciding_function = self.tc_blender_690
-                    self.txo.priont_string("Now blending cards")
+                self.txo.master.deciding_function = self.tc_blender_690
             case 'Card-0wn1oad3r':
                 self.decide_decision("What game to downloaded cards from", TCG_OPTIONS, '0wn1oad3r')
-                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-                    self.txo.master.deciding_function = self.card_0wn1oad3r
+                self.txo.master.deciding_function = self.card_0wn1oad3r
             case 'RanDexter-2110':
                 self.decide_decision("Which card game to generate a deck for", TCG_OPTIONS, 'deckster')
-                if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-                    self.txo.master.deciding_function = self.randexter_2110
+                self.txo.master.deciding_function = self.randexter_2110
+            case _:
+                self.txo.update_header_status(bottom_status="Unknown LAB: " + lab_name)
+                self.txo.master.deciding_function = None
+
+    def get_lab_profile_names(self, lab_choice: str) -> list[str]:
+        lab_tag = self._lab_tag(lab_choice)
+        profile_dir = LAB_PROFILE_ROOT / lab_tag
+        if profile_dir.exists():
+            profiles = sorted([p.stem for p in profile_dir.glob("*.json")])
+            if profiles:
+                return profiles
+
+        try:
+            profiles = u.retrieve_lab_profiles(lab_tag)
+            return sorted(list(profiles.keys()))
+        except FileNotFoundError:
+            return []
+
+    def get_tcg_profile_names(self, tcg_choice: str) -> list[str]:
+        tcg_tag = self._tcg_tag(tcg_choice)
+        profile_dir = TCG_PROFILE_ROOT / tcg_tag
+        if profile_dir.exists():
+            profiles = sorted([p.stem for p in profile_dir.glob("*.json")])
+            if profiles:
+                return profiles
+
+        try:
+            profiles = u.retrieve_tcg_profiles(tcg_tag)
+            return sorted(list(profiles.keys()))
+        except FileNotFoundError:
+            return []
+
+    def load_lab_profile(self, lab_name: str, profile_name: str) -> dict:
+        lab_tag = self._lab_tag(lab_name)
+        profile_path = TCG_PROFILE_ROOT / lab_tag / f"{profile_name}.json"
+        if profile_path.exists():
+            return u.read_json_file(profile_path)
+
+        try:
+            profiles = u.retrieve_lab_profiles(lab_tag)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"No profile found: {lab_name}/{profile_name}")
+
+        if profile_name in profiles:
+            return profiles[profile_name]
+
+        raise FileNotFoundError(f"No profile found: {lab_name}/{profile_name}")
+
+    def load_tcg_profile(self, tcg_name: str, profile_name: str) -> dict:
+        tcg_tag = self._tcg_tag(tcg_name)
+        profile_path = TCG_PROFILE_ROOT / tcg_tag / f"{profile_name}.json"
+        if profile_path.exists():
+            return u.read_json_file(profile_path)
+
+        try:
+            profiles = u.retrieve_tcg_profiles(tcg_tag)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"No profile found: {tcg_name}/{profile_name}")
+
+        if profile_name in profiles:
+            return profiles[profile_name]
+
+        raise FileNotFoundError(f"No profile found: {tcg_name}/{profile_name}")
 
     def depictinator(self, tcg_choice: str):
-        """
-        Depicts an abstract artistical image from the tcg_choice.
-        :param tcg_choice: TCG_OPTIONS
-        """
         self.current_tcg = tcg_choice
-        depiction_profiles = u.retrieve_tcg_profiles(self.opts_to_profs_map[self.current_tcg])
-        self.decide_decision(f"Which profile to use for a depiction", list(depiction_profiles.keys()), tcg_choice.lower())
-        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-            print("Creating depicting")
-            self.txo.master.deciding_function = self.setup_depiction
+        profiles = self.get_lab_profile_names(self._lab_tag(self.current_lab))
+        self.decide_decision(f"Which depiction profile to use", profiles, tcg_choice.lower())
+        self.txo.master.deciding_function = self.setup_depiction
 
     def card_puzzler(self, tcg_choice: str):
         self.current_tcg = tcg_choice
-        puzzler_profiles = u.retrieve_tcg_profiles(self.opts_to_profs_map[self.current_tcg])
-        self.decide_decision(f"Which profile to make a puzzle with", list(puzzler_profiles.keys()), tcg_choice.lower())
-        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-            self.txo.master.deciding_function = self.create_puzzles
+        profiles = self.get_tcg_profile_names(tcg_choice)
+        self.decide_decision(f"Which puzzle profile to use", profiles, tcg_choice.lower())
+        self.txo.master.deciding_function = self.create_puzzles
 
     def tc_blender_690(self, tcg_choice: str):
         self.current_tcg = tcg_choice
-        blending_profiles = u.retrieve_tcg_profiles(self.opts_to_profs_map[self.current_tcg])
-        self.decide_decision("How are we blending", list(blending_profiles.keys()), tcg_choice.lower())
-        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-            self.txo.master.deciding_function = self.blend_cards
+        profiles = self.get_tcg_profile_names(tcg_choice)
+        self.decide_decision("Which blend profile to use", profiles, tcg_choice.lower())
+        self.txo.master.deciding_function = self.blend_cards
 
     def card_0wn1oad3r(self, tcg_choice: str):
         self.current_tcg = tcg_choice
-        downloader_profiles = u.retrieve_tcg_profiles(self.opts_to_profs_map[self.current_tcg])
-        self.decide_decision("Which downloader profile to use", list(downloader_profiles.keys()), tcg_choice.lower())
-        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-            self.txo.master.deciding_function = self.download_cards
+        profiles = self.get_tcg_profile_names(tcg_choice)
+
+        if not profiles:
+            self.txo.update_header_status(bottom_status=f"No profiles found for {self.sources[tcg_choice].tcg_title_name}")
+            return
+        self.decide_decision("Which download profile to use", profiles, tcg_choice.lower())
+        self.txo.master.deciding_function = self.download_cards
 
     def randexter_2110(self, tcg_choice: str):
         self.current_tcg = tcg_choice
-        deckster_profiles = u.retrieve_tcg_profiles(self.opts_to_profs_map[self.current_tcg])
-        self.decide_decision("Which deck profile to use", list(deckster_profiles.keys()), tcg_choice.lower())
-        if self.txo.master.deciding_function is None or isinstance(self.txo.master.deciding_function, Callable):
-            self.txo.master.deciding_function = self.generate_decks
+        profiles = self.get_tcg_profile_names(tcg_choice)
+        self.decide_decision("Which deck profile to use", profiles, tcg_choice.lower())
+        self.txo.master.deciding_function = self.generate_decks
 
-    def setup_depiction(self, tcg_profile_name: str):
-        self.txo.priont_string(f"Depicting a {self.current_tcg} {tcg_profile_name}..")
-        card_search_profile = u.retrieve_tcg_profiles(self.opts_to_profs_map[self.current_tcg])[tcg_profile_name]["card_criteria"]
-        self.txo.priont_dict(card_search_profile)
-        if self.opts_to_profs_map[self.current_tcg] == "magics":
-            card_batch = self.magic_api.get_card_batch(card_search_profile)
-            for card in card_batch:
-                self.txo.priont_string(f"{card.name} {card.colors} {card.type}")
-        # :TODO Search for the card in the tcg api and get the card info
-        lab_profile_dict = {}
-        for name_key in tcg_profile_name.split("_"):
-            print(name_key, "NAMEK")
-            if name_key in u.retrieve_lab_profiles('depicters'):
-                lab_profile_dict = u.retrieve_lab_profiles('depicters')[name_key]
+    def setup_depiction(self, profile_name: str):
+        self.current_profile_name = profile_name
+        self.txo.priont_string(f"Depicting a {self.current_tcg} {profile_name}....")
 
-        self.txo.priont_dict(card_search_profile)
-        create_depiction(card_search_profile, lab_profile_dict)
+        source = self.get_source_for_tcg(self.current_tcg)
+        profile = self.load_lab_profile(self.current_lab, profile_name)
+        lab_criteria = profile.get("card_criteria", profile)
+        print(lab_criteria, "LABcriTeRia")
+        cards = source.get_card_database(filters=lab_criteria)
+
+        if not cards:
+            self.txo.update_header_status(bottom_status=f"No cards found for {self.current_tcg}/{profile_name}")
+            return
+
+        chosen_card = random.choice(cards)
+        self.txo.priont_dict(chosen_card)
+
+        depict_config = profile.get(
+            "depict",
+            profile.get("render", {"image_size": (320, 320), "background": (125, 52, 210, 99)})
+        )
+        self.create_depiction(depict_config, chosen_card)
 
     def create_puzzles(self, profile_name: str):
-        self.txo.priont_string(f"Puzzling a {self.current_tcg} {profile_name}....")
-        puzzle_profile = u.retrieve_tcg_profiles(self.opts_to_profs_map[self.current_tcg])[profile_name]
+        self.current_profile_name = profile_name
+        self.txo.priont_string(f"Creating a {self.current_tcg} {profile_name}....")
+
+        source = self.get_source_for_tcg(self.current_tcg)
+        profile = self.load_tcg_profile(self.current_tcg, profile_name)
+        cards = source.get_card_database(filters=profile.get("card_criteria", profile))
+
+        if not cards:
+            self.txo.update_header_status(bottom_status=f"No cards found for {self.current_tcg}/{profile_name}")
+            return
+
+        puzzle_profile = profile.get("puzzle", profile)
         if "wordsearch" in profile_name:
             self.generate_wordsearch(puzzle_profile)
-        if "hangman" in profile_name:
+        elif "hangman" in profile_name:
             self.generate_hangman(puzzle_profile)
+        else:
+            self.txo.update_header_status(bottom_status=f"No puzzle profile found for {self.current_tcg}/{profile_name}")
 
     def blend_cards(self):
-        pass
-
-    def download_cards(self, profile_name):
-        tcgpack_profile = u.retrieve_tcg_profiles(self.opts_to_profs_map[self.current_tcg])[profile_name]
-        self.txo.priont_dict(tcgpack_profile)
-        print("profName", profile_name)
-        if "magic" in profile_name:
-            card_batch = self.magic_api.get_card_batch(tcgpack_profile['card_criteria'])
-            self.magic_api.download_card_batch(card_batch, 'helpers/promptaires/tcg_lab/cards/magic')
-        if "pokemon" in profile_name:
-            card_batch = self.pokemon_api.gather_correct_cards(tcgpack_profile['card_criteria'])
-            self.pokemon_api.download_card_batch(card_batch)
-        if "yugioh" in tcgpack_profile:
-            card_batch = self.yugioh_api.gather_correct_cards(tcgpack_profile['card_criteria'])
-            self.yugioh_api.download_card_batch(card_batch)
-        if "digimon" in tcgpack_profile:
-            self.digimon_api.download_card_batch(tcgpack_profile['card_criteria'])
-        if "lorcana" in tcgpack_profile:
-            self.lorcana_api.download_card_batch(tcgpack_profile['card_criteria'])
+        self.txo.update_header_status(bottom_status=f"Blending cards isn't working yet.")
 
     def generate_decks(self, profile_name: str):
-        deck_profile = u.retrieve_tcg_profiles(self.opts_to_profs_map[self.current_tcg])[profile_name]
-        dexr_profile = u.retrieve_lab_profiles('decksters')['default']
-        self.txo.priont_dict(deck_profile)
-        self.txo.priont_dict(dexr_profile)
-        # print(profile_name, self.opts_to_profs_map[self.current_tcg])
-        if self.opts_to_profs_map[self.current_tcg] is "magics" and "dexr" in profile_name:
-            self.txo.priont_list(self.magic_api.generate_random_deck(dexr_profile), numbered=True)
-        if "pokemon" in profile_name:
-            # self.pokemon_api.download_card_batch(deck_profile['card_criteria'])
-            pass
-        if "yugioh" in profile_name:
-#             self.yugioh_api.download_card_batch(deck_profile['card_criteria'])
-            pass
-        if "digimon" in profile_name:
-#             self.digimon_api.download_card_batch(deck_profile['card_criteria'])
-            pass
-        if "lorcana" in profile_name:
-#             self.lorcana_api.download_card_batch(deck_profile['card_criteria'])
-            pass
+        self.current_profile_name = profile_name
+        self.txo.priont_string(f"Building decks for {self.current_tcg} {profile_name}....")
+
+        source = self.get_source_for_tcg(self.current_tcg)
+        deck_profile = self.load_tcg_profile(self.current_tcg, profile_name)
+        deck_config = deck_profile.get("deck", deck_profile)
+
+        cards = source.get_card_database(filters=deck_profile.get("card_criteria", deck_profile))
+        if not cards:
+            self.txo.update_header_status(bottom_status=f"No cards found for {self.current_tcg}/{profile_name}")
+            return
+
+        deck_size = int(deck_config.get("deck_size", 60))
+        selected_cards = random.sample(cards, min(deck_size, len(cards)))
+        self.txo.priont_list(
+            [f"{card.get('name', 'Unknown')} - {card.get('type', 'Unknown')}" for card in selected_cards],
+            numbered=True
+        )
+
 
     def generate_wordsearch(self, card_profile: dict):
-        # self.txo.priont_dict(card_profile.get('wordsearch', {"difficulty": 2, "number_of_words": 9}))
         self.txo.priont_dict(card_profile)
-
         for row in create_wordsearch(["one", "thee", "kanisa"], 13):
             self.txo.priont_string(' '.join(row))
 
     def generate_hangman(self, card_profile: dict):
-        """
-        Gets the flavor text of a card and then returns it as a hidden phrase dictionary.
-        """
         self.txo.priont_dict(card_profile.get("hangman", {"difficulty": 2, "phrase": "hangman"}))
-        self.txo.priont_dict(generate_hidden_dictionary("This is a phrase"))
+        self.txo.priont_dict(generate_hidden_dictionary("This is a phrase."))
+
+    def create_depiction(self, depict_config: dict, card_dict: dict):
+        img_size = tuple(depict_config.get("image_size", (320, 320)))
+        bg_color = tuple(depict_config.get("background", (125, 52, 210, 99)))
+
+        new_img = Image.new("RGBA", img_size, bg_color)
+        self.depict_card(new_img, card_dict)
+
+        card_name = card_dict.get('name', 'unknown_card')
+        save_name = "_".join(str(card_name).split())
+        save_path = Path(f"filesOutput/depictions") / f"{save_name}.png"
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        new_img.save(save_path)
+
+        self.txo.priont_string(f"Depiction saved to {save_path}")
+
+    @staticmethod
+    def depict_card(img: Image.Image, card_info_dict: dict):
+        draw = ImageDraw.Draw(img)
+
+        name = str(card_info_dict.get('name', 'unknown_name'))
+        card_type = str(card_info_dict.get('type', 'unknown_type'))
+        rarity = str(card_info_dict.get('rarity', 'unknown_rarity'))
+        source_tcg = str(card_info_dict.get('source_tcg', 'unknown_source_tcg'))
+
+        draw.rectangle([(8, 8), (img.size[0] - 8, img.size[1] - 8)], fill=(255, 255, 255, 180), width=2)
+        draw.text((16, 16), source_tcg, fill=(255, 255, 255, 255))
+        draw.text((16, 48), name, fill=(255, 255, 255, 255))
+        draw.text((16, 80), card_type, fill=(255, 255, 255, 255))
+        draw.text((16, 112), rarity, fill=(255, 255, 255, 255))
+
+    @staticmethod
+    def _lab_tag(lab_choice: str) -> str:
+        mapping = {
+            'Card-0wn1oad3r': "downloaders",
+            'Depictinator{}': "depicters",
+            'Card%Puzzler(]': "puzzlers",
+            'TC-Blender 690': "blenders",
+            'RanDexter-2110': "decksters"
+        }
+        return mapping.get(lab_choice, lab_choice.lower())
+
+    @staticmethod
+    def _tcg_tag(tcg_choice: str) -> str:
+        mapping = {
+            "Magic the Gathering": "magics",
+            "Pokemon": "pokemons",
+            "Lorcana": "lorcanas",
+            "Yu-Gi-Oh": "yugiohs",
+            "Digimon": "digimons"
+        }
+        return mapping.get(tcg_choice, tcg_choice.lower())
+
 
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
@@ -229,6 +346,21 @@ def lsystem_string_maker(axioms: str, rules: dict, iterations: int) -> str:
                 new_axioms += axiom
             axioms = new_axioms
     return axioms
+
+
+def tc_blender(tcg1: str, tcg2: str) -> Image.Image:
+    """Blend a TCG card from two different card games."""
+    print(tcg1, tcg2)
+    src1_img_list = glob.glob(f'config/cards{tcg1.split(" ")[0]}/*.*')
+    src2_img_list = glob.glob(f'config/cards{tcg2.split(" ")[0]}/*.*')
+    img1 = Image.open(random.choice(src1_img_list))
+    img2 = Image.open(random.choice(src2_img_list))
+    if img1.mode == "P":
+        img1 = img1.convert("RGBA")
+    img2 = img2.convert(img1.mode).resize(img1.size)
+    blended = blend_cards(img1, img2, 0.5)
+    return blended
+
 
 
 def lsystem_dual_mana_decoder(lstring: str, start_point=(480, 480), start_length=32,
@@ -335,10 +467,6 @@ def build_mana_color_dict(spell_mana_cost: str) -> dict:
                 mana_colors['dark_colors'].append((213, 213, 213))
                 mana_colors['strong_colors'].append((180, 180, 180))
     return mana_colors
-
-
-def lsystem_depiction(img: Image, spell_llines: dict, spell_info_dict: dict):
-    pass
 
 
 def draw_depiction(img: Image.Image, spell_polypoints: dict, spell_info_dict: dict):

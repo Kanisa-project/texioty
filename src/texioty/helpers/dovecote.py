@@ -99,23 +99,6 @@ def list_interfaces():
         print(f"Error listing network interfaces: {e}")
         return []
 
-def read_file(path):
-    try:
-        # os.chmod(path, 0o666)
-        with open(path, 'r') as f:
-            return f.read().strip()
-    except Exception as e:
-        print(e)
-        return None
-
-def iface_carrier(iface):
-    carrier = read_file(f'/sys/class/net/{iface}/carrier')
-    return int(carrier) if carrier else None
-
-def iface_operstate(iface):
-    operstate = read_file(f'/sys/class/net/{iface}/operstate')
-    return operstate.strip() if operstate else None
-
 def iface_ips(iface):
     try:
         out = subprocess.check_output(['ip', '-4', 'addr', 'show', 'dev', iface], text=True,
@@ -132,16 +115,16 @@ def iface_ips(iface):
                 addrs.append(parts[1].split('/')[0])
     return addrs
 
-def get_linux_status():
-    status = {}
-    for iface in list_interfaces():
-        if iface == "lo":
-            continue
-        carrier = iface_carrier(iface)
-        oper = iface_operstate(iface)
-        ips = iface_ips(iface)
-        status[iface] = {'carrier': carrier, 'oper': oper, 'ips': ips}
-    return status
+# def get_linux_status():
+#     status = {}
+#     for iface in list_interfaces():
+#         if iface == "lo":
+#             continue
+#         carrier = iface_carrier(iface)
+#         oper = iface_operstate(iface)
+#         ips = iface_ips(iface)
+#         status[iface] = {'carrier': carrier, 'oper': oper, 'ips': ips}
+#     return status
 
 class Dovecot(TexiotyHelper):
     def __init__(self, txo, txi, dovecot_id: int = 0, host: str = '0.0.0.0', port: int = 8210):

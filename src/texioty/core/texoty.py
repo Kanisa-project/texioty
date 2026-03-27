@@ -41,6 +41,21 @@ class TEXOTY(Text):
 
         }
         self.header_state = dict(self.header_defaults)
+        self.header_lines = []
+        self.header_line_count = 0
+        self.body_start_index = "3.0"
+        self.header_content = [
+            self._compose_header_top_line(
+                self.header_state["title"],
+                self.header_state["show_username"],
+                self.header_state["right_status"],
+                self.header_state["top_charset"]
+            ),
+            self._compose_header_bottom_line(
+                self.header_state["bottom_status"],
+                self.header_state["bottom_charset"]
+            )
+        ]
         self.set_header()
         self.scroll_bar = Scrollbar(master=self.master, width=10, command=self.yview)
         self['yscrollcommand'] = self.scroll_bar.set
@@ -58,6 +73,29 @@ class TEXOTY(Text):
     def priont_click_command(self, tex: str, link: str, line_index=END):
         self.insert(line_index, tex, self.hyperlink.add_cmd(partial(self.master.set_texity_input, link)))
         self.priont_string('')
+
+    def show_loading_phrase(self, phrase: str | None = None):
+        if phrase is None:
+            phrase = ""
+        self.set_header(bottom_status=phrase)
+
+    def _builder_header_lines(self) -> list[str]:
+        username = self.active_profile.username if self.header_state["show_username"] else ""
+
+        lines = [
+            self._compose_header_top_line(
+                self.header_state["title"],
+                username,
+                self.header_state["right_status"],
+                self.header_state["top_charset"]
+            ),
+            "",
+            self._compose_header_bottom_line(
+                self.header_state["bottom_status"],
+                self.header_state["bottom_charset"]
+            )
+        ]
+        return lines
 
     @staticmethod
     def _fit_header_text(text: str, width: int) -> str:
@@ -109,6 +147,9 @@ class TEXOTY(Text):
         left_text = self._fit_header_text(title, width)
         return left_text
 
+    def _compose_loading_line(self):
+        pass
+
     def _compose_header_bottom_line(self, bottom_status: str, bottom_charset: str) -> str:
         inner_width = max(self.texoty_w - 2, 0)
         bottom_status = str(bottom_status or "")
@@ -133,7 +174,8 @@ class TEXOTY(Text):
         :param show_username:
         :return:
         """
-        self.delete("0.0", 'end')
+        previous_header_line_count = getattr(self, "header_line_count", 0)
+
         if self.master.active_profile:
             self.active_profile = self.master.active_profile
         else:
@@ -147,19 +189,17 @@ class TEXOTY(Text):
             self.header_state["bottom_status"] = bottom_status
         if show_username is not None:
             self.header_state["show_username"] = show_username
-        username = self.active_profile.username if self.header_state["show_username"] else ""
-        top_line = self._compose_header_top_line(
-            self.header_state["title"],
-            username,
-            self.header_state["right_status"],
-            self.header_state["top_charset"]
-        )
-        bottom_line = self._compose_header_bottom_line(
-            self.header_state["bottom_status"],
-            self.header_state["bottom_charset"]
-        )
-        self.set_text_on_line(0, top_line)
-        self.set_text_on_line(2, bottom_line)
+
+        self.header_lines = self._builder_header_lines()
+        self.header_line_count = len(self.header_lines)
+        self.body_start_index = f"{self.header_line_count}.0"
+
+        for line_number, text in enumerate(self.header_lines):
+            self.set_text_on_line(line_number, text)
+
+        for line_number in range(self.header_line_count, previous_header_line_count):
+            self.set_text_on_line(line_number, "")
+
         self.configure(bg=self.active_profile.color_theme[2])
 
     def update_header_status(self, right_status=None, bottom_status=None):
@@ -214,15 +254,15 @@ class TEXOTY(Text):
 
     def clear_add_header(self, header_msg="", right_status=None, bottom_status=None):
         """ Clear Texoty display and replace the header. """
-        self.delete("0.0", 'end')
         self.set_header(header_msg, right_status=right_status, bottom_status=bottom_status)
+        self.delete(self.body_start_index, 'end')
 
     def clear_no_header(self, fillIt=False, fill_space=" "):
         """ Clear Texoty display and do not replace the header. """
-        self.delete("0.0", 'end')
+        self.delete(self.body_start_index, 'end')
         if fillIt:
-            for h in range(self.texoty_h):
-                self.insert(END, fill_space * self.texoty_w)
+            for _ in range(self.texoty_h):
+                self.insert("end-1c", fill_space * self.texoty_w)
 
     def priont_dict(self, dioct: dict, parent_key=None):
         """
@@ -255,9 +295,8 @@ class TEXOTY(Text):
         :param command:
         :return:
         """
-        self.priont_command_colorized(f'\n{command.name}╕', command.font_color, command.back_color)
-        help_message_text = f'{" "*len(command.name)}╘► {command.lite_desc}'
-        self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
+        self.priont_command_colorized(f'\n{command.name} ► {command.lite_desc}', command.font_color, command.back_color)
+        # self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
         self.yview(END)
 
     def priont_command_midd(self, command: texity.Command):
@@ -339,8 +378,8 @@ class TEXOTY(Text):
         @param line_index: Index of where on the line to insert text.
         @param striong: String to display.
         """
-        # self.insert(line_index, striong)
-        self.insert(line_index, striong + "\n")
+        insert_at = "end-1c" if line_index == END else line_index
+        self.insert(insert_at, striong + "\n")
         self.yview(END)
 
     def tag_area(self, fore_color: str, back_color: str, start_pos: str, end_pos: str):
@@ -356,12 +395,12 @@ class TEXOTY(Text):
             except Exception:
                 self.tag_configure(tag_name, foreground=str(text_color), background=str(back_color))
             self._tag_cache.add(tag_name)
-        # start_pos = f'1.0'
-        # end_pos = f'1.{len(striong)}'
-        # self.tag_add(tag_name, start_pos, end_pos)
-        self.insert(END, striong, tag_name)
-        self.insert(END, '\n')
+        insert_at = "end-1c" if start_pos == END else start_pos
+        self.insert(insert_at, striong + "\n")
         self.yview(END)
+
+    def _append_to_body(self, text: str, *tags):
+        self.insert("end-1c", text, tags)
 
     def priont_command_colorized(self, striong: str, text_color='', bg_color=''):
         """
@@ -375,14 +414,22 @@ class TEXOTY(Text):
         if tag_name not in self._tag_cache:
             try:
                 self.tag_configure(tag_name, foreground=text_color, background=bg_color)
-            except Exception:
+            except Exception as e:
                 self.tag_configure(tag_name, foreground=str(text_color), background=str(bg_color))
             self._tag_cache.add(tag_name)
-        start_pos = f'1.0'
-        end_pos = f'1.{len(striong)}'
-        self.tag_add(tag_name, start_pos, end_pos)
-        self.insert(END, striong, tag_name)
-        self.insert(END, '\n')
+
+        leading_newlines = len(striong) - len(striong.lstrip('\n'))
+        trailing_newlines = len(striong) - len(striong.rstrip('\n'))
+        core_text = striong.strip('\n')
+
+        if leading_newlines:
+            self._append_to_body('\n' * leading_newlines)
+
+        if core_text:
+            self._append_to_body(core_text, tag_name)
+
+        if trailing_newlines:
+            self._append_to_body('\n' * trailing_newlines)
         self.yview(END)
 
     def priont_int(self, iont: int, parent_key=None):

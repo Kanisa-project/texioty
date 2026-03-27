@@ -9,7 +9,7 @@ from typing import List
 # from pytube import YouTube
 
 import requests
-from PIL import ImageFont
+from PIL import ImageFont, Image
 
 # from dotenv import load_dotenv
 from src.texioty.settings import themery as t, alphanumers as a
@@ -20,6 +20,113 @@ PRO_TIPS = ["Double click the click-commands to bring focus back to Texity.",
             "'welcome' 'commands' 'help' are three helpful commands to welcome a user."]
 
 
+def input_path(*parts: str) -> str:
+    return os.path.join(input_root(), *parts)
+
+def output_path(*parts: str) -> str:
+    return os.path.join(output_root(), *parts)
+
+def cache_path(*parts: str) -> str:
+    return os.path.join(output_root(), "cache", *parts)
+
+def prepped_dir(*parts: str) -> str:
+    return os.path.join(cache_path("foto_worx", "prepped"), *parts)
+
+def prepped_path(*parts: str) -> str:
+    return ensure_parent_dir(prepped_dir(*parts))
+
+def save_prepped_image(image, *parts: str, **save_kwargs) -> str:
+    save_path = prepped_path(*parts)
+    image.save(save_path, **save_kwargs)
+    return save_path
+
+def list_prepped_images(*parts: str, pattern: str = "*.png") -> list[str]:
+    directory = prepped_dir(*parts)
+    if not os.path.isdir(directory):
+        return []
+    return sorted(glob.glob(os.path.join(directory, pattern)))
+
+def load_prepped_image(*parts: str) -> Image.Image:
+    return Image.open(prepped_path(*parts))
+
+def asset_path(*parts: str) -> str:
+    return os.path.join(project_root(), "assets", *parts)
+
+PROFILE_ROOT_BUILDERS = (
+    output_path,
+    input_path,
+    asset_path,
+)
+
+PROFILE_LOCATIONS = {
+    "lab": (
+        ("helpers", "promptaires", "tcg_lab", "lab_profiles"),
+        ("tcg_lab", "lab_profiles"),
+    ),
+    "tcg": (
+        ("helpers", "promptaires", "tcg_lab", "tcg_profiles"),
+        ("tcg_lab",),
+    ),
+    "worx": (
+        ("foto_worx", "worx_profiles"),
+        ("helpers", "promptaires", "worx_hop", "worx_profiles"),
+        ("worx_hop", "worx_profiles"),
+    ),
+    "user": (
+        (".profiles",),
+    ),
+}
+
+def _candidate_profile_paths(profile_group: str, profile_name: str) -> list[str]:
+    file_name = f"{profile_name}.json"
+    candidate_paths = []
+
+    for root_builder in PROFILE_ROOT_BUILDERS:
+        for relative_dir in PROFILE_LOCATIONS[profile_group]:
+            candidate_paths.append(root_builder(*relative_dir, file_name))
+
+    fallback_dirs = {
+        "lab": (("helpers", "promptaires", "tcg_lab", "lab_profiles"),),
+        "tcg": (("tcg_lab",),),
+        "worx": (("helpers", "promptaires", "worx_hop", "worx_profiles"),),
+    }
+
+    for relative_dir in fallback_dirs.get(profile_group, ()):
+        candidate_paths.append(os.path.join(project_root(), *relative_dir, file_name))
+
+    seen = set()
+    unique_paths = []
+    for path in candidate_paths:
+        normalized = os.path.normpath(path)
+        if normalized not in seen:
+            seen.add(normalized)
+            unique_paths.append(path)
+    return unique_paths
+
+def _candidate_profile_dirs(profile_group: str) -> list[str]:
+    candidate_dirs = []
+
+    for root_builder in PROFILE_ROOT_BUILDERS:
+        for relative_dir in PROFILE_LOCATIONS[profile_group]:
+            candidate_dirs.append(root_builder(*relative_dir))
+
+    fallback_dirs = {
+        "user": (("filesOutput", ".profiles"),),
+    }
+
+    for relative_dir in fallback_dirs.get(profile_group, ()):
+        candidate_dirs.append(os.path.join(project_root(), *relative_dir))
+
+    seen = set()
+    unique_dirs = []
+    for path in candidate_dirs:
+        normalized = os.path.normpath(path)
+        if normalized not in seen:
+            seen.add(normalized)
+            unique_dirs.append(path)
+
+    return unique_dirs
+
 def check_file_exists(path: str) -> bool:
     """Use glob to check if a file exists."""
     if glob.glob(path):
@@ -27,10 +134,13 @@ def check_file_exists(path: str) -> bool:
     return False
 
 def project_root() -> str:
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-def asset_path(*parts: str) -> str:
-    return os.path.join(project_root(), "../../..", "assets", *parts)
+    return os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__))
+            )
+        )
+    )
 
 def output_root() -> str:
     """
@@ -42,13 +152,8 @@ def input_root() -> str:
     """
     Root folder for input files, such as fonts, sounds or images. Adjust as needed.
     """
-    return os.path.join(project_root(), "../../..", "filesInput")
+    return os.path.join(project_root(), "filesInput")
 
-def output_path(*parts: str) -> str:
-    """
-    Build a path inside the output directory.
-    """
-    return os.path.join(output_root(), *parts)
 
 def ensure_parent_dir(file_path: str) -> str:
     """
@@ -155,37 +260,68 @@ class TexiotyProfile:
     password: str
     color_theme: tuple
 
+def _default_available_profiles() -> dict[str, TexiotyProfile]:
+    return {
+        "guest": TexiotyProfile("Guest", "p455",
+                                (rgb_to_hex(t.DARK_BROWN),
+                                 rgb_to_hex(t.SAGE_GREEN),
+                                 rgb_to_hex(t.LIGHT_GOLDENROD_YELLOW))),
+        "bluebeard": TexiotyProfile("Bluebeard", "p455",
+                                    (rgb_to_hex(t.DARK_SLATE_BLUE),
+                                     rgb_to_hex(t.LIGHT_SLATE_BLUE),
+                                     rgb_to_hex(t.GHOST_WHITE)))
+    }
+
+def _iter_profile_json_files(profile_group: str) -> list[str]:
+    profile_files = []
+
+    for directory in _candidate_profile_dirs(profile_group):
+        if not os.path.isdir(directory):
+            continue
+
+        profile_files.extend(sorted(glob.glob(os.path.join(directory, "*.json"))))
+
+    seen = set()
+    unique_files = []
+    for path in profile_files:
+        normalized = os.path.normpath(path)
+        if normalized not in seen:
+            seen.add(normalized)
+            unique_files.append(path)
+
+    return unique_files
 
 
-available_profiles = {
-    "guest": TexiotyProfile("Guest", "p455",
-                            (rgb_to_hex(t.DARK_BROWN),
-                             rgb_to_hex(t.SAGE_GREEN),
-                             rgb_to_hex(t.LIGHT_GOLDENROD_YELLOW))),
-    "bluebeard": TexiotyProfile("Bluebeard", "p455",
-                                (rgb_to_hex(t.DARK_SLATE_BLUE),
-                                 rgb_to_hex(t.LIGHT_SLATE_BLUE),
-                                 rgb_to_hex(t.GHOST_WHITE)))
-}
-for profile in glob.glob("filesOutput/.profiles/*.json"):
-    if "trevor2" in profile or 'old' in profile:
-        continue
-    with open(profile, "r") as f:
-        profile_data = json.load(f)
-        print(profile_data)
-        available_profiles[profile_data['texioty']["username"]] = TexiotyProfile(
-            profile_data['texioty']["username"],
-            profile_data['texioty']["password"],
-            (profile_data['texioty']["color_theme"]["background"],
-             profile_data['texioty']["color_theme"]["foreground"],
-             profile_data['texioty']["color_theme"]["accent"])
+def _load_available_profiles() -> dict[str, TexiotyProfile]:
+    profiles = _default_available_profiles()
+
+    for profile_path in _iter_profile_json_files("user"):
+        file_name = os.path.basename(profile_path)
+
+        with open(profile_path, "r") as profile_file:
+            profile_data = json.load(profile_file)
+
+        texioty_data = profile_data.get('texioty')
+        if not texioty_data:
+            continue
+
+        username = texioty_data.get('username')
+        profiles[username] = TexiotyProfile(
+            username,
+            texioty_data.get('password'),
+            (texioty_data["color_theme"]["background"],
+             texioty_data["color_theme"]["foreground"],
+             texioty_data["color_theme"]["accent"])
         )
+    return profiles
+
+available_profiles = _load_available_profiles()
 
 def string_to_morse(reg_str: str) -> str:
     morse_str = ''
     print(reg_str)
     for letter in reg_str:
-        morse_str += s.MORSE_CODE_AXIOMS[letter.lower()]
+        morse_str += a.MORSE_CODE_AXIOMS[letter.lower()]
     return morse_str
 
 
@@ -231,18 +367,30 @@ def plan_angled_line(x, y, angle, length, width, color, img_size):
             clamp(endx, 0, img_size[0]),
             clamp(endy, 0, img_size[1])), width, color
 
+def _load_profile_json(profile_group: str, profile_name: str) -> dict:
+    searched_paths = []
+
+    for path in _candidate_profile_paths(profile_group, profile_name):
+        searched_paths.append(path)
+        if os.path.exists(path):
+            with open(path, "r") as profile_file:
+                return json.load(profile_file)
+
+    searched_paths_text = "\n".join(searched_paths)
+    print(searched_paths_text)
+    raise FileNotFoundError(
+        f"Profile file not found in any of the following paths:\n{searched_paths_text}"
+    )
+
 def retrieve_lab_profiles(lab_to_get: str) -> dict:
-    with open(f'helpers/promptaires/tcg_lab/lab_profiles/{lab_to_get}.json') as labbed_tcg:
-        data = json.load(labbed_tcg)
-        return data
+    return _load_profile_json('lab', lab_to_get)
 
 def retrieve_tcg_profiles(tcg_to_get: str) -> dict:
-    with open(f'helpers/promptaires/tcg_lab/tcg_profiles/{tcg_to_get}.json') as labbed_tcg:
-    # with open(f'tcg_profiles/{tcg_to_get}.json') as labbed_tcg:
-        data = json.load(labbed_tcg)
-        return data
+    return _load_profile_json("tcg", tcg_to_get)
 
 def retrieve_worx_profiles(equipment: str) -> dict:
-    with open(f'helpers/promptaires/worx_hop/worx_profiles/{equipment}.json') as json_equip:
-        data = json.load(json_equip)
-        return data
+    return _load_profile_json("worx", equipment)
+
+
+def read_json_file(profile_path):
+    return None

@@ -1,0 +1,36 @@
+{
+  "augumon_sleeves_fillin": {
+    "card_criteria": {
+      "rarity": "common",
+      "color": "blue",
+      "type": "Digi-Egg"
+    },
+    "fillin": {
+      "difficulty": 4,
+      "number_of_words": 32
+    },
+    "sleeves": {
+      "image_size": [400, 560],
+      "background": [217, 24, 227, 220],
+      "base_shape": "pentagon"
+    }
+  },
+  "gatomon_playmat": {
+    "card_criteria": {
+      "name": "Gatomon"
+    },
+    "playmat": {
+      "base_shape": "circle"
+    }
+  },
+  "patamon_sticker_playmat": {
+    "card_criteria": {
+      "name": "Patamon"
+    },
+    "sticker": {
+      "background": [127, 127, 127, 20],
+      "image_size": [420, 420],
+      "base_shape": "hexagon"
+    }
+  }
+}

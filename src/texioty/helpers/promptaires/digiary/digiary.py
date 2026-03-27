@@ -5,6 +5,7 @@ from os.path import exists
 from typing import Callable
 
 from src.texioty.helpers.promptaires.prompt_helper import BasePrompt
+from src.texioty.helpers.registries.command_definitions import bind_commands, DIRY_COMMANDS
 from src.texioty.settings import themery as t, utils as u
 
 
@@ -16,45 +17,11 @@ class Digiary(BasePrompt):
         self.diary_line_length = 75
         self.diarySentenceList = []
         self.in_diary_mode = False
-        self.helper_commands["dear_sys,"] = {
-            "name": "dear_sys,",
-            "usage": '"dear_sys,"',
-            "call_func": self.start_diary_mode,
-            "lite_desc": "Starts a diary entry.",
-            "full_desc": ["Starts a diary entry.",
-                          "Can only be used in Texioty mode."],
-            "possible_args": {' - ': 'No arguments available.'},
-            "args_desc": {' - ': 'No arguments available.'},
-            'examples': ['dear_sys,'],
-            "group_tag": "DIRY",
-            "font_color": u.rgb_to_hex(t.VIOLET_RED),
-            "back_color": u.rgb_to_hex(t.BLACK)}
-        self.helper_commands["/until_next_time"] = {
-            "name": "/until_next_time",
-            "usage": '"/until_next_time"',
-            "call_func": self.stop_diary_mode,
-            "lite_desc": "Ends a diary entry.",
-            "full_desc": ["Ends a diary entry.",
-                          "Can only be used inside of Digiary mode."],
-            "possible_args": {' - ': 'No arguments available.'},
-            "args_desc": {' - ': 'No arguments available.'},
-            'examples': ['/until_next_time'],
-            "group_tag": "DIRY",
-            "font_color": u.rgb_to_hex(t.VIOLET_RED),
-            "back_color": u.rgb_to_hex(t.BLACK)}
-        self.helper_commands["redear"] = {
-            "name": "redear",
-            "usage": '"redear"',
-            "call_func": self.select_diary_entry_date,
-            "lite_desc": "Select a date to read through.",
-            "full_desc": ["Select a date to read through.",
-                          "Can only be used in Texioty mode."],
-            "possible_args": {' - ': 'No arguments available.'},
-            "args_desc": {' - ': 'No arguments available.'},
-            'examples': ['redear'],
-            "group_tag": "DIRY",
-            "font_color": u.rgb_to_hex(t.VIOLET_RED),
-            "back_color": u.rgb_to_hex(t.BLACK)}
+        self.helper_commands = bind_commands(DIRY_COMMANDS, {
+            '/until_next_time': self.stop_diary_mode,
+            'dear_sys,': self.start_diary_mode,
+            'redear': self.select_diary_entry_date,
+        })
         
 
     def start_diary_mode(self) -> datetime.datetime:

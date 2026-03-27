@@ -33,6 +33,7 @@ class TEXITY(tk.Entry):
         self.current_possible_options = []
         self.current_option_bindings = []
         self.master = master
+        self.page_change_handler = None
         super(TEXITY, self).__init__(master=master,
                                      background=master.active_profile.color_theme[1],
                                      width=width,
@@ -44,15 +45,37 @@ class TEXITY(tk.Entry):
         for i in range(len(self.current_possible_options)):
             self.unbind(str(i))
             self.unbind(f"<KP_{i}>")
+        self.unbind('+')
+        self.unbind('<KP_Add>')
+        self.unbind('-')
+        self.unbind('<KP_Subtract>')
+        self.unbind('*')
+        self.unbind('<KP_Multiply>')
+        self.unbind('/')
+        self.unbind('<KP_Divide>')
 
     def bind_new_options(self, new_options: list):
         """Bind each number to a possible option."""
+        self.no_options()
         self.current_possible_options = new_options
-        for i, option in enumerate(new_options):
-            if i >= 10:
-                i = 0
-            self.current_option_bindings.append(self.bind(str(i), lambda e, option=option: self.command_string_var.set(f" - {option}")))
-            self.current_option_bindings.append(self.bind(f"<KP_{i}>", lambda e, option=option: self.command_string_var.set(f" - {option}")))
+        self.current_option_bindings = []
+
+        for i, option in enumerate(new_options[:10]):
+            self.current_option_bindings.append(
+                self.bind(str(i), lambda e, option=option: self.command_string_var.set(f" - {option}"))
+            )
+            self.current_option_bindings.append(
+                self.bind(f"<KP_{i}>", lambda e, option=option: self.command_string_var.set(f" - {option}"))
+            )
+
+        self.bind('+', lambda e: self.page_change_handler('+') if self.page_change_handler else None)
+        self.bind('<KP_Add>', lambda e: self.page_change_handler('+') if self.page_change_handler else None)
+        self.bind('-', lambda e: self.page_change_handler('-') if self.page_change_handler else None)
+        self.bind('<KP_Subtract>', lambda e: self.page_change_handler('-') if self.page_change_handler else None)
+        self.bind('*', lambda e: self.page_change_handler('*') if self.page_change_handler else None)
+        self.bind('<KP_Multiply>', lambda e: self.page_change_handler('*') if self.page_change_handler else None)
+        self.bind('/', lambda e: self.page_change_handler('/') if self.page_change_handler else None)
+        self.bind('<KP_Divide>', lambda e: self.page_change_handler('/') if self.page_change_handler else None)
 
     def parse_input_command(self) -> list:
         """

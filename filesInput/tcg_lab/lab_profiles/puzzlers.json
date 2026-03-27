@@ -1,0 +1,29 @@
+{
+  "wordsearch": {
+    "small": {
+      "num_of_words": 8,
+      "grid_size": "13x13"
+    },
+    "medium": {
+      "num_of_words": 10,
+      "grid_size": "16x16"
+    },
+    "large": {
+      "num_of_words": 12,
+      "grid_size": "20x20"
+    }
+  },
+  "hangman": {
+    "short": {
+      "card_property": "Name"
+    },
+    "tall": {
+      "card_property": "Flavor Text"
+    }
+  },
+  "crossword": {
+    "small": {},
+    "medium": {},
+    "large": {}
+  }
+}

@@ -1,0 +1,455 @@
+{
+  "preset_type": "tcg_preset",
+  "prompt_title": "Create a TCG preset",
+  "prompt_description": "Build a reusable preset for filtering, selecting, downloading, depicting, or assembling TCG cards.",
+  "question_order": [
+    "tcg_name",
+    "preset_name",
+    "preset_kind",
+    "preset_goal",
+    "card_criteria",
+    "deck_rules",
+    "render_options",
+    "output_options",
+    "save_options"
+  ],
+  "questions": {
+    "tcg_name": {
+      "field_name": "tcg_name",
+      "label": "Which trading card game is this preset for?",
+      "question_type": "DECISIONING",
+      "response_type": "DECISION",
+      "required": true,
+      "default_response": "Pokemon",
+      "choices": [
+        "Magic the Gathering",
+        "Pokemon",
+        "Lorcana",
+        "Yu-Gi-Oh",
+        "Digimon"
+      ],
+      "help_text": "Select the card game this preset will target."
+    },
+    "preset_name": {
+      "field_name": "preset_name",
+      "label": "What should this preset be called?",
+      "question_type": "STRICT",
+      "response_type": "STRING",
+      "required": true,
+      "default_response": "new_tcg_preset",
+      "help_text": "Use a short, unique, file-safe name."
+    },
+    "preset_kind": {
+      "field_name": "preset_kind",
+      "label": "What kind of preset is this?",
+      "question_type": "DECISIONING",
+      "response_type": "DECISION",
+      "required": true,
+      "default_response": "deck",
+      "choices": [
+        "deck",
+        "download",
+        "depiction",
+        "puzzle",
+        "collection",
+        "search",
+        "export"
+      ],
+      "help_text": "This decides what the preset is used for."
+    },
+    "preset_goal": {
+      "field_name": "preset_goal",
+      "label": "What is the main purpose of this preset?",
+      "question_type": "LOOSE",
+      "response_type": "STRING",
+      "required": false,
+      "default_response": "",
+      "help_text": "Optional natural-language description of what the preset should do."
+    },
+    "card_criteria": {
+      "field_name": "card_criteria",
+      "label": "What card filters should this preset use?",
+      "question_type": "GROUP",
+      "required": true,
+      "help_text": "Defines which cards qualify for the preset.",
+      "fields": {
+        "name_contains": {
+          "field_name": "name_contains",
+          "label": "Card name contains",
+          "question_type": "LOOSE",
+          "response_type": "STRING",
+          "required": false,
+          "default_response": ""
+        },
+        "type": {
+          "field_name": "type",
+          "label": "Card type",
+          "question_type": "DECISIONING",
+          "response_type": "DECISION",
+          "required": false,
+          "default_response": "",
+          "choices": [
+            "creature",
+            "resource",
+            "permanent",
+            "temporary",
+            "spell",
+            "support",
+            "leader",
+            "item",
+            "trainer"
+          ]
+        },
+        "rarity": {
+          "field_name": "rarity",
+          "label": "Rarity",
+          "question_type": "DECISIONING",
+          "response_type": "DECISION",
+          "required": false,
+          "default_response": "",
+          "choices": [
+            "common",
+            "uncommon",
+            "rare",
+            "super rare",
+            "ultra rare",
+            "legendary",
+            "mythic"
+          ]
+        },
+        "colors": {
+          "field_name": "colors",
+          "label": "Allowed colors",
+          "question_type": "LIST",
+          "response_type": "LIST",
+          "required": false,
+          "default_response": [],
+          "help_text": "One or more allowed colors."
+        },
+        "set_code": {
+          "field_name": "set_code",
+          "label": "Set code",
+          "question_type": "STRICT",
+          "response_type": "STRING",
+          "required": false,
+          "default_response": ""
+        },
+        "artist": {
+          "field_name": "artist",
+          "label": "Artist",
+          "question_type": "STRICT",
+          "response_type": "STRING",
+          "required": false,
+          "default_response": ""
+        },
+        "min_cost": {
+          "field_name": "min_cost",
+          "label": "Minimum cost",
+          "question_type": "STRICT",
+          "response_type": "INT",
+          "required": false,
+          "default_response": 0
+        },
+        "max_cost": {
+          "field_name": "max_cost",
+          "label": "Maximum cost",
+          "question_type": "STRICT",
+          "response_type": "INT",
+          "required": false,
+          "default_response": 99
+        },
+        "tags": {
+          "field_name": "tags",
+          "label": "Tags",
+          "question_type": "LIST",
+          "response_type": "LIST",
+          "required": false,
+          "default_response": []
+        },
+        "match_mode": {
+          "field_name": "match_mode",
+          "label": "How should filters match?",
+          "question_type": "DECISIONING",
+          "response_type": "DECISION",
+          "required": false,
+          "default_response": "all",
+          "choices": [
+            "all",
+            "any"
+          ],
+          "help_text": "Use 'all' for stricter matching, 'any' for broader matching."
+        }
+      }
+    },
+    "deck_rules": {
+      "field_name": "deck_rules",
+      "label": "What deck-building rules should apply?",
+      "question_type": "GROUP",
+      "required": false,
+      "help_text": "Use this when the preset is intended to build decks.",
+      "fields": {
+        "deck_size": {
+          "field_name": "deck_size",
+          "label": "Deck size",
+          "question_type": "STRICT",
+          "response_type": "INT",
+          "required": false,
+          "default_response": 60
+        },
+        "copy_limit": {
+          "field_name": "copy_limit",
+          "label": "Maximum copies per card",
+          "question_type": "STRICT",
+          "response_type": "INT",
+          "required": false,
+          "default_response": 4
+        },
+        "include_basic_cards": {
+          "field_name": "include_basic_cards",
+          "label": "Include basic cards?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        },
+        "prefer_card_types": {
+          "field_name": "prefer_card_types",
+          "label": "Prefer which card types?",
+          "question_type": "LIST",
+          "response_type": "LIST",
+          "required": false,
+          "default_response": []
+        },
+        "avoid_card_types": {
+          "field_name": "avoid_card_types",
+          "label": "Avoid which card types?",
+          "question_type": "LIST",
+          "response_type": "LIST",
+          "required": false,
+          "default_response": []
+        },
+        "sort_mode": {
+          "field_name": "sort_mode",
+          "label": "How should selected cards be sorted?",
+          "question_type": "DECISIONING",
+          "response_type": "DECISION",
+          "required": false,
+          "default_response": "name",
+          "choices": [
+            "name",
+            "cost",
+            "rarity",
+            "type",
+            "random"
+          ]
+        }
+      }
+    },
+    "render_options": {
+      "field_name": "render_options",
+      "label": "What render options should apply?",
+      "question_type": "GROUP",
+      "required": false,
+      "help_text": "Use this if the preset influences image generation or depiction.",
+      "fields": {
+        "image_size": {
+          "field_name": "image_size",
+          "label": "Image size",
+          "question_type": "STRICT",
+          "response_type": "LIST",
+          "required": false,
+          "default_response": [320, 320]
+        },
+        "background": {
+          "field_name": "background",
+          "label": "Background color",
+          "question_type": "STRICT",
+          "response_type": "LIST",
+          "required": false,
+          "default_response": [125, 52, 210, 99]
+        },
+        "palette": {
+          "field_name": "palette",
+          "label": "Palette colors",
+          "question_type": "LIST",
+          "response_type": "LIST",
+          "required": false,
+          "default_response": []
+        },
+        "show_card_name": {
+          "field_name": "show_card_name",
+          "label": "Show card name?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        },
+        "show_card_type": {
+          "field_name": "show_card_type",
+          "label": "Show card type?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        },
+        "show_rarity": {
+          "field_name": "show_rarity",
+          "label": "Show rarity?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        }
+      }
+    },
+    "output_options": {
+      "field_name": "output_options",
+      "label": "How should output be handled?",
+      "question_type": "GROUP",
+      "required": false,
+      "fields": {
+        "save_as_json": {
+          "field_name": "save_as_json",
+          "label": "Save preset as JSON?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": true,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        },
+        "save_directory": {
+          "field_name": "save_directory",
+          "label": "Where should the preset be saved?",
+          "question_type": "STRICT",
+          "response_type": "STRING",
+          "required": false,
+          "default_response": "data/tcg/presets"
+        },
+        "export_cards": {
+          "field_name": "export_cards",
+          "label": "Export matching cards?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": false,
+          "choices": [
+            true,
+            false
+          ]
+        },
+        "export_format": {
+          "field_name": "export_format",
+          "label": "Export format",
+          "question_type": "DECISIONING",
+          "response_type": "DECISION",
+          "required": false,
+          "default_response": "json",
+          "choices": [
+            "json",
+            "csv",
+            "txt"
+          ]
+        }
+      }
+    },
+    "save_options": {
+      "field_name": "save_options",
+      "label": "Save options",
+      "question_type": "GROUP",
+      "required": true,
+      "fields": {
+        "overwrite_existing": {
+          "field_name": "overwrite_existing",
+          "label": "Overwrite existing preset if it exists?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": true,
+          "default_response": false,
+          "choices": [
+            true,
+            false
+          ]
+        },
+        "file_name_style": {
+          "field_name": "file_name_style",
+          "label": "Filename style",
+          "question_type": "DECISIONING",
+          "response_type": "DECISION",
+          "required": false,
+          "default_response": "snake_case",
+          "choices": [
+            "snake_case",
+            "kebab-case",
+            "camelCase"
+          ]
+        },
+        "include_metadata": {
+          "field_name": "include_metadata",
+          "label": "Include metadata in the saved preset?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  "validation_rules": {
+    "tcg_name": {
+      "must_be_one_of": [
+        "Magic the Gathering",
+        "Pokemon",
+        "Lorcana",
+        "Yu-Gi-Oh",
+        "Digimon"
+      ]
+    },
+    "preset_name": {
+      "must_not_be_empty": true,
+      "should_be_filesafe": true
+    },
+    "deck_rules.deck_size": {
+      "must_be_positive_integer": true
+    },
+    "deck_rules.copy_limit": {
+      "must_be_positive_integer": true
+    },
+    "card_criteria.min_cost": {
+      "must_be_non_negative_integer": true
+    },
+    "card_criteria.max_cost": {
+      "must_be_non_negative_integer": true
+    },
+    "card_criteria": {
+      "min_cost_must_not_exceed_max_cost": true
+    }
+  },
+  "save_format": {
+    "directory_pattern": "data/tcg/presets/<tcg_name>/",
+    "file_pattern": "<preset_name>.json",
+    "example_path": "data/tcg/presets/Pokemon/cheap_creatures.json"
+  }
+}

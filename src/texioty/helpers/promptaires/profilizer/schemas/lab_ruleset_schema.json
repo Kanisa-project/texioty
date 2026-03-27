@@ -1,0 +1,633 @@
+{
+  "ruleset_type": "lab_ruleset",
+  "prompt_title": "Create a lab ruleset",
+  "prompt_description": "Build a reusable ruleset that controls how a TCG lab action behaves for a selected card game.",
+  "question_order": [
+    "lab_name",
+    "ruleset_name",
+    "target_tcg",
+    "lab_mode",
+    "ruleset_goal",
+    "input_source",
+    "selection_strategy",
+    "action_rules",
+    "output_rules",
+    "error_handling",
+    "save_options"
+  ],
+  "questions": {
+    "lab_name": {
+      "field_name": "lab_name",
+      "label": "Which lab should this ruleset be for?",
+      "question_type": "DECISIONING",
+      "response_type": "DECISION",
+      "required": true,
+      "default_response": "tcg_lab",
+      "choices": [
+        "tcg_lab"
+      ],
+      "help_text": "This identifies the lab system that will use the ruleset."
+    },
+    "ruleset_name": {
+      "field_name": "ruleset_name",
+      "label": "What should this ruleset be called?",
+      "question_type": "STRICT",
+      "response_type": "STRING",
+      "required": true,
+      "default_response": "new_lab_ruleset",
+      "help_text": "Use a short, unique, file-safe name."
+    },
+    "target_tcg": {
+      "field_name": "target_tcg",
+      "label": "Which trading card game does this ruleset target?",
+      "question_type": "DECISIONING",
+      "response_type": "DECISION",
+      "required": true,
+      "default_response": "Pokemon",
+      "choices": [
+        "Magic the Gathering",
+        "Pokemon",
+        "Lorcana",
+        "Yu-Gi-Oh",
+        "Digimon"
+      ],
+      "help_text": "Select the TCG this ruleset operates on."
+    },
+    "lab_mode": {
+      "field_name": "lab_mode",
+      "label": "What kind of lab action is this ruleset for?",
+      "question_type": "DECISIONING",
+      "response_type": "DECISION",
+      "required": true,
+      "default_response": "deckster",
+      "choices": [
+        "deckster",
+        "depicter",
+        "puzzler",
+        "downloader",
+        "blender"
+      ],
+      "help_text": "Choose the lab behavior this ruleset controls."
+    },
+    "ruleset_goal": {
+      "field_name": "ruleset_goal",
+      "label": "What is the goal of this ruleset?",
+      "question_type": "LOOSE",
+      "response_type": "STRING",
+      "required": false,
+      "default_response": "",
+      "help_text": "Optional natural-language description of the ruleset."
+    },
+    "input_source": {
+      "field_name": "input_source",
+      "label": "Where should the lab get its input from?",
+      "question_type": "GROUP",
+      "required": false,
+      "help_text": "Defines where the lab reads card data or supporting data from.",
+      "fields": {
+        "source_kind": {
+          "field_name": "source_kind",
+          "label": "Input source kind",
+          "question_type": "DECISIONING",
+          "response_type": "DECISION",
+          "required": false,
+          "default_response": "database",
+          "choices": [
+            "database",
+            "json_files",
+            "api",
+            "mixed"
+          ]
+        },
+        "source_name": {
+          "field_name": "source_name",
+          "label": "Source name or identifier",
+          "question_type": "STRICT",
+          "response_type": "STRING",
+          "required": false,
+          "default_response": ""
+        },
+        "refresh_source": {
+          "field_name": "refresh_source",
+          "label": "Refresh source before use?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": false,
+          "choices": [
+            true,
+            false
+          ]
+        }
+      }
+    },
+    "selection_strategy": {
+      "field_name": "selection_strategy",
+      "label": "How should cards be selected?",
+      "question_type": "GROUP",
+      "required": true,
+      "help_text": "Controls how the lab picks cards from the available pool.",
+      "fields": {
+        "use_preset": {
+          "field_name": "use_preset",
+          "label": "Use a TCG preset?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        },
+        "preset_name": {
+          "field_name": "preset_name",
+          "label": "Preset to apply",
+          "question_type": "STRICT",
+          "response_type": "STRING",
+          "required": false,
+          "default_response": ""
+        },
+        "selection_mode": {
+          "field_name": "selection_mode",
+          "label": "Selection mode",
+          "question_type": "DECISIONING",
+          "response_type": "DECISION",
+          "required": true,
+          "default_response": "random",
+          "choices": [
+            "random",
+            "first_match",
+            "best_match",
+            "all_matches",
+            "weighted",
+            "manual"
+          ]
+        },
+        "sample_size": {
+          "field_name": "sample_size",
+          "label": "How many cards should be selected?",
+          "question_type": "STRICT",
+          "response_type": "INT",
+          "required": false,
+          "default_response": 1
+        },
+        "allow_duplicates": {
+          "field_name": "allow_duplicates",
+          "label": "Allow duplicate cards?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": false,
+          "choices": [
+            true,
+            false
+          ]
+        },
+        "shuffle_results": {
+          "field_name": "shuffle_results",
+          "label": "Shuffle selected cards?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        }
+      }
+    },
+    "action_rules": {
+      "field_name": "action_rules",
+      "label": "What rules should control the lab action?",
+      "question_type": "GROUP",
+      "required": true,
+      "help_text": "Rules differ depending on the lab mode.",
+      "fields": {
+        "deckster": {
+          "field_name": "deckster",
+          "label": "Deck building rules",
+          "question_type": "GROUP",
+          "required": false,
+          "fields": {
+            "deck_size": {
+              "field_name": "deck_size",
+              "label": "Deck size",
+              "question_type": "STRICT",
+              "response_type": "INT",
+              "required": false,
+              "default_response": 60
+            },
+            "copy_limit": {
+              "field_name": "copy_limit",
+              "label": "Maximum copies of a card",
+              "question_type": "STRICT",
+              "response_type": "INT",
+              "required": false,
+              "default_response": 4
+            },
+            "curve_target": {
+              "field_name": "curve_target",
+              "label": "Target curve style",
+              "question_type": "DECISIONING",
+              "response_type": "DECISION",
+              "required": false,
+              "default_response": "balanced",
+              "choices": [
+                "balanced",
+                "aggressive",
+                "defensive",
+                "combo",
+                "control"
+              ]
+            },
+            "prefer_types": {
+              "field_name": "prefer_types",
+              "label": "Preferred card types",
+              "question_type": "LIST",
+              "response_type": "LIST",
+              "required": false,
+              "default_response": []
+            },
+            "avoid_types": {
+              "field_name": "avoid_types",
+              "label": "Avoided card types",
+              "question_type": "LIST",
+              "response_type": "LIST",
+              "required": false,
+              "default_response": []
+            }
+          }
+        },
+        "depicter": {
+          "field_name": "depicter",
+          "label": "Depiction rules",
+          "question_type": "GROUP",
+          "required": false,
+          "fields": {
+            "image_size": {
+              "field_name": "image_size",
+              "label": "Image size",
+              "question_type": "STRICT",
+              "response_type": "LIST",
+              "required": false,
+              "default_response": [320, 320]
+            },
+            "background": {
+              "field_name": "background",
+              "label": "Background color",
+              "question_type": "STRICT",
+              "response_type": "LIST",
+              "required": false,
+              "default_response": [125, 52, 210, 99]
+            },
+            "show_metadata": {
+              "field_name": "show_metadata",
+              "label": "Show card metadata?",
+              "question_type": "DECISIONING",
+              "response_type": "BOOL",
+              "required": false,
+              "default_response": true,
+              "choices": [
+                true,
+                false
+              ]
+            },
+            "metadata_fields": {
+              "field_name": "metadata_fields",
+              "label": "Which metadata fields to show?",
+              "question_type": "LIST",
+              "response_type": "LIST",
+              "required": false,
+              "default_response": [
+                "name",
+                "type",
+                "rarity",
+                "source_tcg"
+              ]
+            }
+          }
+        },
+        "puzzler": {
+          "field_name": "puzzler",
+          "label": "Puzzle rules",
+          "question_type": "GROUP",
+          "required": false,
+          "fields": {
+            "puzzle_type": {
+              "field_name": "puzzle_type",
+              "label": "Puzzle type",
+              "question_type": "DECISIONING",
+              "response_type": "DECISION",
+              "required": false,
+              "default_response": "wordsearch",
+              "choices": [
+                "wordsearch",
+                "hangman"
+              ]
+            },
+            "difficulty": {
+              "field_name": "difficulty",
+              "label": "Puzzle difficulty",
+              "question_type": "STRICT",
+              "response_type": "INT",
+              "required": false,
+              "default_response": 2
+            },
+            "phrase_source": {
+              "field_name": "phrase_source",
+              "label": "Phrase source",
+              "question_type": "DECISIONING",
+              "response_type": "DECISION",
+              "required": false,
+              "default_response": "preset",
+              "choices": [
+                "preset",
+                "card_names",
+                "manual"
+              ]
+            }
+          }
+        },
+        "downloader": {
+          "field_name": "downloader",
+          "label": "Download rules",
+          "question_type": "GROUP",
+          "required": false,
+          "fields": {
+            "download_images": {
+              "field_name": "download_images",
+              "label": "Download images?",
+              "question_type": "DECISIONING",
+              "response_type": "BOOL",
+              "required": true,
+              "default_response": true,
+              "choices": [
+                true,
+                false
+              ]
+            },
+            "skip_existing_files": {
+              "field_name": "skip_existing_files",
+              "label": "Skip existing files?",
+              "question_type": "DECISIONING",
+              "response_type": "BOOL",
+              "required": false,
+              "default_response": true,
+              "choices": [
+                true,
+                false
+              ]
+            },
+            "output_folder": {
+              "field_name": "output_folder",
+              "label": "Download output folder",
+              "question_type": "STRICT",
+              "response_type": "STRING",
+              "required": false,
+              "default_response": "filesOutput/tcg_lab"
+            }
+          }
+        },
+        "blender": {
+          "field_name": "blender",
+          "label": "Blend rules",
+          "question_type": "GROUP",
+          "required": false,
+          "fields": {
+            "blend_mode": {
+              "field_name": "blend_mode",
+              "label": "Blend mode",
+              "question_type": "DECISIONING",
+              "response_type": "DECISION",
+              "required": false,
+              "default_response": "random",
+              "choices": [
+                "random",
+                "paired",
+                "weighted"
+              ]
+            },
+            "blend_strength": {
+              "field_name": "blend_strength",
+              "label": "Blend strength",
+              "question_type": "STRICT",
+              "response_type": "FLOAT",
+              "required": false,
+              "default_response": 0.5
+            }
+          }
+        }
+      }
+    },
+    "output_rules": {
+      "field_name": "output_rules",
+      "label": "What should happen to the output?",
+      "question_type": "GROUP",
+      "required": false,
+      "fields": {
+        "save_results": {
+          "field_name": "save_results",
+          "label": "Save output?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": true,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        },
+        "output_directory": {
+          "field_name": "output_directory",
+          "label": "Output directory",
+          "question_type": "STRICT",
+          "response_type": "STRING",
+          "required": false,
+          "default_response": "filesOutput/tcg_lab"
+        },
+        "output_format": {
+          "field_name": "output_format",
+          "label": "Output format",
+          "question_type": "DECISIONING",
+          "response_type": "DECISION",
+          "required": false,
+          "default_response": "json",
+          "choices": [
+            "json",
+            "csv",
+            "txt",
+            "png"
+          ]
+        },
+        "include_summary": {
+          "field_name": "include_summary",
+          "label": "Include summary output?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        }
+      }
+    },
+    "error_handling": {
+      "field_name": "error_handling",
+      "label": "How should errors be handled?",
+      "question_type": "GROUP",
+      "required": false,
+      "fields": {
+        "fail_mode": {
+          "field_name": "fail_mode",
+          "label": "Failure mode",
+          "question_type": "DECISIONING",
+          "response_type": "DECISION",
+          "required": false,
+          "default_response": "warn",
+          "choices": [
+            "warn",
+            "skip",
+            "stop"
+          ]
+        },
+        "allow_partial_results": {
+          "field_name": "allow_partial_results",
+          "label": "Allow partial results?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        },
+        "log_missing_profiles": {
+          "field_name": "log_missing_profiles",
+          "label": "Log missing profiles?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        },
+        "fallback_to_defaults": {
+          "field_name": "fallback_to_defaults",
+          "label": "Fallback to defaults if something is missing?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        }
+      }
+    },
+    "save_options": {
+      "field_name": "save_options",
+      "label": "Save options",
+      "question_type": "GROUP",
+      "required": true,
+      "fields": {
+        "overwrite_existing": {
+          "field_name": "overwrite_existing",
+          "label": "Overwrite existing ruleset if it exists?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": true,
+          "default_response": false,
+          "choices": [
+            true,
+            false
+          ]
+        },
+        "file_name_style": {
+          "field_name": "file_name_style",
+          "label": "Filename style",
+          "question_type": "DECISIONING",
+          "response_type": "DECISION",
+          "required": false,
+          "default_response": "snake_case",
+          "choices": [
+            "snake_case",
+            "kebab-case",
+            "camelCase"
+          ]
+        },
+        "include_metadata": {
+          "field_name": "include_metadata",
+          "label": "Include metadata in saved ruleset?",
+          "question_type": "DECISIONING",
+          "response_type": "BOOL",
+          "required": false,
+          "default_response": true,
+          "choices": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  "validation_rules": {
+    "lab_name": {
+      "must_be_one_of": [
+        "tcg_lab"
+      ]
+    },
+    "ruleset_name": {
+      "must_not_be_empty": true,
+      "should_be_filesafe": true
+    },
+    "target_tcg": {
+      "must_be_one_of": [
+        "Magic the Gathering",
+        "Pokemon",
+        "Lorcana",
+        "Yu-Gi-Oh",
+        "Digimon"
+      ]
+    },
+    "lab_mode": {
+      "must_be_one_of": [
+        "deckster",
+        "depicter",
+        "puzzler",
+        "downloader",
+        "blender"
+      ]
+    },
+    "selection_strategy.sample_size": {
+      "must_be_positive_integer": true
+    },
+    "action_rules.deckster.deck_size": {
+      "must_be_positive_integer": true
+    },
+    "action_rules.deckster.copy_limit": {
+      "must_be_positive_integer": true
+    },
+    "action_rules.depicter.image_size": {
+      "must_be_list_of_two_positive_ints": true
+    },
+    "action_rules.depicter.background": {
+      "must_be_rgba_or_rgb_list": true
+    },
+    "action_rules.downloader.output_folder": {
+      "must_not_be_empty": true
+    }
+  },
+  "save_format": {
+    "directory_pattern": "data/tcg/lab_rulesets/<target_tcg>/",
+    "file_pattern": "<ruleset_name>.json",
+    "example_path": "data/tcg/lab_rulesets/Pokemon/fast_deck_builder.json"
+  }
+}

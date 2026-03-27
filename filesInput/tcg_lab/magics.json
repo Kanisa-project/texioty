@@ -1,0 +1,17 @@
+{
+  "white_ajani_creatures": {
+    "card_criteria": {
+      "name": "Ajani",
+      "type": "Creature",
+      "colors": "W"
+    }
+  },
+  "explore_TLE259": {
+    "card_criteria": {
+      "name": "Explore",
+      "set_code": "TLE",
+      "type": "Sorcery",
+      "card_number": "259"
+    }
+  }
+}

@@ -67,14 +67,19 @@ class SourceLRCNA(SourceTCG):
         super().__init__()
         self.base_url = 'https://api.lorcana-api.com'
         self.tcg_title_name = 'lorcana'
-        db_path = Path(__file__).resolve().parent / "cards" / "databases" / "lorcana_cards.db"
-        db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._init_lorcana_database()
 
-        if not db_path.exists():
-            self.db_helper = DatabaseHelper(str(db_path))
-            self.db_helper.create_tables_from_templates(LORCANA_TEMPLATES)
-        else:
-            self.db_helper = DatabaseHelper(str(db_path))
+    def _init_lorcana_database(self):
+        try:
+            db_path = Path(__file__).resolve().parent / "cards" / "databases" / "lorcana_cards.db"
+            if not db_path.exists():
+                self.db_helper = DatabaseHelper(str(db_path))
+                self.db_helper.create_tables_from_templates(LORCANA_TEMPLATES)
+            else:
+                self.db_helper = DatabaseHelper(str(db_path))
+        except Exception as e:
+            print(f"Error initializing LRCNA database: {e}")
+
 
     def add_card_local_database(self, new_card):
         all_card_insert_query = insert_table_statement_maker('all_cards',

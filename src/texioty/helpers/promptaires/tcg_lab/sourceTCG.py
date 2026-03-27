@@ -1,7 +1,11 @@
+from __future__ import annotations
+
+from pathlib import Path
 from typing import List, Optional, Dict, Callable
 from enum import Enum
 
 from dotenv import load_dotenv
+import requests
 from src.texioty.helpers.apis.base_tcg_api import TCGAPI
 
 load_dotenv()
@@ -27,6 +31,8 @@ class SourceTCG(TCGAPI):
     def __init__(self, tcg_type: Optional[str] = None):
         super().__init__()
         self.default_tcg_type = tcg_type
+        self.tcg_title_name = tcg_type.lower().replace(" ", "_") if tcg_type else "tcg"
+
         self.decoders: Dict[str, Callable] = {
             CardGameType.MAGIC_THE_GATHERING.value: self._decode_mtg,
             CardGameType.POKEMON.value: self._decode_pokemon,
@@ -36,80 +42,84 @@ class SourceTCG(TCGAPI):
         }
 
     def decode_card(self, raw_card_data: dict, tcg_type: str) -> dict:
-        """
-        Decodes raw card data for a specific trading card game (TCG) type and returns a
-        formatted dictionary containing metadata and attributes specific to the card.
-
-        Args:
-            raw_card_data (dict): The raw card data containing unformatted attributes
-                retrieved from an external source.
-            tcg_type (str): The type of trading card game (e.g., "Yu-Gi-Oh", "Magic",
-                etc.) to ensure correct field formatting.
-
-        Returns:
-            dict: Normalized card metadata and attributes.
-        """
         decoder = self.decoders.get(tcg_type)
         if not decoder:
             raise ValueError(f"No decoder found for TCG type: {tcg_type}")
         return decoder(raw_card_data)
 
+    @staticmethod
+    def card_to_dict(card: dict) -> dict:
+        pass
+
+    @staticmethod
+    def _normalize_card(card_dict: dict) -> dict:
+        normalized = {
+            "source_tcg": card_dict.get("source_tcg", "Unknown"),
+            "source_id": str(card_dict.get("source_id", card_dict.get("id", "Unknown"))),
+            "name": card_dict.get("name", "Unknown"),
+            "type": card_dict.get("type", "Unknown"),
+            "rarity": card_dict.get("rarity", "Unknown"),
+            "color": card_dict.get("color", "Unknown"),
+            "artist": card_dict.get("artist", "Unknown"),
+            "set_code": card_dict.get("set_code", card_dict.get("set",  "Unknown")),
+            "image_url": card_dict.get("image_url", "Unknown"),
+            "local_image_path": card_dict.get("local_image_path"),
+            "raw_data": card_dict.get("raw_data", {}),
+        }
+        return normalized
+
     def _decode_mtg(self, card_data: dict) -> dict:
-        """
-        Decode Magic the Gathering card data into normalized schema
-        """
         return self._normalize_card({
+            'source_tcg': CardGameType.MAGIC_THE_GATHERING.value,
+            'source_id': f"{card_data.get('set_code')}_{card_data.get('number')}",
             'name': card_data.get('name'),
             'type': card_data.get('type'),
             'rarity': card_data.get('rarity'),
             'color': card_data.get('color'),
             'artist': card_data.get('artist'),
-            'set': card_data.get('set'),
-            'source_tcg': CardGameType.MAGIC_THE_GATHERING.value,
-            'raw_data': card_data
+            'set_code': card_data.get('set_code'),
+            'image_url': card_data.get("image_url"),
+            'raw_data': str(card_data)
         })
 
     def _decode_pokemon(self, card_data: dict) -> dict:
-        """
-        Decode Pokémon card data into normalized schema
-        """
         return self._normalize_card({
             'name': card_data.get('name'),
             'type': card_data.get('type'),
             'rarity': card_data.get('rarity'),
             'color': card_data.get('energyType'),
             'artist': card_data.get('illustrator'),
-            'set': card_data.get('set'),
+            'set_code': card_data.get('set'),
+            "source_id": card_data.get("source_id"),
+            "image_url": card_data.get("image_url"),
             'source_tcg': CardGameType.POKEMON.value,
             'raw_data': card_data
         })
 
     def _decode_lorcana(self, card_data: dict) -> dict:
-        """
-        Decode Lorcana card data into normalized schema
-        """
         return self._normalize_card({
             'name': card_data.get('name'),
             'type': card_data.get('type'),
             'rarity': card_data.get('rarity'),
             'color': card_data.get('ink'),
             'artist': card_data.get('artist'),
-            'set': card_data.get('set'),
+            'set_code': card_data.get('set'),
+            "source_id": card_data.get("id"),
+            "image_url": card_data.get("image_url"),
             'source_tcg': CardGameType.LORCANA.value,
             'raw_data': card_data
         })
 
     def _decode_digimon(self, card_data: dict) -> dict:
-        """
-        Decode Digimon card data into normalized schema
-        """
         return self._normalize_card({
             'name': card_data.get('name'),
             'type': card_data.get('card_type'),
             'rarity': card_data.get('rarity'),
             'color': card_data.get('attribute'),
             'artist': card_data.get('creator'),
-            'set': card_data.get('set_number'),
+            'set_code': card_data.get('set_number'),
+            "source_id": card_data.get("id"),
+            "image_url": card_data.get("image_url"),
             'source_tcg': CardGameType.DIGIMON.value,
             'raw_data': card_data
         })
@@ -121,64 +131,88 @@ class SourceTCG(TCGAPI):
             'rarity': card_data.get('rarity'),
             'color': card_data.get('color'),
             'artist': card_data.get('artist'),
-            'set': card_data.get('set'),
+            'set_code': card_data.get('set'),
+            "source_id": card_data.get("id"),
+            "image_url": card_data.get("image_url"),
             'source_tcg': CardGameType.YUGIOH.value,
             'raw_data': card_data
         })
 
+    def get_card_database(self, limit: Optional[int] = None, filters: Optional[dict] = None) -> List[dict]:
+        rows = self.db_helper.fetch_all_cards(limit=limit)
+        cards = [self._row_to_card_dict(row) for row in rows]
+        if filters:
+            cards = self._filter_by_criteria(cards, filters)
+        return cards
+
     @staticmethod
-    def _normalize_card(card_dict: dict) -> dict:
-        """
-        Apply final normalization steps to a card dictionary and return the normalized card metadata.
-        """
-        required_fields = ["name", "type", "rarity", "color", "artist", "set_code", "source_tcg"]
-        for field in required_fields:
-            if field not in card_dict or card_dict[field] is None:
-                card_dict[field] = "Unknown"
-        return card_dict
+    def _row_to_card_dict(row) -> dict:
+        return dict(row)
 
     @staticmethod
     def _filter_by_criteria(cards: List[dict], criteria: dict) -> List[dict]:
-        """
-        Filter a list of cards based on given criteria.
-        """
         filtered = cards
         for key, value in criteria.items():
             if value is None:
                 continue
             if isinstance(value, list):
-                filtered = [c for c in filtered if c.get(key) in value]
+                filtered = [card for card in filtered if card.get(key) in value]
             else:
-                filtered = [c for c in filtered if c.get(key) == value]
+                filtered = [card for card in filtered if card.get(key) == value]
         return filtered
 
+    def card_exists(self, source_tcg: str, source_id: str) -> bool:
+        return self.db_helper.card_exists(source_tcg, source_id)
+
+    @staticmethod
+    def download_card_image(card: dict, output_dir: str) -> str | None:
+        image_url = card.get("image_url")
+        if not image_url:
+            return None
+
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        save_name = f"{card['source_id']}_{card['name'].replace(' ', '_')}.png"
+        file_path = Path(output_dir) / save_name
+
+        response = requests.get(image_url, timeout=15)
+        response.raise_for_status()
+
+        with open(sanitize_filename(str(file_path)), 'wb') as handler:
+            handler.write(response.content)
+
+        return str(file_path)
+
+    def ingest_card(self, raw_card_data: dict, tcg_type: str, output_dir: str) -> dict:
+        card = self.decode_card(raw_card_data, tcg_type)
+        print(card, "DECODDDED")
+        if self.card_exists(card['source_tcg'], card['source_id']):
+            return card
+
+        local_path = self.download_card_image(card, output_dir)
+        card["local_image_path"] = local_path
+
+        self.add_card_to_database(card)
+        return card
+
+    def add_card_local_database(self, card: dict) -> bool:
+        return self.db_helper.insert_card(card)
 
     def gather_all_creature_cards(self, creature_criteria: dict,
                                   tcg_type: Optional[str] = None) -> List[dict]:
-        """
-        Gather creature-styled cards to create a card batch. They match an offensive/defensive profile.
-        :param creature_criteria: The criteria to match creature cards to.
-        :param tcg_type: Optional type of TCG to filter by. If None, all types are considered.
-        """
         criteria = {'type': 'creature'} if 'type' not in creature_criteria else creature_criteria
         cards = self.get_card_database(limit=None)
 
         if tcg_type:
-            cards = [c for c in cards if c.get('source_tcg') == tcg_type]
+            cards = [card for card in cards if card.get('source_tcg') == tcg_type]
         return self._filter_by_criteria(cards, criteria)
 
     def gather_all_resource_cards(self, resource_criteria: dict,
                                   tcg_type: Optional[str] = None) -> List[dict]:
-        """
-        Gather resource-styled cards to create a card batch. They match an energy provision profile.
-        :param resource_criteria: The criteria to match resource cards to.
-        :param tcg_type: Optional type of TCG to filter by. If None, all types are considered.
-        """
         criteria = {'type': 'resource'} if 'type' not in resource_criteria else resource_criteria
         cards = self.get_card_database(limit=None)
 
         if tcg_type:
-            cards = [c for c in cards if c.get('source_tcg') == tcg_type]
+            cards = [card for card in cards if card.get('source_tcg') == tcg_type]
         return self._filter_by_criteria(cards, criteria)
 
     def gather_all_permanent_cards(self, permanent_criteria: dict,
@@ -192,7 +226,7 @@ class SourceTCG(TCGAPI):
         cards = self.get_card_database(limit=None)
 
         if tcg_type:
-            cards = [c for c in cards if c.get('source_tcg') == tcg_type]
+            cards = [card for card in cards if card.get('source_tcg') == tcg_type]
         return self._filter_by_criteria(cards, criteria)
 
     def gather_all_temporary_cards(self, temporary_criteria: dict,
@@ -209,3 +243,6 @@ class SourceTCG(TCGAPI):
             cards = [c for c in cards if c.get('source_tcg') == tcg_type]
         return self._filter_by_criteria(cards, criteria)
 
+
+def sanitize_filename(filename: str) -> str:
+    return ''.join(c for c in filename if c is not '/').rstrip()

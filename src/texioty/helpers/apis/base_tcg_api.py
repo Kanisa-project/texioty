@@ -157,12 +157,36 @@ class TCGAPI(BaseAPIHelper):
 
             insert_query = dbHelper.insert_table_statement_maker(
                 'all_cards',
-                ['name', 'rarity', 'color', 'artist', 'type', 'set_code']
+                [
+                    'source_tcg',
+                    'source_id',
+                    'name',
+                    'type',
+                    'rarity',
+                    'color',
+                    'artist',
+                    'set_code',
+                    'image_url',
+                    'local_image_path',
+                    'raw_data'
+                ]
             )[0]
 
             self.db_helper.execute_query(
                 insert_query,
-                [new_card['name'], new_card['rarity'], new_card['color'], new_card['artist'], new_card['type'], new_card['set_code']]
+                [
+                    new_card.get('source_tcg', 'unknown'),
+                    new_card.get('source_id', 'unknown'),
+                    new_card['name'],
+                    new_card['type'],
+                    new_card['rarity'],
+                    new_card['color'],
+                    new_card['artist'],
+                    new_card['set_code'],
+                    new_card.get('image_url', 'unknown'),
+                    new_card.get('local_image_path', 'unknown'),
+                    str(new_card.get('raw_data', 'unknown'))
+                ]
             )
             logger.info(f"Added card {new_card['name']} to database.")
             return True

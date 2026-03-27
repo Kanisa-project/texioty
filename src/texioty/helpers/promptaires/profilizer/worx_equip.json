@@ -1,0 +1,54 @@
+{
+  "slicer": {
+    "slice_item": {
+      "question": "What item to use on the slicer?",
+      "question_type": "STRICT",
+      "default_response": "cheese",
+      "response_type": "STRING"
+    },
+    "slice_direction": {
+      "question": "What direction to slice the item?",
+      "question_type": "STRICT",
+      "default_response": [0.2, 0.9],
+      "response_type": "LIST"
+    },
+    "thickness": {
+      "question": "What thickness to slice the item?",
+      "question_type": "STRICT",
+      "default_response": 0.5,
+      "response_type": "FLOAT"
+    },
+    "amount": {
+      "question": "How much item to slice?",
+      "question_type": "STRICT",
+      "default_response": 10,
+      "response_type": "INT"
+    },
+    "portion_amount": {
+      "question": "How much item to weight?",
+      "question_type": "STRICT",
+      "default_response": 100,
+      "response_type": "INT"
+    }
+  },
+  "flatop": {
+    "spatula_slide": {
+      "question": "Which way to slide the spatula?",
+      "question_type": "STRICT",
+      "default_response": [0.3, 0.89],
+      "response_type": "LIST"
+    },
+    "grill_weight": {
+      "question": "What weight to put on the grill?",
+      "question_type": "STRICT",
+      "default_response": [0.2, 0.2, 0.8, 0.8],
+      "response_type": "LIST"
+    },
+    "steam_lid": {
+      "question": "Should the item be steamed under the lid?",
+      "question_type": "STRICT",
+      "default_response": false,
+      "response_type": "BOOL"
+    }
+  }
+}

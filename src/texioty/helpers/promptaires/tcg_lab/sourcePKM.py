@@ -1,5 +1,5 @@
 import random
-from typing import List
+from typing import List, Dict
 
 import requests
 from dotenv import load_dotenv
@@ -7,45 +7,47 @@ from dotenv import load_dotenv
 from src.texioty.helpers.dbHelper import DatabaseHelper, insert_table_statement_maker
 from src.texioty.helpers.promptaires.tcg_lab.sourceTCG import SourceTCG
 from src.texioty.settings import utils as u
-from tcgdexsdk import TCGdex, Query
+from tcgdexsdk import TCGdex, Query, Card, SetResume
 from pathlib import Path
 
 load_dotenv()
 width_len = 36
 ENERGY_TYPES = ['grass', 'fire', 'water', 'lighting', 'psychic', 'fighting', 'darkness', 'metal']
 
-
 POKEMON_TEMPLATES = {
     "all_cards": {
-        "number": [],
+        "source_id": [],
+        "source_tcg": [],
         "name": [],
-        "colour": [],
-        "type": []
+        "type": [],
+        "rarity": [],
+        "color": [],
+        "artist": [],
+        "set_code": [],
+        "image_url": [],
+        "local_image_path": [],
+        "raw_data": []
     },
     "energy_cards": {
-        "number": [],
+        "source_id": [],
         "name": [],
-        "colour": [],
-        "rarity": [],
         "special_effect": []
     },
     "pokemon_cards": {
-        "number": [],
-        "hp": [],
-        "abilities": [],
-        "lvl": [],
+        "source_id": [],
         "name": [],
-        "colour": [],
-        "rarity": [],
-        "stage": [],
+        "hp": [],
+        "level": [],
+        "abilities": [],
+        "attacks": [],
         "retreat_cost": [],
-        "attacks": []
+        "stage": []
     },
     "trainer_cards": {
-        "number": [],
-        "effects": [],
+        "source_id": [],
         "name": [],
-        "rarity": []
+        "trainer_type": [],
+        "effect": []
     }
 }
 
@@ -56,15 +58,9 @@ class SourcePKM(SourceTCG):
     """
     def __init__(self):
         super().__init__()
+        self.tcg_title_name = 'pokemon'
         self.CARDTYPES = ["Energy", "Pokemon", "Trainer"]
         self.base_url = 'https://api.pokemontcg.io/v2/'
-        db_path = Path(__file__).resolve().parent / "cards" / "databases" / "pokemon_cards.db"
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-        if not db_path.exists():
-            self.db_helper = DatabaseHelper(str(db_path))
-            self.db_helper.create_tables_from_templates(POKEMON_TEMPLATES)
-        else:
-            self.db_helper = DatabaseHelper(str(db_path))
 
         self.color_translation_dict = {
             'grass': 'green',
@@ -78,12 +74,40 @@ class SourcePKM(SourceTCG):
             'colorless': 'white'
         }
         self.sdk = TCGdex()
-        self.tcg_title_name = 'pokemon'
+        self._init_pkm_database()
 
-    def gather_all_creature_cards(self, creature_criteria: dict) -> List[dict]:
-        # super().gather_all_creature_cards(creature_criteria)
-        pass
+    def _init_pkm_database(self):
+        try:
+            db_path = Path(__file__).resolve().parent / "cards" / "databases" / "pokemon_cards.db"
+            if not db_path.exists():
+                self.db_helper = DatabaseHelper(str(db_path))
+                self.db_helper.create_tables_from_templates(POKEMON_TEMPLATES)
+            else:
+                self.db_helper = DatabaseHelper(str(db_path))
+        except Exception as e:
+            print(f"Error initializing PKM database: {e}")
 
+    def get_card_batch(self, card_criteria: Dict) -> List[Card]:
+        if "Pokemon" in card_criteria.get('type'):
+            return self.gather_pokemon_cards(card_criteria)
+        if "Energy" in card_criteria.get('type'):
+            return self.gather_energy_cards(card_criteria)
+        if "Trainer" in card_criteria.get('type'):
+            return self.gather_trainer_cards(card_criteria)
+        else:
+            return []
+
+    def add_card_to_database(self, new_card: Card) -> bool:
+        try:
+            if not self.db_helper:
+                print("Database not initialized")
+                return False
+            if not isinstance(new_card, dict):
+                new_card = pkmcard_to_dict(new_card)
+            return super().add_card_to_database(new_card)
+        except Exception as e:
+            print(f"Error adding card to database:--{e}")
+            return False
 
     def add_card_local_database(self, new_card):
         all_card_insert_query = insert_table_statement_maker('all_cards', ['number', 'name', 'colour', 'type'])[0]
@@ -155,8 +179,8 @@ class SourcePKM(SourceTCG):
             if card.image is not None:
                 img_data = requests.get(f'{card.image}/high.png').content
                 save_name = f"{card.id}_" + card.name.replace(" ", "_")
-                with open(f'helpers/promptaires/tcg_lab/cards/pokemon/{save_name}.png',
-                # with open(f'cards/{save_name}.png',
+                # with open(f'helpers/promptaires/tcg_lab/cards/pokemon/{save_name}.png',
+                with open(f'cards/{save_name}.png',
                           'wb') as handler:
                     handler.write(img_data)
                 print(f"Downloaded {save_name}")
@@ -188,26 +212,78 @@ class SourcePKM(SourceTCG):
         return None
 
     def gather_pokemon_cards(self, creature_criteria):
-        if "name" in creature_criteria:
-            pokemons = self.sdk.card.listSync(Query().equal('name', creature_criteria['name']))
-        # print(pokemons)
+        try:
+            print(f"Trying to get pokemons with criteria: {creature_criteria}")
+            pokemons = self.sdk.card.listSync(
+                Query()
+                .equal('name', creature_criteria.get('name', ''))
+                .equal('category', 'Pokemon')
+                # .equal('rarity', creature_criteria.get('rarity', ''))
+                # .equal('types', creature_criteria.get('color', ''))
+                # .equal('illustrator', creature_criteria.get('artist', ''))
+            )
+            print(f"Got {pokemons} pokemons")
+        except Exception as e:
+            print(f"Error gathering pokemon cards: {e}")
+            pokemons = []
         return pokemons
 
     def gather_energy_cards(self, energy_criteria):
-        if "name" in energy_criteria:
-            energys = self.sdk.card.listSync(Query().equal('name', energy_criteria['name']))
-        elif "type" in energy_criteria:
+        try:
             energys = self.sdk.card.listSync(Query().equal('category', energy_criteria['type']))
-        else:
+            if energy_criteria.get('name'):
+                energys = energys.listSync(Query().equal('name', energy_criteria['name']))
+            if energy_criteria.get('type'):
+                energys = energys.listSync(Query().equal('category', energy_criteria['type']))
+            if energy_criteria.get('rarity'):
+                energys = energys.listSync(Query().equal('rarity', energy_criteria['rarity']))
+            if energy_criteria.get('color'):
+                energys = energys.listSync(Query().equal('types', energy_criteria['color']))
+            if energy_criteria.get('artist'):
+                energys = energys.listSync(Query().equal('illustrator', energy_criteria['artist']))
+            else:
+                energys = []
+        except Exception as e:
+            print(f"Error gathering energy cards: {e}")
             energys = []
         print(energys)
         return energys
 
     def gather_trainer_cards(self, trainer_criteria):
-        if "name" in trainer_criteria:
-            trainers = self.sdk.card.listSync(Query().equal('name', trainer_criteria['name']))
-        print(trainers)
+        try:
+            trainers = self.sdk.card.listSync(Query().equal('category', trainer_criteria['type']))
+            if trainer_criteria.get('name'):
+                trainers = trainers.listSync(Query().equal('name', trainer_criteria['name']))
+            if trainer_criteria.get('rarity'):
+                trainers = trainers.listSync(Query().equal('rarity', trainer_criteria['rarity']))
+            if trainer_criteria.get('artist'):
+                trainers = trainers.listSync(Query().equal('illustrator', trainer_criteria['artist']))
+            if trainer_criteria.get('type'):
+                trainers = trainers.listSync(Query().equal('category', trainer_criteria['type']))
+            if trainer_criteria.get('color'):
+                trainers = trainers.listSync(Query().equal('types', trainer_criteria['color']))
+            else:
+                trainers = []
+        except Exception as e:
+            print(f"Error gathering trainer cards: {e}")
+            trainers = []
         return trainers
+
+    def card_to_dict(self, pkmcard: Card) -> Dict:
+        local_id = pkmcard.localId
+        pkmcard = self.sdk.card.getSync(pkmcard.id)
+        print("PKMCARD", pkmcard.id)
+        return {
+            'source_id': f"{pkmcard.id}",
+            'name': pkmcard.name,
+            'type': pkmcard.category,
+            'rarity': pkmcard.rarity,
+            'color': ', '.join(pkmcard.types) if isinstance(pkmcard.types, list) else pkmcard.types,
+            'artist': pkmcard.illustrator,
+            'set_code': pkmcard.set.id,
+            'image_url': pkmcard.image,
+            'number': local_id
+        }
 
 def download_snorlaxes():
     sdk = TCGdex()
@@ -228,7 +304,7 @@ def download_snorlaxes():
 
 if __name__ == "__main__":
     pkm = SourcePKM()
-    batch_profile = u.retrieve_tcg_profiles('pokemons')["snorlax_playmat_wordsearch"]
+    batch_profile = u.retrieve_tcg_profiles('pokemons')["snorlax"]
     card_batch = pkm.gather_correct_cards(batch_profile['card_criteria'])
     pkm.download_card_batch(card_batch)
     # download_snorlaxes()

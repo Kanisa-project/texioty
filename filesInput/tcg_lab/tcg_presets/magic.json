@@ -6,12 +6,18 @@
       "colors": "W"
     }
   },
-  "explore_TLE259": {
+  "explore": {
     "card_criteria": {
       "name": "Explore",
-      "set_code": "TLE",
       "type": "Sorcery",
-      "card_number": "259"
+      "Rarity": "Common"
+    }
+  },
+  "red_enchantments": {
+    "card_criteria": {
+      "type": "Enchantment",
+      "colors": "R",
+      "rarity": "Uncommon"
     }
   }
 }

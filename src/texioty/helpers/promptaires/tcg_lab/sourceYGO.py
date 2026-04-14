@@ -12,10 +12,17 @@ print_width_len = 36
 
 YUGIOH_TEMPLATES = {
     "all_cards": {
-        "number": [],
+        "source_id": [],
+        "source_tcg": [],
         "name": [],
-        "colour": [],
-        "type": []
+        "type": [],
+        "rarity": [],
+        "color": [],
+        "artist": [],
+        "set_code": [],
+        "image_url": [],
+        "local_image_path": [],
+        "raw_data": []
     },
     "monster_cards": {
         "number": [],
@@ -53,13 +60,13 @@ YUGIOH_TEMPLATES = {
 class SourceYGO(SourceTCG):
     def __init__(self):
         super().__init__()
-        self.base_url = 'https://db.ygoprodeck.com/api/v7/cardinfo.php'
         self.tcg_title_name = 'yugioh'
+        self.base_url = 'https://db.ygoprodeck.com/api/v7/cardinfo.php'
         self._init_yugioh_database()
 
     def _init_yugioh_database(self):
         try:
-            db_path = Path(__file__).resolve().parent / "cards" / "databases" / "yugioh_cards.db"
+            db_path = Path(__file__).resolve().parent / "databases" / "yugioh_cards.db"
 
             if not db_path.exists():
                 self.db_helper = DatabaseHelper(str(db_path))
@@ -70,13 +77,13 @@ class SourceYGO(SourceTCG):
             print(f"Error initializing YGO database: {e}")
 
         self.color_translation_dict = {
-            'light': 'yellow',
-            'dark': 'purple',
-            'fire': 'red',
-            'water': 'blue',
-            'wind': 'green',
-            'earth': 'brown',
-            'divine': 'white'
+            'LIGHT': 'yellow',
+            'DARK': 'purple',
+            'FIRE': 'red',
+            'WATER': 'blue',
+            'WIND': 'green',
+            'EARTH': 'brown',
+            'DIVINE': 'white'
         }
 
     def add_card_local_database(self, new_card):
@@ -103,7 +110,15 @@ class SourceYGO(SourceTCG):
             self.add_trap_local_database(new_card)
         print(f"✓  Added {new_card['name']} to all_yugioh_cards.")
 
-
+    def get_card_batch(self, card_criteria: dict) -> List[dict]:
+        print("YUGI_CRITeria", card_criteria)
+        if "Monster" in card_criteria.get('type', ''):
+            return self.gather_monster_cards(card_criteria)
+        if "Spell" in card_criteria.get('type', ''):
+            return self.gather_spell_cards(card_criteria)
+        if "Trap" in card_criteria.get('type', ''):
+            return self.gather_trap_cards(card_criteria)
+        return []
 
     def add_monster_local_database(self, new_card):
         monster_card_insert_query = insert_table_statement_maker('monster_cards',
@@ -164,61 +179,38 @@ class SourceYGO(SourceTCG):
             print("DLCARD", card)
             self.add_card_local_database(card)
 
-
-
-    # def download_card_batch(self, batch_config: dict):
-    #     # super().download_card_batch(batch_config)
-    #     print(batch_config)
-    #     endpoint = self.endpoint_builder('?', self.query_builder({'type': random.choice(batch_config['type'])}))
-    #     r = requests.get(endpoint)
-    #     # print(r.json(), endpoint)
-    #     random_cards = random.sample(r.json()['data'], batch_config['pack_size'])
-    #     for card_dict in random_cards:
-    #         self.add_card_local_database(card_dict)
-    #         # self.add_card_database(card_dict)
-    #         try:
-    #             img_data = requests.get(f'https://images.ygoprodeck.com/images/cards/{card_dict["id"]}.jpg').content
-    #             save_name = card_dict['name'].replace(" ", "_")
-    #             with open(f'cards/{save_name}.jpg',
-    #             # with open(f'helpers/promptaires/tcg_lab/cards/yugioh/{save_name}.jpg',
-    #                       'wb') as handler:
-    #                 handler.write(img_data)
-    #             print(f"✓|  Downloaded {save_name} into /fotoes/cardsYuGiOh")
-    #         except AttributeError as e:
-    #             print(e)
-    #         except FileNotFoundError as e:
-    #             print(e)
-
-    def gather_correct_cards(self, card_criteria: dict):
-        search_criteria = {}
-        # print("GATH", card_criteria)
-        if 'name' in card_criteria:
-            search_criteria['name'] = card_criteria['name']
-        if 'color' in card_criteria:
-            search_criteria['color'] = card_criteria['color']
-        if 'type' in card_criteria:
-            match card_criteria['type']:
-                case 'Normal Monster':
-                    return self.gather_monster_cards(card_criteria)
-                case 'Spell Card':
-                    print("WAT", search_criteria)
-                    return self.gather_spell_cards(card_criteria)
-                case 'Trap Card':
-                    return self.gather_trap_cards(card_criteria)
-                case 'Other Card':
-                    return self.gather_other_cards(card_criteria)
-                case _:
-                    raise ValueError(f"Invalid card type: {card_criteria['type']}")
-        return []
+    # def gather_correct_cards(self, card_criteria: dict):
+    #     search_criteria = {}
+    #     # print("GATH", card_criteria)
+    #     if 'name' in card_criteria:
+    #         search_criteria['name'] = card_criteria['name']
+    #     if 'color' in card_criteria:
+    #         search_criteria['color'] = card_criteria['color']
+    #     if 'type' in card_criteria:
+    #         match card_criteria['type']:
+    #             case 'Normal Monster':
+    #                 return self.gather_monster_cards(card_criteria)
+    #             case 'Spell Card':
+    #                 print("WAT", search_criteria)
+    #                 return self.gather_spell_cards(card_criteria)
+    #             case 'Trap Card':
+    #                 return self.gather_trap_cards(card_criteria)
+    #             case 'Other Card':
+    #                 return self.gather_other_cards(card_criteria)
+    #             case _:
+    #                 raise ValueError(f"Invalid card type: {card_criteria['type']}")
+    #     return []
 
     def query_builder(self, query_dict: dict) -> str:
         use_url = self.base_url + "?"
         for key in list(query_dict.keys()):
+            if "name" in key:
+                query_dict[key] = query_dict[key].replace(" ", "_")
             use_url += f"{key.lower()}={query_dict[key].lower()}&"
         return use_url
 
     def gather_monster_cards(self, search_criteria):
-        fetch_url = self.query_builder(search_criteria)
+        fetch_url = self.query_builder(search_criteria).replace(' ', "%20")
         print(fetch_url)
         monsters = requests.get(fetch_url)
         if 'data' in monsters.json():
@@ -242,11 +234,16 @@ class SourceYGO(SourceTCG):
     def gather_other_cards(self, search_criteria):
         pass
 
-
-if __name__ == "__main__":
-    ygo = SourceYGO()
-    batch_profile = u.retrieve_tcg_profiles('yugiohs')["slimetoad_playmat_fillin_sleeves"]
-    card_batch = ygo.gather_correct_cards(batch_profile['card_criteria'])
-    for card in card_batch:
-        print(card['name'], card_batch.index(card) + 1)
-    ygo.download_card_batch(card_batch)
+    def card_to_dict(self, yugicard: dict) -> dict:
+        print("YUGid", yugicard)
+        return {
+            "source_tcg": "yugioh",
+            "source_id": str(yugicard['id']),
+            "name": yugicard['name'],
+            "type": yugicard['type'],
+            "rarity": yugicard['card_sets'][0]['set_rarity'],
+            "color": yugicard.get('attribute', yugicard.get('humanReadableCardType', 'Unknown')),
+            "artist": yugicard.get('artist', 'Unknown'),
+            "set_code": yugicard['card_sets'][0]['set_code'],
+            "image_url": f"https://images.ygoprodeck.com/images/cards/{yugicard['id']}.jpg",
+        }

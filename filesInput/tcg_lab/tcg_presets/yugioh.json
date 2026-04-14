@@ -1,0 +1,14 @@
+{
+  "trap_hole": {
+    "card_criteria": {
+      "name": "Trap Hole",
+      "type": "Trap Card"
+    }
+  },
+  "gem-knight_garnet": {
+    "card_criteria": {
+      "fname": "Gem-knight",
+      "type": "Normal Monster"
+    }
+  }
+}

@@ -62,7 +62,6 @@ class DatabaseHelper:
                 create_stmt = (
                     f"CREATE TABLE IF NOT EXISTS {table_name} ("
                     f"source_id TEXT PRIMARY KEY NOT NULL, "
-                    # f"row_id INTEGER PRIMARY KEY AUTOINCREMENT, "
                     f"{', '.join(column_defs)})"
                 )
             else:

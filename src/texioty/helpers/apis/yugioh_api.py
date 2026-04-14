@@ -76,18 +76,18 @@ class YugiohAPIHelper(TCGAPI):
                 print(e)
 
 
-if __name__ == "__main__":
-    pass
-
-
-def run_depicter_from_script(depict_config_dict: dict):
-    depicter = YgoDepicter(depict_config_dict)
-    yapi = YugiohAPIHelper()
-    ygo_card = yapi.fetch_single_card()
-    card_datadict = depicter.build_card_datadict(ygo_card)
-    depicted_card = depicter.depict_card(card_datadict)
-    depicted_card.save(f"depictions/{depicter.card_datadict['name']}.png")
-
-
-def run_puzzler_from_script(puzzle_config_dict: dict):
-    pass
+# if __name__ == "__main__":
+#     pass
+#
+#
+# def run_depicter_from_script(depict_config_dict: dict):
+#     depicter = YgoDepicter(depict_config_dict)
+#     yapi = YugiohAPIHelper()
+#     ygo_card = yapi.fetch_single_card()
+#     card_datadict = depicter.build_card_datadict(ygo_card)
+#     depicted_card = depicter.depict_card(card_datadict)
+#     depicted_card.save(f"depictions/{depicter.card_datadict['name']}.png")
+#
+#
+# def run_puzzler_from_script(puzzle_config_dict: dict):
+#     pass

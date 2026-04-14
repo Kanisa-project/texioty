@@ -1,0 +1,20 @@
+{
+  "agumon": {
+    "card_criteria": {
+      "name": "Agumon",
+      "type": "Digimon"
+    }
+  },
+  "gatomon": {
+    "card_criteria": {
+      "name": "Gatomon",
+      "type": "Digimon"
+    }
+  },
+  "patamon": {
+    "card_criteria": {
+      "name": "Patamon",
+      "type":  "Digimon"
+    }
+  }
+}

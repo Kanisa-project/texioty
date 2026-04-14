@@ -5,6 +5,7 @@ from mtgsdk import Card
 from PIL import Image, ImageDraw
 import random
 
+from helpers.promptaires.tcg_lab.tcg_depicter import TcgDepicter
 from src.texioty.helpers.promptaires.prompt_helper import BasePrompt
 from src.texioty.helpers.promptaires.tcg_lab.sourceDGM import SourceDGM
 from src.texioty.helpers.promptaires.tcg_lab.sourceLRCNA import SourceLRCNA
@@ -24,7 +25,7 @@ TCG_OPTIONS = [
     'Digimon'
 ]
 
-LAB_PROFILE_ROOT = Path("src/texioty/helpers/promptaires/tcg_lab/lab_profiles")
+LAB_PROFILE_ROOT = Path("src/texioty/helpers/promptaires/tcg_lab/lab_presets")
 TCG_PROFILE_ROOT = Path("src/texioty/helpers/promptaires/tcg_lab/tcg_profiles")
 
 
@@ -33,14 +34,15 @@ class TCGLabby(BasePrompt):
         super().__init__(txo, txi)
         self.current_tcg: str | None = None
         self.current_lab: str | None = None
-        self.current_profile_name: str | None = None
+        self.current_lab_profile_name: str | None = None
+        self.depicter = TcgDepicter()
 
         self.sources = {
-            'Magic the Gathering': SourceMTG(),
-            'Pokemon': SourcePKM(),
-            # 'Lorcana': SourceLRCNA(),
-            # 'Yu-Gi-Oh': SourceYGO(),
-            # 'Digimon': SourceDGM()
+            'magic': SourceMTG(),
+            'pokemon': SourcePKM(),
+            'yugioh': SourceYGO(),
+            'lorcana': SourceLRCNA(),
+            'digimon': SourceDGM()
         }
 
     def get_source_for_tcg(self, tcg_name: str):
@@ -49,14 +51,13 @@ class TCGLabby(BasePrompt):
             raise ValueError(f"Unsupported TCG: {tcg_name}")
         return source
 
-    def ingest_cards_for_profile(self, tcg_name: str, profile_name: str):
+    def ingest_cards_for_profile(self, tcg_name: str|None, profile_name: str):
         source = self.get_source_for_tcg(self._tcg_tag(tcg_name))
         profile = self.load_tcg_profile(tcg_name, profile_name)
         card_criteria = profile.get("card_criteria", profile)
         print(card_criteria, "card CRIT")
         raw_cards = source.get_card_batch(card_criteria)
-
-
+        # print(raw_cards, "RAW CARDS")
         if raw_cards is None:
             raw_cards = []
 
@@ -70,11 +71,12 @@ class TCGLabby(BasePrompt):
             raw_card = source.card_to_dict(raw_card)
             source.ingest_card(raw_card, tcg_name, output_dir)
             ingested_count += 1
+            # self.txo.priont_string(f"Ingested card: {raw_card['name']} - {raw_card['source_id']}")
 
         self.txo.update_header_status(bottom_status=f"Ingested {ingested_count} cards for {tcg_name}/{profile_name}")
 
     def download_cards(self, profile_name: str):
-        self.current_profile_name = profile_name
+        self.current_lab_profile_name = profile_name
         self.txo.priont_string(f"Ingesting {self.current_tcg} {profile_name}....")
         self.ingest_cards_for_profile(self.current_tcg, profile_name)
 
@@ -129,7 +131,9 @@ class TCGLabby(BasePrompt):
         except FileNotFoundError:
             return []
 
-    def load_lab_profile(self, lab_name: str, profile_name: str) -> dict:
+    def load_lab_profile(self, lab_name: str | None, profile_name: str) -> dict:
+        if lab_name is None:
+            lab_name = self.current_lab
         lab_tag = self._lab_tag(lab_name)
         profile_path = TCG_PROFILE_ROOT / lab_tag / f"{profile_name}.json"
         if profile_path.exists():
@@ -145,7 +149,7 @@ class TCGLabby(BasePrompt):
 
         raise FileNotFoundError(f"No profile found: {lab_name}/{profile_name}")
 
-    def load_tcg_profile(self, tcg_name: str, profile_name: str) -> dict:
+    def load_tcg_profile(self, tcg_name: str|None, profile_name: str) -> dict:
         tcg_tag = self._tcg_tag(tcg_name)
         profile_path = TCG_PROFILE_ROOT / tcg_tag / f"{profile_name}.json"
         if profile_path.exists():
@@ -196,30 +200,34 @@ class TCGLabby(BasePrompt):
         self.txo.master.deciding_function = self.generate_decks
 
     def setup_depiction(self, profile_name: str):
-        self.current_profile_name = profile_name
+        self.current_lab_profile_name = profile_name
         self.txo.priont_string(f"Depicting a {self.current_tcg} {profile_name}....")
 
-        source = self.get_source_for_tcg(self.current_tcg)
-        profile = self.load_lab_profile(self.current_lab, profile_name)
-        lab_criteria = profile.get("card_criteria", profile)
-        print(lab_criteria, "LABcriTeRia")
-        cards = source.get_card_database(filters=lab_criteria)
+        source = self.get_source_for_tcg(self._tcg_tag(self.current_tcg))
+        # profile = self.load_lab_profile(self.current_lab, profile_name)
+        # source.chosen_lab_profile_dict = profile
+
+        cards = source.get_card_database()
 
         if not cards:
             self.txo.update_header_status(bottom_status=f"No cards found for {self.current_tcg}/{profile_name}")
             return
 
-        chosen_card = random.choice(cards)
-        self.txo.priont_dict(chosen_card)
+        # chosen_card = random.choice(cards)
+        card_options = [f"{card.get('name', 'Unknown')} - {card.get('source_id', 'Unknown')}" for card in cards]
+        self.decide_decision("Which card to use", card_options)
+        self._set_deciding_function(self.depict_depiction)
 
-        depict_config = profile.get(
-            "depict",
-            profile.get("render", {"image_size": (320, 320), "background": (125, 52, 210, 99)})
-        )
-        self.create_depiction(depict_config, chosen_card)
+    def depict_depiction(self, card_source_id: str):
+        source = self.get_source_for_tcg(self._tcg_tag(self.current_tcg))
+        self.depicter.card_datadict = source.get_card_database(filters={"source_id": card_source_id})[0]
+        self.depicter.depiction_preset = self.load_lab_profile(self.current_lab, self.current_lab_profile_name)
+        self.depicter.depiction_type = self.current_lab_profile_name
+        self.depicter.color_translation_dict = source.color_translation_dict
+        self.depicter.depict_card(card_source_id)
 
     def create_puzzles(self, profile_name: str):
-        self.current_profile_name = profile_name
+        self.current_lab_profile_name = profile_name
         self.txo.priont_string(f"Creating a {self.current_tcg} {profile_name}....")
 
         source = self.get_source_for_tcg(self.current_tcg)
@@ -242,7 +250,7 @@ class TCGLabby(BasePrompt):
         self.txo.update_header_status(bottom_status=f"Blending cards isn't working yet.")
 
     def generate_decks(self, profile_name: str):
-        self.current_profile_name = profile_name
+        self.current_lab_profile_name = profile_name
         self.txo.priont_string(f"Building decks for {self.current_tcg} {profile_name}....")
 
         source = self.get_source_for_tcg(self.current_tcg)
@@ -271,20 +279,21 @@ class TCGLabby(BasePrompt):
         self.txo.priont_dict(card_profile.get("hangman", {"difficulty": 2, "phrase": "hangman"}))
         self.txo.priont_dict(generate_hidden_dictionary("This is a phrase."))
 
-    def create_depiction(self, depict_config: dict, card_dict: dict):
-        img_size = tuple(depict_config.get("image_size", (320, 320)))
-        bg_color = tuple(depict_config.get("background", (125, 52, 210, 99)))
-
-        new_img = Image.new("RGBA", img_size, bg_color)
-        self.depict_card(new_img, card_dict)
-
-        card_name = card_dict.get('name', 'unknown_card')
-        save_name = "_".join(str(card_name).split())
-        save_path = Path(f"filesOutput/depictions") / f"{save_name}.png"
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        new_img.save(save_path)
-
-        self.txo.priont_string(f"Depiction saved to {save_path}")
+    # def create_depiction(self, card_source_id: str):
+    #     source = self.get_source_for_tcg(self._tcg_tag(self.current_tcg))
+    #     print(source.chosen_lab_profile_dict, "LABDICT")
+    #     source.chosen_card_dict = source.get_card_database(filters={"source_id": card_source_id})[0]
+    #     print(source.chosen_card_dict, "CARDDICT")
+    #     img_size = tuple(source.chosen_lab_profile_dict.get("image_size", (320, 320)))
+    #     bg_color = tuple(source.chosen_lab_profile_dict.get("background", (125, 52, 210, 255)))
+    #     new_img = Image.new("RGBA", img_size, bg_color)
+    #     self.depict_card(new_img, source.chosen_card_dict)
+    #     card_name = source.chosen_card_dict.get('name', 'unknown_card')
+    #     save_name = "_".join(str(card_name).split())
+    #     save_path = Path(f"filesOutput/tcg_lab/depictions/{self.current_lab_profile_name}") / f"{save_name}.png"
+    #     save_path.parent.mkdir(parents=True, exist_ok=True)
+    #     new_img.save(save_path)
+    #     self.txo.priont_string(f"Depiction saved to {save_path}")
 
     @staticmethod
     def depict_card(img: Image.Image, card_info_dict: dict):
@@ -295,14 +304,14 @@ class TCGLabby(BasePrompt):
         rarity = str(card_info_dict.get('rarity', 'unknown_rarity'))
         source_tcg = str(card_info_dict.get('source_tcg', 'unknown_source_tcg'))
 
-        draw.rectangle([(8, 8), (img.size[0] - 8, img.size[1] - 8)], fill=(255, 255, 255, 180), width=2)
-        draw.text((16, 16), source_tcg, fill=(255, 255, 255, 255))
-        draw.text((16, 48), name, fill=(255, 255, 255, 255))
-        draw.text((16, 80), card_type, fill=(255, 255, 255, 255))
-        draw.text((16, 112), rarity, fill=(255, 255, 255, 255))
+        draw.rectangle([(8, 8), (img.size[0] - 8, img.size[1] - 8)], fill=(255, 255, 255, 255), width=2)
+        draw.text((16, 16), source_tcg, fill=(5, 55, 125, 255))
+        draw.text((16, 48), name, fill=(5, 55, 125, 255))
+        draw.text((16, 80), card_type, fill=(5, 55, 125, 255))
+        draw.text((16, 112), rarity, fill=(5, 55, 125, 255))
 
     @staticmethod
-    def _lab_tag(lab_choice: str) -> str:
+    def _lab_tag(lab_choice: str | None) -> str:
         mapping = {
             'Card-0wn1oad3r': "downloaders",
             'Depictinator{}': "depicters",
@@ -310,17 +319,21 @@ class TCGLabby(BasePrompt):
             'TC-Blender 690': "blenders",
             'RanDexter-2110': "decksters"
         }
+        if lab_choice is None:
+            return str(lab_choice)
         return mapping.get(lab_choice, lab_choice.lower())
 
     @staticmethod
-    def _tcg_tag(tcg_choice: str) -> str:
+    def _tcg_tag(tcg_choice: str | None) -> str:
         mapping = {
-            "Magic the Gathering": "magics",
-            "Pokemon": "pokemons",
-            "Lorcana": "lorcanas",
-            "Yu-Gi-Oh": "yugiohs",
-            "Digimon": "digimons"
+            "Magic the Gathering": "magic",
+            "Pokemon": "pokemon",
+            "Lorcana": "lorcana",
+            "Yu-Gi-Oh": "yugioh",
+            "Digimon": "digimon"
         }
+        if tcg_choice is None:
+            return str(tcg_choice)
         return mapping.get(tcg_choice, tcg_choice.lower())
 
 
@@ -328,24 +341,30 @@ def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
 
 
-def polypointlist(sides: int, offset: int, cx: int, cy: int, radius: int) -> list:
+def polypointlist(sides: int, offset: float, cx: int, cy: int, radius: int) -> list:
     step = 2 * math.pi / sides
+    print("OSep", step)
     offset = math.radians(offset)
+    print(offset, "OFFS")
     pointlist = [(radius * math.cos(step * n + offset) + cx, radius * math.sin(step * n + offset) + cy) for n in
                  range(0, int(sides) + 1)]
     return pointlist
 
 
-def lsystem_string_maker(axioms: str, rules: dict, iterations: int) -> str:
-    for _ in range(iterations):
-        new_axioms = ''
-        for axiom in axioms:
-            if axiom in rules:
-                new_axioms += rules[axiom]
-            else:
-                new_axioms += axiom
-            axioms = new_axioms
-    return axioms
+# def lsystem_string_maker(axioms: str, rules: dict, iterations: int) -> str:
+#     for _ in range(iterations):
+#         new_axioms = ''
+#         for axiom in axioms:
+#             if axiom in rules:
+#                 new_axioms += rules[axiom]
+#             else:
+#                 new_axioms += axiom
+#             axioms = new_axioms
+#     return axioms
+
+
+def blend_cards(img1, img2, param) -> Image.Image:
+    return img1
 
 
 def tc_blender(tcg1: str, tcg2: str) -> Image.Image:
@@ -406,21 +425,6 @@ def depict_card(img: Image.Image, card_info_dict: dict):
                       "set_points": set_points,
                       "type_points": type_points}
     draw_depiction(img, polypoint_dict, card_info_dict)
-
-
-# def depict_spell(img: Image.Image, spell_info_dict: dict):
-#     spell_name = spell_info_dict['spell_name']
-#     spell_cmc = spell_info_dict['spell_cmc']
-#     spell_type = spell_info_dict['spell_type']
-#     print(spell_info_dict)
-#     name_points = depict_name(spell_name)
-#     cmc_points = depict_cmc(spell_cmc)
-#     type_points = depict_type(spell_type)
-#     polypoint_dict = {"name_points": name_points,
-#                       "cmc_points": cmc_points,
-#                       "type_points": type_points}
-#     draw_depiction(img, polypoint_dict, spell_info_dict)
-
 
 def build_mana_color_dict(spell_mana_cost: str) -> dict:
     mana_colors = {
@@ -531,186 +535,149 @@ def depict_type(spell_type: str) -> list:
     return type_pointlist
 
 
-def depict_cmc(spell_cmc: int) -> list:
-    cmc_pointlist = polypointlist(spell_cmc + 3, spell_cmc * 60, 480, 480, spell_cmc * 19)
-    return cmc_pointlist
+# def depict_cmc(spell_cmc: int) -> list:
+#     cmc_pointlist = polypointlist(spell_cmc + 3, spell_cmc * 60, 480, 480, spell_cmc * 19)
+#     return cmc_pointlist
 
 
-def build_card_info_dict(tcg: str, card_info) -> dict:
-    match tcg:
-        case "Magic the Gathering":
-            pass
-        case "Pokemon":
-            pass
-        case "Lorcana":
-            pass
-        case "Digimon":
-            pass
-        case "YuGiOh":
-            pass
-    return {}
+# def build_card_info_dict(tcg: str, card_info) -> dict:
+#     match tcg:
+#         case "Magic the Gathering":
+#             pass
+#         case "Pokemon":
+#             pass
+#         case "Lorcana":
+#             pass
+#         case "Digimon":
+#             pass
+#         case "YuGiOh":
+#             pass
+#     return {}
 
 
-def build_mtg_card_dict(card: Card):
-    return {"card_name": card.name,
-            "card_cmc": card.cmc,
-            "card_type": card.type.replace('\u2014', '-'),
-            "card_colors": card.colors,
-            "card_mana_cost": card.mana_cost[::-1]}
+# def build_mtg_card_dict(card: Card):
+#     return {"card_name": card.name,
+#             "card_cmc": card.cmc,
+#             "card_type": card.type.replace('\u2014', '-'),
+#             "card_colors": card.colors,
+#             "card_mana_cost": card.mana_cost[::-1]}
 
 
-def build_spell_dict(spell_card):
-    if isinstance(spell_card, Card):
-        return {"spell_name": spell_card.name,
-                "spell_cmc": spell_card.cmc,
-                "spell_type": spell_card.type.replace('\u2014', '-'),
-                "spell_colors": spell_card.colors,
-                "spell_mana_cost": spell_card.mana_cost[::-1]}
-    elif isinstance(spell_card, list):
-        spell_dict_list = []
-        for spell in spell_card:
-            spell_dict_list.append({"spell_name": spell.name,
-                                    "spell_cmc": spell.cmc,
-                                    "spell_type": spell.type.replace('\u2014', '-'),
-                                    "spell_colors": spell.colors,
-                                    "spell_mana_cost": spell.mana_cost})
-        return spell_dict_list
-    return None
+# def build_spell_dict(spell_card):
+#     if isinstance(spell_card, Card):
+#         return {"spell_name": spell_card.name,
+#                 "spell_cmc": spell_card.cmc,
+#                 "spell_type": spell_card.type.replace('\u2014', '-'),
+#                 "spell_colors": spell_card.colors,
+#                 "spell_mana_cost": spell_card.mana_cost[::-1]}
+#     elif isinstance(spell_card, list):
+#         spell_dict_list = []
+#         for spell in spell_card:
+#             spell_dict_list.append({"spell_name": spell.name,
+#                                     "spell_cmc": spell.cmc,
+#                                     "spell_type": spell.type.replace('\u2014', '-'),
+#                                     "spell_colors": spell.colors,
+#                                     "spell_mana_cost": spell.mana_cost})
+#         return spell_dict_list
+#     return None
 
-
-def create_depiction(depict_dict: dict, card_dict: dict):
-    img_size = depict_dict.get('image_size', (320, 320))
-    bg_color = depict_dict.get('background', (125, 52, 210, 99))
-    # color_list = depict_dict['palette']
-    new_img = Image.new('RGBA', img_size, tuple(bg_color))
-    print("CDD: DD", depict_dict)
-    print("CDD: CD", card_dict)
-    depict_card(new_img, card_dict)
-    card_name = card_dict['card_name']
-    save_name = "_".join(card_name.split())
-    save_path = f"filesOutput/depictions/{save_name.split('_//_')[0]}.png"
-    new_img.save(save_path)
-    print(f"saved to {save_path}")
-
-# def create_depiction(spell_dict: dict):
-#     new_spell_img = Image.new("RGBA", (320, 320), t.KHAKI)
-#     depict_spell(new_spell_img, spell_dict)
-#     card_name = spell_dict['spell_name']
-#     save_name = "_".join(card_name.split())
-#     save_path = f"filesOutput/depictions/{save_name.split('_//_')[0]}.png"
-#     new_spell_img.save(save_path)
-#     print(f"saved to {save_path}")
-
-
-# def playmat_depiction(profile_name: str):
-#     prof_dict = u.retrieve_lab_profiles('depicters')[profile_name]
-#     img_size = prof_dict['image_size']
-#     bg_color = prof_dict['background']
-#     color_list = prof_dict['palette']
-#     new_img = Image.new('RGBA', img_size, tuple(bg_color))
-#     print(prof_dict)
-#     create_depiction(prof_dict['spell_dict'])
-
-
-class TcgDepicter:
-    def __init__(self, config_dict: dict):
-        self.select_choices = ["Name a card.", "Random card.", "Cards batch."]
-
-        self.single_card_queries = {"name": 'What name would you like to find? ',
-                                    "type": 'What type of card is it? ',
-                                    "coloring": 'What colors are the card? '}
-
-        self.batch_cards_queries = {"set_code": 'What is the setcode for the batch? ',
-                                    "batch_size": 'How many cards to batch? ',
-                                    "batch_types": 'What type is each card in the batch? '}
-        self.card_datadict = {}
-        self.config = config_dict
-
-    def build_card_datadict(self, card_data) -> dict:
-        """
-        Fetch the card_id from the tcg_name's library of cards and creates a datadict to be
-        depicted and drawn.
-        :param card_data: The card data directly from the API.
-        :return:
-        """
-        print("CARD_DATA", card_data)
-        card_datadict = {
-            'name': 'R4nd0m',
-            'type': 'Sorcery',
-            'rarity': 'Common',
-            'id': 'SOAD-420'
-        }
-        self.card_datadict = card_datadict
-        return card_datadict
-
-    def depict_card(self, datadict: dict) -> Image.Image:
-        print(self.config)
-        print(datadict)
-        img = Image.new('RGBA', self.config["image_size"], tuple(self.config["background"]))
-        name_points = self.depict_name()
-        type_points = self.depict_type()
-        id_points = self.depict_id()
-        rarity_points = self.depict_rarity()
-        # self.depict_coloring()
-        pointlist_dict = {"name_points": name_points,
-                          "type_points": type_points,
-                          "id_points": id_points,
-                          "rarity_points": rarity_points}
-        self.draw_depiction(img, pointlist_dict)
-        return img
-
-    def draw_depiction(self, img: Image.Image, card_pointlists: dict):
-        draw = ImageDraw.Draw(img)
-        color_list = self.config['palette']
-        print(color_list)
-        for n_point in card_pointlists["name_points"]:
-            draw.line([(n_point[0][0], n_point[0][1]),
-                       (n_point[0][2], n_point[0][3])],
-                      fill=tuple(random.choice(color_list)))
-        for i_point in card_pointlists["id_points"]:
-            draw.line([(0, i_point[0][1]),
-                       (img.size[0], i_point[0][1])],
-                      fill=tuple(random.choice(color_list)))
-            draw.line([(i_point[0][2], 0),
-                       (i_point[0][2], img.size[1])],
-                      fill=tuple(random.choice(color_list)))
-
-    def depict_name(self) -> list:
-        name_len = len(self.card_datadict['name'])
-        image_size = self.config['image_size']
-        planned_name_lines = []
-        for x in range(0, image_size[0], 3):
-            planned_name_lines.append(
-                u.plan_angled_line(x, 0, 90, name_len, 1, t.BLUE_2, (image_size[0], image_size[1])))
-            planned_name_lines.append(
-                u.plan_angled_line(x, image_size[1], 270, name_len, 1, t.BLUE_2, (image_size[0], image_size[1])))
-        for y in range(0, image_size[1], 3):
-            planned_name_lines.append(
-                u.plan_angled_line(0, y, 0, name_len, 1, t.BLUE_2, (image_size[0], image_size[1])))
-            planned_name_lines.append(
-                u.plan_angled_line(image_size[0], y, 180, name_len, 1, t.BLUE_2, (image_size[0], image_size[1])))
-        return planned_name_lines
-
-    def depict_type(self) -> list:
-        card_type = u.string_to_morse(self.card_datadict['type'])
-        type_lstring = lsystem_string_maker(card_type, a.MORSE_CODE_AXIOMS, 2)
-        lsystem_points = u.lsystem_morse_coder(type_lstring)
-        return lsystem_points
-
-    def depict_rarity(self) -> list:
-        card_rarity = u.string_to_morse(self.card_datadict['rarity'])
-        rarity_lstring = lsystem_string_maker(card_rarity, a.MORSE_CODE_AXIOMS, 2)
-        lsystem_points = u.lsystem_morse_coder(rarity_lstring)
-        return lsystem_points
-
-    def depict_id(self) -> list:
-        card_id = u.string_to_morse(self.card_datadict['id'])
-        id_lstring = lsystem_string_maker(card_id, a.MORSE_CODE_AXIOMS, 2)
-        lsystem_points = u.lsystem_morse_coder(id_lstring)
-        return lsystem_points
-
-    def depict_coloring(self) -> list:
-        card_coloring = u.string_to_morse(self.card_datadict['coloring'])
-        coloring_lstring = lsystem_string_maker(card_coloring, a.MORSE_CODE_AXIOMS, 2)
-        lsystem_points = u.lsystem_morse_coder(coloring_lstring)
-        return lsystem_points
+# class TcgDepicter:
+#     def __init__(self):
+#         self.card_datadict = {}
+#
+#     def build_card_datadict(self, card_data) -> dict:
+#         print("CARD_DATA", card_data)
+#         card_datadict = {
+#             'name': 'R4nd0m',
+#             'type': 'Sorcery',
+#             'rarity': 'Common',
+#             'id': 'SOAD-420'
+#         }
+#         self.card_datadict = card_datadict
+#         return card_datadict
+#
+#     def depict_card(self, card_source_id: str):
+#         img = Image.new('RGBA',
+#                         (640, 640),
+#                         (32, 36, 123))
+#         name_points = self.pointify_name()
+#         type_points = self.pointify_type()
+#         id_points = self.pointify_id()
+#         rarity_points = self.pointify_rarity()
+#         pointlist_dict = {"name_points": name_points,
+#                           "type_points": type_points,
+#                           "id_points": id_points,
+#                           "rarity_points": rarity_points}
+#         img = self.draw_depiction(img, pointlist_dict)
+#         save_name = f"{card_source_id}"
+#         save_path = Path(f"filesOutput/tcg_lab/depictions") / f"{save_name}.png"
+#         save_path.parent.mkdir(parents=True, exist_ok=True)
+#         img.save(save_path)
+#         print(f"Depiction saved to {save_path}")
+#
+#     def draw_depiction(self, img: Image.Image, card_pointlists: dict) -> Image.Image:
+#         draw = ImageDraw.Draw(img)
+#         color_list = t.RANDOM_COLORS
+#         print(color_list)
+#         for n_point in card_pointlists["name_points"]:
+#             draw.line([(n_point[0][0], n_point[0][1]),
+#                        (n_point[0][2], n_point[0][3])],
+#                       fill=tuple(random.choice(color_list)))
+#         for t_point in card_pointlists['type_points']:
+#             print(t_point, "TPOIN")
+#             for tn_point in polypointlist(3, 30,
+#                                           t_point[0][0], t_point[0][1], 69):
+#                 draw.line((tn_point, (t_point[0][0], t_point[0][1])), fill=random.choice(color_list), width=2)
+#         for i_point in card_pointlists["id_points"]:
+#             draw.line([(0, i_point[0][1]),
+#                        (img.size[0], i_point[0][1])],
+#                       fill=tuple(random.choice(color_list)))
+#             draw.line([(i_point[0][2], 0),
+#                        (i_point[0][2], img.size[1])],
+#                       fill=tuple(random.choice(color_list)))
+#         for r_point in card_pointlists["rarity_points"]:
+#             draw.line([(r_point[0][0], r_point[0][1]),
+#                        (r_point[0][2], r_point[0][3])],
+#                       fill=tuple(random.choice(color_list)))
+#         return img
+#
+#     def pointify_name(self) -> list:
+#         # print("POINTYNAEM", self.card_datadict)
+#         name_len = len(self.card_datadict['name'])
+#         image_size = (365, 365)
+#         planned_name_lines = []
+#         for x in range(0, image_size[0], 3):
+#             planned_name_lines.append(
+#                 u.plan_angled_line(x, 0, 90, name_len, 1, t.BLUE_2, (image_size[0], image_size[1])))
+#             planned_name_lines.append(
+#                 u.plan_angled_line(x, image_size[1], 270, name_len, 1, t.BLUE_2, (image_size[0], image_size[1])))
+#         for y in range(0, image_size[1], 3):
+#             planned_name_lines.append(
+#                 u.plan_angled_line(0, y, 0, name_len, 1, t.BLUE_2, (image_size[0], image_size[1])))
+#             planned_name_lines.append(
+#                 u.plan_angled_line(image_size[0], y, 180, name_len, 1, t.BLUE_2, (image_size[0], image_size[1])))
+#         return planned_name_lines
+#
+#     def pointify_type(self) -> list:
+#         card_type = u.string_to_morse(self.card_datadict['type'])
+#         type_lstring = lsystem_string_maker(card_type, a.MORSE_CODE_AXIOMS, 2)
+#         lsystem_points = u.lsystem_morse_coder(type_lstring)
+#         return lsystem_points
+#
+#     def pointify_rarity(self) -> list:
+#         card_rarity = u.string_to_morse(self.card_datadict['rarity'])
+#         rarity_lstring = lsystem_string_maker(card_rarity, a.MORSE_CODE_AXIOMS, 2)
+#         lsystem_points = u.lsystem_morse_coder(rarity_lstring)
+#         return lsystem_points
+#
+#     def pointify_id(self) -> list:
+#         card_id = u.string_to_morse(self.card_datadict['source_id'])
+#         id_lstring = lsystem_string_maker(card_id, a.MORSE_CODE_AXIOMS, 2)
+#         lsystem_points = u.lsystem_morse_coder(id_lstring)
+#         return lsystem_points
+#
+#     def depict_coloring(self) -> list:
+#         card_coloring = u.string_to_morse(self.card_datadict['color'])
+#         coloring_lstring = lsystem_string_maker(card_coloring, a.MORSE_CODE_AXIOMS, 2)
+#         lsystem_points = u.lsystem_morse_coder(coloring_lstring)
+#         return lsystem_points

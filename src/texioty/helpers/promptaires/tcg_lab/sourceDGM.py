@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import requests
 import random
@@ -13,10 +13,17 @@ base_url = "https://digimoncard.io/api-public/"
 
 DIGIMON_TEMPLATES = {
     "all_cards": {
-        "number": [],
+        "source_id": [],
+        "source_tcg": [],
         "name": [],
-        "colour": [],
-        "type": []
+        "type": [],
+        "rarity": [],
+        "color": [],
+        "artist": [],
+        "set_code": [],
+        "image_url": [],
+        "local_image_path": [],
+        "raw_data": []
     },
     "digiegg_cards": {
         "number": [],
@@ -68,10 +75,19 @@ class SourceDGM(SourceTCG):
         super().__init__()
         self.tcg_title_name = 'digimon'
         self._init_digimon_database()
+        self.color_translation_dict = {
+            "Red": "red",
+            "Blue": "blue",
+            "Yellow": "yellow",
+            "Green": "green",
+            "Black": "black",
+            "Purple": "purple",
+            "White": "white"
+        }
 
     def _init_digimon_database(self):
         try:
-            db_path = Path(__file__).resolve().parent / "cards" / "databases" / "digimon_cards.db"
+            db_path = Path(__file__).resolve().parent / "databases" / "digimon_cards.db"
             if not db_path.exists():
                 self.db_helper = DatabaseHelper(str(db_path))
                 self.db_helper.create_tables_from_templates(DIGIMON_TEMPLATES)
@@ -80,72 +96,62 @@ class SourceDGM(SourceTCG):
         except Exception as e:
             print(f"Error initializing DGM database: {e}")
 
-    def gather_correct_cards(self, card_criteria: dict):
-        search_criteria = {}
-        if 'name' in card_criteria:
-            search_criteria['n'] = card_criteria['name']
-        if 'color' in card_criteria:
-            search_criteria['color'] = card_criteria['color']
-        if 'rarity' in card_criteria:
-            search_criteria['rarity'] = card_criteria['rarity']
-        if 'artist' in card_criteria:
-            search_criteria['artist'] = card_criteria['artist']
-        if 'type' in card_criteria:
-            match card_criteria['type']:
-                case "Digi-Egg":
-                    pass
-                case "Digimon":
-                    search_criteria['type'] = card_criteria['type']
-                    return self.gather_digimon_cards(search_criteria)
-                case "Option":
-                    pass
-                case "Tamer":
-                    search_criteria['type'] = card_criteria['type']
-                    return self.gather_tamer_cards(search_criteria)
-                case _:
-                    raise ValueError(f"Invalid card type: {card_criteria['type']}")
-        return self.gather_digimon_cards(search_criteria)
+    def fetch_digiegg_cards(self, egg_criteria: dict) -> List[dict]:
+        fetch_url = self.query_builder(egg_criteria)
+        digieggs = requests.get(fetch_url)
+        return digieggs.json()
 
-    def gather_tamer_cards(self, tamer_criteria: dict) -> List[dict]:
+    def fetch_tamer_cards(self, tamer_criteria: dict) -> List[dict]:
         fetch_url = self.query_builder(tamer_criteria)
         tamers = requests.get(fetch_url)
         return tamers.json()
 
-    def gather_digimon_cards(self, creature_criteria: dict) -> List[dict]:
+    def fetch_digimon_cards(self, creature_criteria: dict) -> List[dict]:
         fetch_url = self.query_builder(creature_criteria)
+        print(fetch_url)
         digimons = requests.get(fetch_url)
         return digimons.json()
 
+    def fetch_option_cards(self, option_criteria: dict) -> List[dict]:
+        fetch_url = self.query_builder(option_criteria)
+        print(fetch_url)
+        options = requests.get(fetch_url)
+        return options.json()
+
     def query_builder(self, query_dict: dict) -> str:
-        use_url = base_url + "search.php?"
-        for key in list(query_dict.keys()):
-            use_url += f"{key.lower()}={query_dict[key].lower()}&"
+        use_url = base_url + "search?"
+        for key, value in query_dict.items():
+            if key == "name":
+                use_url += f"n={value.lower()}&"
+            else:
+                use_url += f"{key.lower()}={query_dict[key].lower()}&"
         print(use_url)
         return use_url
 
-    def get_card_database(self, card_type="Digimon"):
-        pass
+    def get_card_batch(self, card_criteria: dict) -> List[dict]:
+        print("DGM_CRITeria", card_criteria)
+        if "Digimon" in card_criteria.get('type', ''):
+            return self.fetch_digimon_cards(card_criteria)
+        if "Tamer" in card_criteria.get('type', ''):
+            return self.fetch_tamer_cards(card_criteria)
+        if "Digiegg" in card_criteria.get('type', ''):
+            return self.fetch_digiegg_cards(card_criteria)
+        if "Option" in card_criteria.get('type', ''):
+            return self.fetch_option_cards(card_criteria)
+        return []
 
-    def add_card_local_database(self, new_card):
-        all_card_insert_query = insert_table_statement_maker('all_cards',
-                                                             ['name',
-                                                              'colour',
-                                                              'type',
-                                                              'number'])[0]
-        self.db_helper.execute_query(all_card_insert_query, [new_card['name'],
-                                                             new_card['color'],
-                                                             new_card['type'],
-                                                             new_card['id']])
-        match new_card['type']:
-            case "Digi-Egg":
-                self.add_digiegg_local_database(new_card)
-            case "Digimon":
-                self.add_digimon_local_database(new_card)
-            case "Tamer":
-                self.add_tamer_local_database(new_card)
-            case "Option":
-                self.add_option_local_database(new_card)
-        print(f"✓  Added {new_card['name']} to all_digimon_cards.")
+    def card_to_dict(self, card: dict) -> dict:
+        return {
+            "source_tcg": "digimon",
+            "source_id": card['id'],
+            "name": card['name'],
+            "type": card['type'],
+            "rarity": card['rarity'],
+            "color": card['color'],
+            "artist": card['artist'],
+            "set_code": card['set_name'],
+            "pretty_url": card['pretty_url'],
+        }
 
     def add_digiegg_local_database(self, new_card):
         tamer_card_insert_query = insert_table_statement_maker('digiegg_cards', ['number', 'name', 'colour', 'lvl', 'rarity', 'form', 'type', 'inherited_effect'])[0]
@@ -201,26 +207,3 @@ class SourceDGM(SourceTCG):
                                       new_card['rarity'],
                                       new_card['source_effect']])
         print(f"✓  Added {new_card['name']} to tamer_cards.")
-
-    def download_card_batch(self, batch: List[dict]):
-        for i in range(3):
-            card = random.choice(batch)
-            # print("DLCARD", card)
-            self.add_card_local_database(card)
-            print(f"{card['attribute']}    {card['id']}")
-            if card['id'] is not None:
-                img_data = requests.get(f'https://images.digimoncard.io/images/cards/{card['id']}.jpg').content
-                save_name = f"{card['id']}_" + card['name'].replace(" ", "_")
-                with open(f'helpers/promptaires/tcg_lab/cards/digimon/{save_name}.jpg',
-                # with open(f'cards/{save_name}.jpg',
-                          'wb') as handler:
-                    handler.write(img_data)
-                print(f"✓  Downloaded {save_name} into /fotoes/cardsDigimon")
-
-
-if __name__ == "__main__":
-    dgm = SourceDGM()
-    batch_profile = u.retrieve_tcg_profiles('digimons')["augumon_sleeves_fillin"]
-    card_batch = dgm.gather_correct_cards(batch_profile['card_criteria'])
-    dgm.download_card_batch(card_batch)
-

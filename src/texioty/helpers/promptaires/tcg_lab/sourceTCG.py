@@ -30,9 +30,11 @@ class SourceTCG(TCGAPI):
     """
     def __init__(self, tcg_type: Optional[str] = None):
         super().__init__()
+        self.db_helper = None
         self.default_tcg_type = tcg_type
         self.tcg_title_name = tcg_type.lower().replace(" ", "_") if tcg_type else "tcg"
-
+        self.chosen_card_dict = {}
+        self.chosen_lab_profile_dict = {}
         self.decoders: Dict[str, Callable] = {
             CardGameType.MAGIC_THE_GATHERING.value: self._decode_mtg,
             CardGameType.POKEMON.value: self._decode_pokemon,
@@ -41,7 +43,7 @@ class SourceTCG(TCGAPI):
             CardGameType.YUGIOH.value: self._decode_yugioh
         }
 
-    def decode_card(self, raw_card_data: dict, tcg_type: str) -> dict:
+    def decode_card(self, raw_card_data: dict, tcg_type: str|None) -> dict:
         decoder = self.decoders.get(tcg_type)
         if not decoder:
             raise ValueError(f"No decoder found for TCG type: {tcg_type}")
@@ -83,13 +85,14 @@ class SourceTCG(TCGAPI):
         })
 
     def _decode_pokemon(self, card_data: dict) -> dict:
+        print("DECODINGGNIDOCEDpoke", card_data)
         return self._normalize_card({
             'name': card_data.get('name'),
             'type': card_data.get('type'),
             'rarity': card_data.get('rarity'),
-            'color': card_data.get('energyType'),
-            'artist': card_data.get('illustrator'),
-            'set_code': card_data.get('set'),
+            'color': card_data.get('color'),
+            'artist': card_data.get('artist'),
+            'set_code': card_data.get('set_code'),
             "source_id": card_data.get("source_id"),
             "image_url": card_data.get("image_url"),
             'source_tcg': CardGameType.POKEMON.value,
@@ -104,7 +107,7 @@ class SourceTCG(TCGAPI):
             'color': card_data.get('ink'),
             'artist': card_data.get('artist'),
             'set_code': card_data.get('set'),
-            "source_id": card_data.get("id"),
+            "source_id": card_data.get("source_id"),
             "image_url": card_data.get("image_url"),
             'source_tcg': CardGameType.LORCANA.value,
             'raw_data': card_data
@@ -113,18 +116,19 @@ class SourceTCG(TCGAPI):
     def _decode_digimon(self, card_data: dict) -> dict:
         return self._normalize_card({
             'name': card_data.get('name'),
-            'type': card_data.get('card_type'),
+            'type': card_data.get('type'),
             'rarity': card_data.get('rarity'),
-            'color': card_data.get('attribute'),
+            'color': card_data.get('colour'),
             'artist': card_data.get('creator'),
             'set_code': card_data.get('set_number'),
-            "source_id": card_data.get("id"),
+            "source_id": card_data.get("source_id"),
             "image_url": card_data.get("image_url"),
             'source_tcg': CardGameType.DIGIMON.value,
             'raw_data': card_data
         })
 
     def _decode_yugioh(self, card_data: dict) -> dict:
+        print("DECODINGGNIDOCED", card_data)
         return self._normalize_card({
             'name': card_data.get('name'),
             'type': card_data.get('type'),
@@ -132,7 +136,7 @@ class SourceTCG(TCGAPI):
             'color': card_data.get('color'),
             'artist': card_data.get('artist'),
             'set_code': card_data.get('set'),
-            "source_id": card_data.get("id"),
+            "source_id": card_data.get("source_id"),
             "image_url": card_data.get("image_url"),
             'source_tcg': CardGameType.YUGIOH.value,
             'raw_data': card_data
@@ -141,8 +145,10 @@ class SourceTCG(TCGAPI):
     def get_card_database(self, limit: Optional[int] = None, filters: Optional[dict] = None) -> List[dict]:
         rows = self.db_helper.fetch_all_cards(limit=limit)
         cards = [self._row_to_card_dict(row) for row in rows]
+        # print(limit, filters, "CARDS")
         if filters:
             cards = self._filter_by_criteria(cards, filters)
+#             print(cards)
         return cards
 
     @staticmethod
@@ -171,20 +177,21 @@ class SourceTCG(TCGAPI):
             return None
 
         Path(output_dir).mkdir(parents=True, exist_ok=True)
-        save_name = f"{card['source_id']}_{card['name'].replace(' ', '_')}.png"
+        save_name = f"{card['source_id']}_{card['name'].replace(' ', '_').replace('//', '--')}.png"
         file_path = Path(output_dir) / save_name
 
         response = requests.get(image_url, timeout=15)
         response.raise_for_status()
 
-        with open(sanitize_filename(str(file_path)), 'wb') as handler:
+        with open(str(file_path), 'wb') as handler:
             handler.write(response.content)
 
         return str(file_path)
 
-    def ingest_card(self, raw_card_data: dict, tcg_type: str, output_dir: str) -> dict:
+    def ingest_card(self, raw_card_data: dict, tcg_type: str|None, output_dir: str) -> dict:
+        # print(raw_card_data, "DECODDDED")
+
         card = self.decode_card(raw_card_data, tcg_type)
-        print(card, "DECODDDED")
         if self.card_exists(card['source_tcg'], card['source_id']):
             return card
 

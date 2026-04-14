@@ -232,7 +232,11 @@ TCG_PROFILE_DICT = {
         "question_type": QuestionType.DECISIONING,
         "default_response": "deckster",
         "response_type": ResponseType.DECISION,
-        "decision_choices": ["deckster", "depicter", "puzzler", "downloader", "blender"]
+        "decision_choices": ["deckster",
+                             "depicter",
+                             "puzzler",
+                             "downloader",
+                             "blender"]
     },
     "pokemon": {
         "": "pokemon_string",
@@ -240,7 +244,11 @@ TCG_PROFILE_DICT = {
         "question_type": QuestionType.DECISIONING,
         "default_response": "deckster",
         "response_type": ResponseType.DECISION,
-        "decision_choices": ["deckster", "depicter", "puzzler", "downloader", "blender"]
+        "decision_choices": ["deckster",
+                             "depicter",
+                             "puzzler",
+                             "downloader",
+                             "blender"]
     },
     "digimon": {
         "": "digimon_string",
@@ -248,7 +256,11 @@ TCG_PROFILE_DICT = {
         "question_type": QuestionType.DECISIONING,
         "default_response": "deckster",
         "response_type": ResponseType.DECISION,
-        "decision_choices": ["deckster", "depicter", "puzzler", "downloader", "blender"]
+        "decision_choices": ["deckster",
+                             "depicter",
+                             "puzzler",
+                             "downloader",
+                             "blender"]
     },
     "lorcana": {
         "": "lorcana_string",
@@ -287,7 +299,7 @@ LAB_PROFILE_DICT = {
     }
 }
 
-WORD_GAIMS = ["crossword", "word_search", "candy_slinger", "hangman", "boston_trail"]
+WORD_GAIMS = ["crossword", "word_search", "hangman"]
 
 
 class Profilizer(BasePrompt):
@@ -312,7 +324,7 @@ class Profilizer(BasePrompt):
                 self.decide_word_gaims_profile()
 
     def decide_user_profile(self):
-        self.decide_decision("Which user profile to make", list(USER_PROFILE_DICT.keys()))
+        self.decide_decision("What type of user profile", list(USER_PROFILE_DICT.keys()))
         self._set_deciding_function(self.prompt_user_profile)
 
     def decide_fotoworx_profile(self):

@@ -60,12 +60,13 @@ PROFILE_ROOT_BUILDERS = (
 
 PROFILE_LOCATIONS = {
     "lab": (
-        ("helpers", "promptaires", "tcg_lab", "lab_profiles"),
-        ("tcg_lab", "lab_profiles"),
+        ("helpers", "promptaires", "tcg_lab", "lab_presets"),
+        ("tcg_lab", "lab_presets"),
     ),
     "tcg": (
         ("helpers", "promptaires", "tcg_lab", "tcg_profiles"),
-        ("tcg_lab",),
+        ("tcg_lab", "tcg_presets"),
+
     ),
     "worx": (
         ("foto_worx", "worx_profiles"),
@@ -86,7 +87,7 @@ def _candidate_profile_paths(profile_group: str, profile_name: str) -> list[str]
             candidate_paths.append(root_builder(*relative_dir, file_name))
 
     fallback_dirs = {
-        "lab": (("helpers", "promptaires", "tcg_lab", "lab_profiles"),),
+        "lab": (("helpers", "promptaires", "tcg_lab", "lab_presets"),),
         "tcg": (("tcg_lab",),),
         "worx": (("helpers", "promptaires", "worx_hop", "worx_profiles"),),
     }
@@ -207,9 +208,9 @@ def set_masterpiece_size(image_size: str) -> tuple[int, int]:
     return size
 
 
-def polypointlist(sides: int, offset: int, cx: int, cy: int, radius: int) -> list:
+def polypointlist(sides: int, ophset: int, cx: int, cy: int, radius: int) -> list:
     step = 2 * math.pi / sides
-    offset = math.radians(offset)
+    offset = math.radians(ophset)
     pointlist = [(radius * math.cos(step * n + offset) + cx, radius * math.sin(step * n + offset) + cy) for n in
                  range(0, int(sides) + 1)]
     return pointlist
@@ -323,6 +324,18 @@ def string_to_morse(reg_str: str) -> str:
     for letter in reg_str:
         morse_str += a.MORSE_CODE_AXIOMS[letter.lower()]
     return morse_str
+
+
+def lsystem_string_maker(axioms: str, rules: dict, iterations: int) -> str:
+    for _ in range(iterations):
+        new_axioms = ''
+        for axiom in axioms:
+            if axiom in rules:
+                new_axioms += rules[axiom]
+            else:
+                new_axioms += axiom
+            axioms = new_axioms
+    return axioms
 
 
 def lsystem_morse_coder(lstring: str, start_point=(320, 320), start_length=32, start_width=1, start_color=t.ORANGE) -> list:

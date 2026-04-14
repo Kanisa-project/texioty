@@ -15,10 +15,17 @@ base_url = 'https://api.lorcana-api.com'
 
 LORCANA_TEMPLATES = {
     "all_cards": {
-        "number": [],
+        "source_id": [],
+        "source_tcg": [],
         "name": [],
-        "colour": [],
-        "type": []
+        "type": [],
+        "rarity": [],
+        "color": [],
+        "artist": [],
+        "set_code": [],
+        "image_url": [],
+        "local_image_path": [],
+        "raw_data": []
     },
     "character_cards": {
         "number": [],
@@ -68,10 +75,18 @@ class SourceLRCNA(SourceTCG):
         self.base_url = 'https://api.lorcana-api.com'
         self.tcg_title_name = 'lorcana'
         self._init_lorcana_database()
+        self.color_translation_dict = {
+            "Amber": "yellow",
+            "Amethyst": "purple",
+            "Emerald": "green",
+            "Ruby": "red",
+            "Sapphire": "blue",
+            "Steel": "gray",
+        }
 
     def _init_lorcana_database(self):
         try:
-            db_path = Path(__file__).resolve().parent / "cards" / "databases" / "lorcana_cards.db"
+            db_path = Path(__file__).resolve().parent / "databases" / "lorcana_cards.db"
             if not db_path.exists():
                 self.db_helper = DatabaseHelper(str(db_path))
                 self.db_helper.create_tables_from_templates(LORCANA_TEMPLATES)
@@ -126,8 +141,7 @@ class SourceLRCNA(SourceTCG):
                                       new_card['Inkable']])
 
     def add_action_local_database(self, new_card):
-        action_card_insert_query = insert_table_statement_maker('action_cards',
-                                                                [])
+        pass
 
     def add_item_local_database(self, new_card):
         pass
@@ -155,68 +169,37 @@ class SourceLRCNA(SourceTCG):
                 print(f"✓  Downloaded {save_name} into /fotoes/cardsLorcana")
 
 
-    # def download_card_batch(self, batch_config: dict):
-    #     # super().download_card_batch(batch_config)
-    #     random_color_types = requests.get(self.fetch_cards_url({'type': self.batch_type,
-    #                                                         'color': random.choice(self.batch_colors.split(','))}))
-    #     for i in range(batch_config['pack_size']):
-    #         card = random.choice(random_color_types.json())
-    #         # self.add_card_database(card)
-    #         if 'Character' in card['Type']:
-    #             # print(f"{card['Image']}    {card['Strength']}/{card['Willpower']}")
-    #             pass
-    #         else:
-    #             # print(f"{card['Name']} - {card['Rarity']}")
-    #             pass
-    #         if card['Image'] is not None:
-    #             self.add_card_local_database(card)
-    #             img_data = requests.get(f'{card['Image']}').content
-    #             save_name = f"{card['Set_Num']}_" + card['Name'].replace(" ", "_")
-    #             with open(f'cards/{save_name}.png',
-    #             # with open(f'helpers/promptaires/tcg_lab/cards/lorcana/{save_name}.png',
-    #                       'wb') as handler:
-    #                 handler.write(img_data)
-    #             print(f"✓  Downloaded {save_name} into /fotoes/cardsLorcana")
-    #
-
     def fetch_cards_url(self, query_dict: dict) -> str:
         use_url = self.base_url + "/cards/fetch?search="
         for key in list(query_dict.keys()):
             if key == 'name':
                 use_url += f"{key.lower()}~{query_dict[key].lower()};"
+            elif key == 'set':
+                use_url += f"set_id={query_dict[key]};"
             else:
                 use_url += f"{key.lower()}={query_dict[key].lower()};"
         print("fetching  " + use_url)
         return use_url
 
-    # def download_character(self):
-    #     random_jasmine = requests.get(self.fetch_cards_url({'name': 'jasmine'}))
-    #     for card in random_jasmine.json():
-    #         if 'Character' in card['Type']:
-    #             print(f"{card['Image']}    {card['Strength']}/{card['Willpower']}")
-    #         else:
-    #             print(f"{card['Name']} - {card['Rarity']}")
-    #         if card['Image'] is not None:
-    #             img_data = requests.get(f'{card['Image']}').content
-    #             save_name = f"{card['Set_Num']}_" + card['Name'].replace(" ", "_")
-    #             with open(f'/home/trevor/Documents/PycharmProjects/KanisaBot/fotoes/cardsLorcana/{save_name}.png',
-    #                       'wb') as handler:
-    #                 handler.write(img_data)
-    #             print(f"Downloaded {save_name}")
+    def get_card_batch(self, card_criteria: dict) -> List[dict]:
+        print("LORCriterisa", card_criteria)
+        if "Character" in card_criteria.get('type', ''):
+            return self.fetch_character_cards(card_criteria)
+        return []
 
-    def gather_correct_cards(self, card_criteria: dict):
-        search_criteria = {}
-        if 'name' in card_criteria:
-            search_criteria['name'] = card_criteria['name']
-        if 'color' in card_criteria:
-            search_criteria['color'] = card_criteria['color']
-        if 'type' in card_criteria:
-            search_criteria['type'] = card_criteria['type']
-        return requests.get(self.fetch_cards_url(search_criteria)).json()
+    def fetch_character_cards(self, card_criteria) -> list:
+        fetch_url = self.fetch_cards_url(card_criteria)
+        return requests.get(fetch_url).json()
 
-
-if __name__ == "__main__":
-    lrca = SourceLRCNA()
-    batch_profile = u.retrieve_tcg_profiles('lorcanas')["mickey_playmat_sleeves"]
-    card_batch = lrca.gather_correct_cards(batch_profile['card_criteria'])
-    lrca.download_card_batch(card_batch)
+    def card_to_dict(self, card: dict) -> dict:
+        return {
+            "source_tcg": "lorcana",
+            "source_id": card['Unique_ID'],
+            "name": card['Name'],
+            "set": card['Set_Name'],
+            "type": card['Type'],
+            "rarity": card['Rarity'],
+            "image_url": card['Image'],
+            "set_number": card['Set_Num'],
+            "number": card['Card_Num'],
+        }

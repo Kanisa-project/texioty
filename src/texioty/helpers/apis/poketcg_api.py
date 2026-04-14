@@ -128,20 +128,20 @@ def download_snorlaxes():
                 handler.write(img_data)
             print(f"Downloaded {save_name}")
 
-if __name__ == "__main__":
-    # download_energy_set()
-    download_snorlaxes()
-
-
-def run_depicter_from_script(depict_config_dict: dict):
-    depicter = PkmnDepicter(depict_config_dict)
-    sdk = TCGdex()
-    rando_card = random.choice(sdk.card.listSync(Query().equal('name', 'Snorlax')))
-    pkmn_card = sdk.card.getSync(rando_card.id)
-    card_datadict = depicter.build_card_datadict(pkmn_card)
-    depicted_card = depicter.depict_card(card_datadict)
-    depicted_card.save(f"depictions/{depicter.card_datadict['name']}.png")
-
-
-def run_puzzler_from_script(puzzle_config_dict: dict):
-    pass
+# if __name__ == "__main__":
+#     # download_energy_set()
+#     download_snorlaxes()
+#
+#
+# def run_depicter_from_script(depict_config_dict: dict):
+#     depicter = PkmnDepicter(depict_config_dict)
+#     sdk = TCGdex()
+#     rando_card = random.choice(sdk.card.listSync(Query().equal('name', 'Snorlax')))
+#     pkmn_card = sdk.card.getSync(rando_card.id)
+#     card_datadict = depicter.build_card_datadict(pkmn_card)
+#     depicted_card = depicter.depict_card(card_datadict)
+#     depicted_card.save(f"depictions/{depicter.card_datadict['name']}.png")
+#
+#
+# def run_puzzler_from_script(puzzle_config_dict: dict):
+#     pass

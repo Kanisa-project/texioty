@@ -63,22 +63,23 @@ class SourcePKM(SourceTCG):
         self.base_url = 'https://api.pokemontcg.io/v2/'
 
         self.color_translation_dict = {
-            'grass': 'green',
-            'fire': 'red',
-            'water': 'blue',
-            'lighting': 'yellow',
-            'psychic': 'purple',
-            'fighting': 'brown',
-            'darkness': 'dark grey',
-            'metal': 'light grey',
-            'colorless': 'white'
+            'Grass': 'green',
+            'Fire': 'red',
+            'Water': 'blue',
+            'Lighting': 'yellow',
+            'Psychic': 'purple',
+            'Fairy': 'pink',
+            'Fighting': 'brown',
+            'Darkness': 'dark grey',
+            'Metal': 'light grey',
+            'Colorless': 'white'
         }
         self.sdk = TCGdex()
         self._init_pkm_database()
 
     def _init_pkm_database(self):
         try:
-            db_path = Path(__file__).resolve().parent / "cards" / "databases" / "pokemon_cards.db"
+            db_path = Path(__file__).resolve().parent / "databases" / "pokemon_cards.db"
             if not db_path.exists():
                 self.db_helper = DatabaseHelper(str(db_path))
                 self.db_helper.create_tables_from_templates(POKEMON_TEMPLATES)
@@ -97,17 +98,17 @@ class SourcePKM(SourceTCG):
         else:
             return []
 
-    def add_card_to_database(self, new_card: Card) -> bool:
-        try:
-            if not self.db_helper:
-                print("Database not initialized")
-                return False
-            if not isinstance(new_card, dict):
-                new_card = pkmcard_to_dict(new_card)
-            return super().add_card_to_database(new_card)
-        except Exception as e:
-            print(f"Error adding card to database:--{e}")
-            return False
+    # def add_card_to_database(self, new_card: Card) -> bool:
+    #     try:
+    #         if not self.db_helper:
+    #             print("Database not initialized")
+    #             return False
+    #         if not isinstance(new_card, dict):
+    #             new_card = pkmcard_to_dict(new_card)
+    #         return super().add_card_to_database(new_card)
+    #     except Exception as e:
+    #         print(f"Error adding card to database:--{e}")
+    #         return False
 
     def add_card_local_database(self, new_card):
         all_card_insert_query = insert_table_statement_maker('all_cards', ['number', 'name', 'colour', 'type'])[0]
@@ -281,7 +282,7 @@ class SourcePKM(SourceTCG):
             'color': ', '.join(pkmcard.types) if isinstance(pkmcard.types, list) else pkmcard.types,
             'artist': pkmcard.illustrator,
             'set_code': pkmcard.set.id,
-            'image_url': pkmcard.image,
+            'image_url': pkmcard.image + "/high.png" if not pkmcard.image is None else "https://assets.tcgdex.net/en/neo/si1/8/high.png",
             'number': local_id
         }
 

@@ -25,7 +25,7 @@ class TCGAPI(BaseAPIHelper):
         Initializes the TCG API helper with specified API name and timeout.
         """
         super().__init__()
-        self.tcg_title_name = api_name
+        # self.tcg_title_name = api_name
         self.timeout = timeout
         self.base_url = 'https://api.psacard.com/publicapi/'
 
@@ -53,28 +53,9 @@ class TCGAPI(BaseAPIHelper):
             ]
         }
         self.color_translation_dict: Dict[str, str] = {}
-        try:
-            self.db_helper = dbHelper.DatabaseHelper(
-                'alldata_base.db'
-                # 'helpers/promptaires/tcg_lab/cards/databases/alldata_base.db'
-            )
-        except Exception as e_:
-            logger.error(f"Error initializing database: {e_}")
-            self.db_helper = None
+        self.db_helper: dbHelper.DatabaseHelper
 
     def endpoint_builder(self, endpoint_name: str, url_ending: str = '') -> str:
-        """
-        Constructs a full endpoint string by combining the base URL with the given endpoint name
-        and optional URL ending.
-
-        Args:
-            endpoint_name (str): The name of the endpoint to be appended to the base URL.
-            url_ending (str, optional): An additional string to be appended after the endpoint name.
-                Defaults to an empty string.
-
-        Returns:
-            str: The constructed full endpoint URL.
-        """
         if not endpoint_name:
             raise ValueError("Invalid endpoint name.")
 
@@ -83,15 +64,6 @@ class TCGAPI(BaseAPIHelper):
         return endpoint_url
 
     def query_builder(self, query_dict: dict) -> str:
-        """
-        Constructs a query string from a dictionary of key-value pairs.
-
-        Args:
-            query_dict (dict): A dictionary containing query parameters.
-
-        Returns:
-            str: The constructed query string.
-        """
         if not query_dict:
             return ''
         try:
@@ -102,50 +74,8 @@ class TCGAPI(BaseAPIHelper):
             logger.error(f"Error constructing query string: {er}")
             raise TCGAPIError(f"Error constructing query string: {er}")
 
-    def get_card_database(self, card_type: str = 'all', limit: Optional[str] = None) -> List[Dict]:
-        """
-        Retrieve cards from the local database.
-
-        Args:
-            card_type (str, optional): The type of cards to retrieve. Defaults to 'all'.
-            limit (int, optional): The maximum number of cards to retrieve. Defaults to None (no limit).
-
-        Returns:
-            List[Dict]: A list of card dictionaries.
-        """
-        if not self.db_helper:
-            logger.warning("Database not initialized. Returning empty list.")
-            return []
-
-        try:
-            query = "SELECT * FROM all_cards"
-            if card_type != 'all':
-                query += f" WHERE card_type = ?"
-                params = [card_type]
-            else:
-                params = []
-
-            if limit:
-                query += f" LIMIT ?"
-                params.append(limit)
-
-            results = self.db_helper.execute_query(query, params)
-            logger.info(f"Retrieved {len(results) if results else 0} cards from database.")
-            return results if results else []
-        except Exception as e_:
-            logger.error(f"Error retrieving cards from database: {e_}")
-            return []
 
     def add_card_to_database(self, new_card: Dict) -> bool:
-        """
-        Add a single card to the local database.
-
-        Args:
-            new_card (Dict): Card dictionary with keys: name, rarity, color, artist, type, set
-
-        Returns:
-            bool: True if the card was successfully added, False otherwise.
-        """
         if not self.db_helper:
             logger.warning("Database not initialized. Returning False.")
             return False
@@ -195,15 +125,6 @@ class TCGAPI(BaseAPIHelper):
             return False
 
     def fetch_card_by_id(self, card_id: str) -> Optional[Dict]:
-        """
-        Fetch a card from the local database by its ID.
-
-        Args:
-            card_id (int): The ID of the card to fetch.
-
-        Returns:
-            Optional[Dict]: The card dictionary if found, None otherwise.
-        """
         try:
             endpoint = self.endpoint_builder('cert', f'/GetByCertNumber')
             query_params = self.query_builder({'': card_id})

@@ -1,0 +1,15 @@
+{
+  "mickey": {
+    "card_criteria": {
+      "name": "Mickey",
+      "type": "Character"
+    }
+  },
+  "goofy": {
+    "card_criteria": {
+      "name": "Goofy",
+      "type": "Character",
+      "set": "TFC"
+    }
+  }
+}

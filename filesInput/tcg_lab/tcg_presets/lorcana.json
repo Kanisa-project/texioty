@@ -11,5 +11,11 @@
       "type": "Character",
       "set": "TFC"
     }
+  },
+  "moana": {
+    "card_criteria": {
+      "name": "Moana",
+      "type": "Character"
+    }
   }
 }

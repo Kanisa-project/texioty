@@ -9,8 +9,8 @@ TEXIOTY_COMMANDS: Dict[str, Dict[str, Any]] = {
         'lite_desc': 'Displays a welcoming message.',
         'full_desc': ['Displays a welcoming message with a few commands to get started.',
                       'Available at any point using the system.'],
-        'possible_args': {' - ': 'No arguments available.'},
-        'args_desc': {' - ': ['No arguments available.', None]},
+        'possible_args': {},
+        'args_desc': {},
         'examples': ['welcome'],
         'group_tag': 'HLPR',
         'font_color': u.rgb_to_hex(t.GREEN_YELLOW),
@@ -23,8 +23,8 @@ TEXIOTY_COMMANDS: Dict[str, Dict[str, Any]] = {
             'lite_desc': 'Displays available commands.',
             'full_desc': ['Displays all commands available to use in the active Texioty mode.',
                           'Available at any point using the system.'],
-            'possible_args': {' - ': 'No arguments available.'},
-            'args_desc': {' - ': 'No arguments available.'},
+            'possible_args': {},
+            'args_desc': {},
             'examples': ['commands'],
             'group_tag': 'HLPR',
             'font_color': u.rgb_to_hex(t.GREEN_YELLOW),
@@ -32,15 +32,14 @@ TEXIOTY_COMMANDS: Dict[str, Dict[str, Any]] = {
         },
         "help": {
             'name': 'help',
-            'usage': '"help (GROUP_TAG) (COMMAND_NAME)"',
+            'usage': '"help (GROUP_TAG/COMMAND_NAME)"',
             'call_func': None,
             'lite_desc': 'Displays a helpful message.',
             'full_desc': ['Displays some helpful tips and info based on the active Texioty mode.',
                           'Available at any point using the system.'],
-            'possible_args': {'(GROUP_TAG)': 'self.txo.master.active_helpers',
-                              '(COMMAND_NAME)': 'list(self.txo.master.command_registry.commands.keys())'},
-            'args_desc': {' - ': ['No argument needed.', None],
-                          '(GROUP_TAG)': ['Group tag for getting help with.', str],
+            'possible_args': {'(GROUP_TAG)': None,
+                              '(COMMAND_NAME)': None},
+            'args_desc': {'(GROUP_TAG)': ['Group tag for getting help with.', str],
                           '(COMMAND_NAME)': ['Name of the command to get help with.', str]},
             'examples': ['help help', 'help', 'help HLPR', 'help commands'],
             'group_tag': 'HLPR',
@@ -57,8 +56,8 @@ DIRY_COMMANDS: Dict[str, Dict[str, Any]] = {
         "lite_desc": "Starts a diary entry.",
         "full_desc": ["Starts a diary entry.",
                       "Can only be used in Texioty mode."],
-        "possible_args": {' - ': 'No arguments available.'},
-        "args_desc": {' - ': 'No arguments available.'},
+        "possible_args": {},
+        "args_desc": {},
         'examples': ['dear_sys,'],
         "group_tag": "DIRY",
         "font_color": u.rgb_to_hex(t.VIOLET_RED),
@@ -71,8 +70,8 @@ DIRY_COMMANDS: Dict[str, Dict[str, Any]] = {
         "lite_desc": "Ends a diary entry.",
         "full_desc": ["Ends a diary entry.",
                       "Can only be used inside of Digiary mode."],
-        "possible_args": {' - ': 'No arguments available.'},
-        "args_desc": {' - ': 'No arguments available.'},
+        "possible_args": {},
+        "args_desc": {},
         'examples': ['/until_next_time'],
         "group_tag": "DIRY",
         "font_color": u.rgb_to_hex(t.VIOLET_RED),
@@ -85,8 +84,8 @@ DIRY_COMMANDS: Dict[str, Dict[str, Any]] = {
         "lite_desc": "Select a date to read through.",
         "full_desc": ["Select a date to read through.",
                       "Can only be used in Texioty mode."],
-        "possible_args": {' - ': 'No arguments available.'},
-        "args_desc": {' - ': 'No arguments available.'},
+        "possible_args": {},
+        "args_desc": {},
         'examples': ['redear'],
         "group_tag": "DIRY",
         "font_color": u.rgb_to_hex(t.VIOLET_RED),
@@ -102,8 +101,8 @@ PROMPT_COMMANDS: Dict[str, Dict[str, Any]] = {
         "lite_desc": "Enter the TCG lab.",
         "full_desc": ["Entering the TCG lab allows a person to make card game stuff.",
                       "Randomized decks, abstract art and word games from cards."],
-        "possible_args": {' - ': 'No arguments available.'},
-        "args_desc": {' - ': ['No arguments available.', None]},
+        "possible_args": {},
+        "args_desc": {},
         "examples": ['tcg_lab'],
         "group_tag": "PRUN",
         "font_color": u.rgb_to_hex(t.KHAKI),
@@ -115,8 +114,8 @@ PROMPT_COMMANDS: Dict[str, Dict[str, Any]] = {
         "call_func": None,
         "lite_desc": "Work in the foto hop.",
         "full_desc": ["Designed after restaurant equipment, it manipulates fotoes.",],
-        "possible_args": {' - ': 'No arguments available.'},
-        "args_desc": {' - ': ['No arguments available.', None]},
+        "possible_args": {},
+        "args_desc": {},
         "examples": ['foto_worx'],
         "group_tag": "PRUN",
         "font_color": u.rgb_to_hex(t.KHAKI),
@@ -128,8 +127,8 @@ PROMPT_COMMANDS: Dict[str, Dict[str, Any]] = {
         "call_func": None,
         "lite_desc": "Make some type of profile.",
         "full_desc": ["Make some type of profile.",],
-        "possible_args": {' - ': 'No arguments available.'},
-        "args_desc": {' - ': ['No arguments available.', None]},
+        "possible_args": {},
+        "args_desc": {},
         "examples": ['profile_make'],
         "group_tag": "PRUN",
         "font_color": u.rgb_to_hex(t.KHAKI),
@@ -409,10 +408,14 @@ BATTLESHIP_COMMANDS: Dict[str, Dict[str, Any]] = {
 }
 
 def bind_commands(command_dict: Dict[str, Dict[str, Any]],
-                  method_map: Dict[str, Callable]) -> Dict[str, Dict[str, Any]]:
+                  binding_map: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     for command_name, command_info in command_dict.items():
-        if command_name in method_map:
-            command_info['call_func'] = method_map[command_name]
+        if command_name in binding_map:
+            if isinstance(binding_map[command_name], dict):
+                for key, value in binding_map[command_name].items():
+                    command_info[key] = value
+            else:
+                command_info['call_func'] = binding_map[command_name]
     return command_dict
 
 def merge_command_groups(*command_dicts: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:

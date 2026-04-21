@@ -27,15 +27,15 @@ class BaseAPIHelper:
         self.previous_endpoint = f'{self.base_url}{endpoint_name}{url_ending}'
         return self.previous_endpoint
 
-if __name__ == "__main__":
-    based_helper = BaseAPIHelper()
-    rand_endpoint = random.choice(list(based_helper.endpoint_names.keys()))
-    # rand_endpoint = 'Animal'
-    print(rand_endpoint)
-    if rand_endpoint == 'Animal':
-        animal = input('Enter animal name: ')
-        endpoint = based_helper.endpoint_builder(random.choice(based_helper.endpoint_names[rand_endpoint]), f'?name={animal}')
-    else:
-        endpoint = based_helper.endpoint_builder(random.choice(based_helper.endpoint_names[rand_endpoint]), '')
-    print(endpoint)
-    print(requests.get(endpoint, headers=based_helper.headers).json()[0][rand_endpoint.lower()])
+# if __name__ == "__main__":
+#     based_helper = BaseAPIHelper()
+#     rand_endpoint = random.choice(list(based_helper.endpoint_names.keys()))
+#     # rand_endpoint = 'Animal'
+#     print(rand_endpoint)
+#     if rand_endpoint == 'Animal':
+#         animal = input('Enter animal name: ')
+#         endpoint = based_helper.endpoint_builder(random.choice(based_helper.endpoint_names[rand_endpoint]), f'?name={animal}')
+#     else:
+#         endpoint = based_helper.endpoint_builder(random.choice(based_helper.endpoint_names[rand_endpoint]), '')
+#     print(endpoint)
+#     print(requests.get(endpoint, headers=based_helper.headers).json()[0][rand_endpoint.lower()])

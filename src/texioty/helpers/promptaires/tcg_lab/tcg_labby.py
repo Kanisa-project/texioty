@@ -94,7 +94,7 @@ class TCGLabby(BasePrompt):
                 self.decide_decision("Which card games to blend together", TCG_OPTIONS, 'tc_blender')
                 self.txo.master.deciding_function = self.tc_blender_690
             case 'Card-0wn1oad3r':
-                self.decide_decision("What game to downloaded cards from", TCG_OPTIONS, '0wn1oad3r')
+                self.decide_decision("What game to download cards from", TCG_OPTIONS, '0wn1oad3r')
                 self.txo.master.deciding_function = self.card_0wn1oad3r
             case 'RanDexter-2110':
                 self.decide_decision("Which card game to generate a deck for", TCG_OPTIONS, 'deckster')

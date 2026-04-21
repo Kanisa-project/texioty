@@ -100,11 +100,12 @@ class SourceTCG(TCGAPI):
         })
 
     def _decode_lorcana(self, card_data: dict) -> dict:
+        print(card_data, "DECODINGGNIDOCEDlorcanan")
         return self._normalize_card({
             'name': card_data.get('name'),
             'type': card_data.get('type'),
             'rarity': card_data.get('rarity'),
-            'color': card_data.get('ink'),
+            'color': card_data.get('color'),
             'artist': card_data.get('artist'),
             'set_code': card_data.get('set'),
             "source_id": card_data.get("source_id"),
@@ -118,7 +119,7 @@ class SourceTCG(TCGAPI):
             'name': card_data.get('name'),
             'type': card_data.get('type'),
             'rarity': card_data.get('rarity'),
-            'color': card_data.get('colour'),
+            'color': card_data.get('color'),
             'artist': card_data.get('creator'),
             'set_code': card_data.get('set_number'),
             "source_id": card_data.get("source_id"),
@@ -173,6 +174,7 @@ class SourceTCG(TCGAPI):
     @staticmethod
     def download_card_image(card: dict, output_dir: str) -> str | None:
         image_url = card.get("image_url")
+        print("imgURL", image_url, card)
         if not image_url:
             return None
 

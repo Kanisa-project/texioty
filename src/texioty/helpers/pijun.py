@@ -59,14 +59,30 @@ class Pijun(TexiotyHelper):
         self._heartbeat_thread.start()
 
         self.helper_commands = bind_commands(PIJUN_COMMANDS, {
-            "send": self.send_message,
-            "deliver": self.send_game_data,
-            "enter": self.enter_coop,
-            "leave": self.leave_coop,
+            "send": {
+                'call_func': self.send_message,
+                'possible_args': {},
+                'args_desc': {}
+            },
+            "deliver": {
+                'call_func': self.send_game_data,
+                'possible_args': {},
+                'args_desc': {}
+            },
+            "enter": {
+                'call_func': self.enter_coop,
+                'possible_args': {},
+                'args_desc': {}
+            },
+            "leave": {
+                'call_func': self.leave_coop,
+                'possible_args': {},
+                'args_desc': {}
+            },
         })
 
-    def display_help_message(self, group_tag: Optional[str] = None):
-        super().display_help_message(group_tag)
+    # def display_help_message(self, group_tag: Optional[str] = None):
+    #     super().display_help_message(group_tag)
 
     def _make_request_id(self, prefix: str) -> str:
         return f"{prefix}-{self.pijun_id}-{int(time.time() * 1000)}"

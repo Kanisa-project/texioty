@@ -89,9 +89,17 @@ HANGMAN_TEXTMAN_LIST = ["  ╔╤╤═══╕   \n"
 class HangmanRunner(BaseGaim):
     def __init__(self, txo, txi):
         super().__init__(txo, txi, "Hangman")
-        self.helper_commands = bind_commands(HANGMAN_COMMANDS, {
-            'guess': self.guess_letter,
-            'solve': self.guess_phrase,
+        self.gaim_commands = bind_commands(HANGMAN_COMMANDS, {
+            'guess': {
+                'call_func':self.guess_letter,
+                'possible_args': {'[LETTER]': 'Letter to guess.'},
+                'args_desc': {'[LETTER]': 'Required and not case sensitive.'},
+            },
+            'solve': {
+                'call_func': self.guess_phrase,
+                'possible_args': {'[PHRASE]': 'Phrase to guess.'},
+                'args_desc': {'[PHRASE]': 'Required and not case sensitive.'},
+            },
         })
         self.gaim_phrase = random.choice(PHRASE_LIST)
         print(self.gaim_phrase)
@@ -143,7 +151,7 @@ class HangmanRunner(BaseGaim):
             self.hidden_dict[c] = hide_it
 
     def welcome_message(self, welcoming_msgs=None):
-        super().welcome_message([])
+        # super().welcome_message([])
         self.txo.priont_string("")
         self.txo.priont_string("Hangman is where you guess a single letter at a time, in an attempt to solve a hidden phrase.")
         self.txo.priont_string("Every wrongly guessed letter will add another body part to the man being hanged.")
@@ -208,8 +216,8 @@ class HangmanRunner(BaseGaim):
                 if self.hidden_dict[lower * (i + 1)] == "◙":
                     self.hidden_dict[lower * (i + 1)] = lower
 
-    def display_help_message(self, group_tag: Optional[str] = None):
-        super().display_help_message(group_tag)
+    # def display_help_message(self, group_tag: Optional[str] = None):
+    #     super().display_help_message(group_tag)
         # self.txo.priont_string("Using the 'guess' command will allow you to guess a single letter at a time.")
 
     def stop_game(self):

@@ -192,12 +192,15 @@ class SourceLRCNA(SourceTCG):
         return requests.get(fetch_url).json()
 
     def card_to_dict(self, card: dict) -> dict:
+        print(card, "DECODODOlorcononono")
         return {
             "source_tcg": "lorcana",
             "source_id": card['Unique_ID'],
             "name": card['Name'],
             "set": card['Set_Name'],
             "type": card['Type'],
+            "artist": card['Artist'],
+            "color": card['Color'],
             "rarity": card['Rarity'],
             "image_url": card['Image'],
             "set_number": card['Set_Num'],

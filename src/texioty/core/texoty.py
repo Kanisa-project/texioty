@@ -98,13 +98,13 @@ class TEXOTY(Text):
         return lines
 
     @staticmethod
-    def _fit_header_text(text: str, width: int) -> str:
+    def _fit_header_text(text: str|bool, width: int) -> str:
         text = str(text or "")
         if width <= 0:
             return ""
-        if len(text) >= width:
+        if len(str(text)) >= width:
             return text[:width]
-        return text + (" " * (width - len(text)))
+        return text + (" " * (width - len(str(text))))
 
     @staticmethod
     def _build_header_fill(width: int, charset: str, patterned: bool = True):
@@ -125,13 +125,13 @@ class TEXOTY(Text):
                 fill += random.choice(charset)
         return fill
 
-    def _compose_header_top_line(self, title: str, username: str, right_status: str, top_charset: str) -> str:
+    def _compose_header_top_line(self, title: str|bool, username: str|bool, right_status: str|bool, top_charset: str|bool) -> str:
         width = self.texoty_w
         title = str(title or "")
         username = str(username or "")
         right_status = str(right_status or "")
 
-        right_parts = [part for part in [right_status, username] if part]
+        right_parts = [str(part) for part in [right_status, username] if part]
         right_text = " | ".join(right_parts)
 
         if right_text:
@@ -150,7 +150,7 @@ class TEXOTY(Text):
     def _compose_loading_line(self):
         pass
 
-    def _compose_header_bottom_line(self, bottom_status: str, bottom_charset: str) -> str:
+    def _compose_header_bottom_line(self, bottom_status: str|bool, bottom_charset: str|bool) -> str:
         inner_width = max(self.texoty_w - 2, 0)
         bottom_status = str(bottom_status or "")
 
@@ -159,10 +159,10 @@ class TEXOTY(Text):
             if len(label) > inner_width:
                 label = label[:inner_width]
             fill_width = max(inner_width - len(label), 0)
-            filler = self._build_header_fill(fill_width, bottom_charset, patterned=False)
+            filler = self._build_header_fill(fill_width, str(bottom_charset), patterned=False)
             return f"╙{label}{filler}╛"
 
-        filler = self._build_header_fill(inner_width, bottom_charset, patterned=False)
+        filler = self._build_header_fill(inner_width, str(bottom_charset), patterned=False)
         return f"╙{filler}╛"
 
     def set_header(self, msg=None, right_status=None, bottom_status=None, show_username=None):
@@ -296,20 +296,20 @@ class TEXOTY(Text):
         :return:
         """
         self.priont_command_colorized(f'\n{command.name} ► {command.lite_desc}', command.font_color, command.back_color)
-        # self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
         self.yview(END)
 
     def priont_command_midd(self, command: texity.Command):
         """
         Display a command with its lite description and some extra info.
         """
-        self.priont_command_colorized(f'\n{command.name}╕', command.font_color, command.back_color)
-        help_message_text = f'{" "*len(command.name)}╘► {command.lite_desc}'
+        self.priont_command_colorized(f'\n{command.name}╕\n', command.font_color, command.back_color)
+        help_message_text = f'{" "*len(command.name)}╘► {command.lite_desc}\n'
         self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
         self.priont_full_command_desc(command.full_desc)
-        rando_examp = random.choice(command.examples)
         self.priont_string('\nClickable examples ➤  ')
+        rando_examp = random.choice(command.examples)
         self.priont_click_command(rando_examp, rando_examp)
+        self.priont_break_line()
         self.yview(END)
 
     def priont_command_full(self, command: texity.Command):
@@ -318,21 +318,37 @@ class TEXOTY(Text):
         :param command:
         :return:
         """
-        self.priont_command_colorized(f'{command.name}╕', command.font_color, command.back_color)
-        help_message_text = f'{" " * len(command.name)}└► {command.lite_desc}'
-        self.priont_command_colorized(help_message_text, command.font_color, command.back_color)
-        usage_message_text = f'\nHow to use─►  {command.usage}\n'
-        self.priont_colorized_string(usage_message_text, command.back_color, command.font_color)
+        print(command, "COMMA")
         self.priont_string('')
-        self.priont_dict(command.args_desc)
-        self.priont_string('')
-        self.priont_dict(command.possible_args)
+        self.priont_command_lite(command)
+        self.priont_string('\n')
+        self.priont_full_command_desc(command.full_desc)
+        self.priont_string('\nUsage: ' + command.usage)
+        for poss_arg in command.possible_args:
+            self.priont_string('')
+            self.priont_possible_argument_description(poss_arg, command.possible_args[poss_arg])
+        # self.priont_dict(command.possible_args)
+        # self.priont_dict(command.args_desc)
 
-        self.priont_string('')
-        rando_examp = random.choice(command.examples)
-        self.priont_click_command(rando_examp, rando_examp)
+        # for examp in command.examples:
+        #     self.priont_click_command(examp, examp)
         self.priont_break_line()
         self.yview(END)
+
+    def priont_possible_argument_description(self, arg_name: str, arg_desc):
+        """
+        Display a possible argument with its description.
+        :param arg_name:
+        :param arg_desc:
+        :return:
+        """
+        self.priont_string(f"{arg_name}╗")
+        if isinstance(arg_desc, dict):
+            self.priont_list(list(arg_desc.keys()), parent_key=arg_name)
+        elif isinstance(arg_desc, list):
+            self.priont_list(arg_desc, parent_key=arg_name)
+        else:
+            self.priont_string(f"   {arg_desc}\n")
 
     def priont_break_line(self):
         """
@@ -392,7 +408,7 @@ class TEXOTY(Text):
         if tag_name not in self._tag_cache:
             try:
                 self.tag_configure(tag_name, foreground=text_color, background=back_color)
-            except Exception:
+            except Exception as e:
                 self.tag_configure(tag_name, foreground=str(text_color), background=str(back_color))
             self._tag_cache.add(tag_name)
         insert_at = "end-1c" if start_pos == END else start_pos
@@ -453,8 +469,9 @@ class TEXOTY(Text):
         self.priont_string(f'{leading_spaces}└{flioat}')
 
     def priont_full_command_desc(self, desc_list: list):
-        for item in desc_list:
-            self.priont_string(f' -{item}')
+        desc_title = 'Description list'
+        self.priont_string(desc_title+'┓')
+        self.priont_list(desc_list, parent_key=desc_title)
 
     def priont_list(self, items: list, parent_key=None, numbered=False):
         """

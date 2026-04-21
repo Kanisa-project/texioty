@@ -118,6 +118,26 @@ class SourceDGM(SourceTCG):
         options = requests.get(fetch_url)
         return options.json()
 
+    @staticmethod
+    def download_card_image(card: dict, output_dir: str) -> str | None:
+        image_url = f"https://images.digimoncard.io/images/cards/{card.get("source_id")}.jpg"
+        print("imgURL", image_url, card)
+        if not image_url:
+            return None
+
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        save_name = f"{card['source_id']}_{card['name'].replace(' ', '_').replace('//', '--')}.png"
+        file_path = Path(output_dir) / save_name
+
+        response = requests.get(image_url, timeout=15)
+        response.raise_for_status()
+
+        with open(str(file_path), 'wb') as handler:
+            handler.write(response.content)
+
+        return str(file_path)
+
+
     def query_builder(self, query_dict: dict) -> str:
         use_url = base_url + "search?"
         for key, value in query_dict.items():
@@ -150,7 +170,7 @@ class SourceDGM(SourceTCG):
             "color": card['color'],
             "artist": card['artist'],
             "set_code": card['set_name'],
-            "pretty_url": card['pretty_url'],
+            "image_url": card['pretty_url'],
         }
 
     def add_digiegg_local_database(self, new_card):

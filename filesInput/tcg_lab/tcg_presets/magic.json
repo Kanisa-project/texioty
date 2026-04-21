@@ -7,7 +7,7 @@
     }
   },
   "explore": {
-    "card_criteria": {
+    "card_specific": {
       "name": "Explore",
       "type": "Sorcery",
       "Rarity": "Common"
@@ -18,6 +18,12 @@
       "type": "Enchantment",
       "colors": "R",
       "rarity": "Uncommon"
+    }
+  },
+  "5_pack_ZEN": {
+    "card_pack": {
+      "pack_size": 5,
+      "pack_set": "ZEN"
     }
   }
 }

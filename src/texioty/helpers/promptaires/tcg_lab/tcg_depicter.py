@@ -24,7 +24,7 @@ class TcgDepicter:
                 ]
             case "blue":
                 return [
-                    t.ARC_BLUE, t.LIGHT_BLUE, t.SKY_BLUE, t.LIGHT_SKY_BLUE, t.LIGHT_CYAN,
+                    t.ARC_BLUE, t.LOOPRING_BLUE, t.SKY_BLUE, t.CADET_BLUE, t.CONTINENTAL_BLUE,
                     t.ROYAL_BLUE, t.BLUE, t.MEDIUM_BLUE, t.DARK_BLUE, t.NAVY_BLUE
                 ]
             case "green":
@@ -34,8 +34,8 @@ class TcgDepicter:
                 ]
             case "yellow":
                 return [
-                    t.ARC_YELLOW, t.LIGHT_YELLOW, t.YELLOW, t.LIGHT_YELLOW, t.GOLDENROD,
-                    t.DARK_GOLDENROD, t.OLIVE, t.YELLOW_GREEN, t.LIGHT_GOLDENROD_YELLOW, t.ZENYTE_YELLOW
+                    t.ARC_YELLOW, t.MUSTARD_YELLOW, t.YELLOW, t.LIGHT_GOLDENROD, t.GOLDENROD,
+                    t.DARK_GOLDENROD, t.OLIVE, t.YELLOW_GREEN, t.MEDIUM_GOLDENROD, t.ZENYTE_YELLOW
                 ]
             case "white":
                 return [
@@ -56,6 +56,11 @@ class TcgDepicter:
                 return [
                     t.PINK, t.MISTY_ROSE, t.FLESH, t.LIGHT_CORAL, t.LIGHT_PINK,
                     t.NEON_PINK, t.HOT_PINK, t.SPICY_PINK, t.DEEP_PINK, t.LIGHT_RED
+                ]
+            case "brown":
+                return [
+                    t.BROWN, t.SANDY_BROWN, t.DARK_BROWN, t.SEMI_SWEET_CHOCOLATE, t.BURLYWOOD,
+                    t.SIENNA, t.ROSY_BROWN, t.SADDLE_BROWN, t.PERU, t.CHOCOLATE
                 ]
             case _:
                 return t.RANDOM_COLORS
@@ -84,7 +89,8 @@ class TcgDepicter:
         pointlist_dict = {"name_points": name_points,
                           "type_points": type_points,
                           "id_points": id_points,
-                          "rarity_points": rarity_points}
+                          "rarity_points": rarity_points
+                        }
         img = self.draw_depiction(img, pointlist_dict)
         self.save_depiction(img, card_source_id)
 
@@ -98,14 +104,13 @@ class TcgDepicter:
     def draw_depiction(self, img: Image.Image, card_pointlists: dict) -> Image.Image:
         draw = ImageDraw.Draw(img)
         color_list = self.create_color_palette(self.card_datadict['color'])
-        print(card_pointlists['type_points'], "TYPEPOOINT")
+        # print(card_pointlists['type_points'], "TYPEPOOINT")
         for n_point in card_pointlists["name_points"]:
             draw.line([(n_point[0][0], n_point[0][1]),
                        (n_point[0][2], n_point[0][3])],
                       fill=tuple(random.choice(color_list)))
         for t_point in card_pointlists['type_points']:
-            # print(t_point, "TPOIN")
-            for tn_point in u.polypointlist(3, 30,
+            for tn_point in u.polypointlist(len(self.card_datadict['type']), 30,
                                           t_point[0], t_point[1], 69):
                 draw.line((tn_point, (t_point[0], t_point[1])), fill=random.choice(color_list), width=2)
         for i_point in card_pointlists["id_points"]:
@@ -116,8 +121,11 @@ class TcgDepicter:
                        (i_point[0][2], img.size[1])],
                       fill=tuple(random.choice(color_list)))
         for r_point in card_pointlists["rarity_points"]:
-            draw.line([(r_point[0][0], r_point[0][1]),
-                       (r_point[0][2], r_point[0][3])],
+            draw.line([(0, r_point[0][1]),
+                       (r_point[0][1], 0)],
+                      fill=tuple(random.choice(color_list)))
+            draw.line([(r_point[0][2], 0),
+                       (0, r_point[0][2])],
                       fill=tuple(random.choice(color_list)))
         return img
 
@@ -140,7 +148,7 @@ class TcgDepicter:
     def pointify_type(self) -> list:
         type_name_len = len(self.card_datadict['type'])
         image_size = self.depiction_preset.get('image_size', (365, 365))
-        card_type_pointlist = u.polypointlist(type_name_len, 30, 0, image_size[1] // 2, 69)
+        card_type_pointlist = u.polypointlist(type_name_len, 0, image_size[0] // 2, image_size[1] // 2, 69)
         return card_type_pointlist
 
     def pointify_rarity(self) -> list:

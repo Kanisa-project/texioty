@@ -5,7 +5,7 @@ from src.texioty.helpers.tex_helper import TexiotyHelper
 from src.texioty.helpers.gaims.hangman import HangmanRunner
 from src.texioty.helpers.gaims.casino import CasinoRunner
 from src.texioty.helpers.gaims.candy_slinger import CandySlingerRunner
-from src.texioty.helpers.gaims.boston_trail import BostonTrail
+from src.texioty.helpers.gaims.boston_trail import BostonTrailRunner
 from src.texioty.helpers.gaims.battleship import BattleshipRunner
 
 
@@ -18,7 +18,7 @@ class GaimRegistry(TexiotyHelper):
         self.available_games = {"hangman": HangmanRunner,
                                 "casino": CasinoRunner,
                                 "slinger": CandySlingerRunner,
-                                "trailin": BostonTrail,
+                                "trailin": BostonTrailRunner,
                                 "battleship": BattleshipRunner}
         self.helper_commands["start"] = {
                 "name": "start",

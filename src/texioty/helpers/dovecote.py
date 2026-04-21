@@ -159,8 +159,8 @@ class Dovecot(TexiotyHelper):
             "message": self.post_to_board
         })
 
-    def display_help_message(self, group_tag: Optional[str] = None):
-        super().display_help_message(group_tag)
+    # def display_help_message(self, group_tag: Optional[str] = None):
+    #     super().display_help_message(group_tag)
 
     def _create_socket(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

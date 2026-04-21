@@ -12,12 +12,12 @@ class CommandRegistry:
     """
     commands: Dict[str, texity.Command]
 
-    def remove_commands(self, help_symb: str):
+    def remove_commands(self, help_symbol: str):
         """
         Remove a command from the registry.
         """
-        if help_symb in self.commands:
-            del self.commands[help_symb]
+        if help_symbol in self.commands:
+            del self.commands[help_symbol]
             return
 
         to_delete = [name for name, cmd in self.commands.items() if getattr(cmd, "group_tag", None) == help_symb]
@@ -66,5 +66,4 @@ class CommandRegistry:
             print(f"Error executing '{name}': {e}", exec_args)
 
     def register_command(self, cmd_name, cmd_config):
-        # print(cmd_config)
         self.commands[cmd_name] = texity.Command(**cmd_config)

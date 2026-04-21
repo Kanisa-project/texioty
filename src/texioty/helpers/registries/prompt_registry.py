@@ -41,9 +41,6 @@ class PromptRegistry(TexiotyHelper):
         self.arc_api = ArcApi(txo, txi)
         all_prompt_commands = merge_command_groups(PROMPT_COMMANDS, DIRY_COMMANDS, TEXIOTY_COMMANDS)
         self.helper_commands = bind_commands(all_prompt_commands,{
-            'welcome': self.welcome_message,
-            'help': self.display_help_message,
-            'commands': self.display_all_available_commands,
             'tcg_lab': self.decide_tcg_lab,
             'foto_worx': self.start_worxhop_prompt,
             'profile_make': self.start_profiler_prompt

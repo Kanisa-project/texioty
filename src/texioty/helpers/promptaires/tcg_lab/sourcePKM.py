@@ -126,7 +126,7 @@ class SourcePKM(SourceTCG):
     def add_pokemon_local_database(self, new_card):
         tamer_card_insert_query = insert_table_statement_maker('pokemon_cards', ['number', 'hp', 'abilities', 'lvl', 'name', 'colour', 'rarity', 'stage', 'retreat_cost', 'attacks'])[0]
         new_card = self.sdk.card.getSync(new_card.id)
-        print(new_card)
+        # print(new_card)
         self.db_helper.execute_query(tamer_card_insert_query,
                                      [new_card.id,
                                       new_card.hp,
@@ -147,7 +147,7 @@ class SourcePKM(SourceTCG):
         """
         energy_card_insert_query = insert_table_statement_maker('energy_cards', ['number', 'name', 'colour', 'rarity', 'special_effect'])[0]
         new_card = self.sdk.card.getSync(new_card.id)
-        print(new_card)
+        # print(new_card)
         self.db_helper.execute_query(energy_card_insert_query,
                                      [new_card.id,
                                              new_card.name,

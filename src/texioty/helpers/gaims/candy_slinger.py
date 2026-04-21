@@ -5,7 +5,7 @@ import random
 INSTRUCTIONS = {'objective': 'Main point of this game is to buy candy cheap and sell it expensive.',
                      'controls': 'You\'ll have an inventory to manage, along with money.',
                      'scoring': 'Different locations have different candies available at different prices.'}
-BUY_WIDTH = 25
+# BUY_WIDTH = 25
 # PLAYER_CHOICES = ["move", "buy", "sell", "save"]
 # USER_CHOICES = ["new game", "load game", "settings", "exit"]
 LOCATIONS = {
@@ -91,7 +91,7 @@ class CandySlingerRunner(BaseGaim):
     def new_game(self):
         super().new_game()
         self.welcome_message([])
-        self.display_player_invo()
+        self.display_player_inventory()
 
 
     def load_game(self):
@@ -102,7 +102,7 @@ class CandySlingerRunner(BaseGaim):
         self.player.location = self.game_state['location']
         self.world = World(self.player)
         self.welcome_message([])
-        self.display_player_invo()
+        self.display_player_inventory()
 
     def save_game(self):
         self.game_state = {
@@ -116,7 +116,7 @@ class CandySlingerRunner(BaseGaim):
     def move_location(self, new_location: str):
         self.world.update_new_location(new_location)
         self.welcome_message([])
-        self.display_player_invo()
+        self.display_player_inventory()
 
     def buy_candy(self, amount: int, candy: str):
         if self.world.buying_prices[candy][1] < int(amount):
@@ -127,7 +127,7 @@ class CandySlingerRunner(BaseGaim):
                               candy_price_ea=self.world.buying_prices[candy][0]):
             self.world.buying_prices[candy][1] -= int(amount)
         self.welcome_message([])
-        self.display_player_invo()
+        self.display_player_inventory()
 
     def sell_candy(self, amount: int, candy: str):
         if self.player.inventory[candy]["inventory"] < int(amount):
@@ -138,43 +138,44 @@ class CandySlingerRunner(BaseGaim):
                                candy_price_ea=self.world.selling_prices[candy][0]):
             self.world.buying_prices[candy][1] += int(amount)
         self.welcome_message([])
-        self.display_player_invo()
+        self.display_player_inventory()
 
-    def display_player_invo(self):
-        invo_cash_line = f" Inventory: ────────────────────── ${self.player.money} "
-        self.txo.priont_string(f"╔{invo_cash_line}╗")
-        self.txo.priont_string(f"║{' '*len(invo_cash_line)}║")
+    def display_player_inventory(self):
+        inventory_cash_line = f" Inventory: ────────────────────── ${self.player.money} "
+        self.txo.priont_string(f"╔{inventory_cash_line}╗")
+        self.txo.priont_string(f"║{' '*len(inventory_cash_line)}║")
         for candy in list(self.player.inventory.keys()):
             selling_price = self.world.selling_prices[candy][0]
             sell_avail = f"{self.player.inventory[candy]['inventory']}x"
             sell_price = f"${selling_price}"
-            candy_line = f"{sell_avail} {candy.title()} {'┄'*(len(invo_cash_line)-len(candy)-len(sell_price)-len(sell_avail)-3)} {sell_price}"
-            self.txo.priont_string(f"║{candy_line}{' '*(len(invo_cash_line)-len(candy_line))}║")
-        self.txo.priont_string(f"╚{'═'*(len(invo_cash_line))}╝\n\n")
-        self.display_loca(len(invo_cash_line))
+            candy_line = f"{sell_avail} {candy.title()} {'┄'*(len(inventory_cash_line)-len(candy)-len(sell_price)-len(sell_avail)-3)} {sell_price}"
+            self.txo.priont_string(f"║{candy_line}{' '*(len(inventory_cash_line)-len(candy_line))}║")
+        self.txo.priont_string(f"╚{'═'*(len(inventory_cash_line))}╝\n\n")
+        self.display_location(len(inventory_cash_line))
 
-    def display_loca(self, invo_width: int):
-        location_line = f"{'─'*(invo_width-len(self.player.location)-11)} Location: {self.player.location.title()}"
+    def display_location(self, inventory_width: int):
+        location_line = f"{'─'*(inventory_width-len(self.player.location)-11)} Location: {self.player.location.title()}"
         self.txo.priont_string(f"╭{location_line}╮")
         self.txo.priont_string(f"│{' '*len(location_line)}╽")
         for candy in list(CANDIES.keys()):
             buy_price = f'${self.world.buying_prices[candy][0]}'
             buy_avail = f'{self.world.buying_prices[candy][1]}x'
-            candy_buy_line = f"{buy_avail} {candy.title()} {'┄'*(invo_width-len(candy)-len(buy_price)-len(buy_avail)-3)} {buy_price}"
+            candy_buy_line = f"{buy_avail} {candy.title()} {'┄'*(inventory_width-len(candy)-len(buy_price)-len(buy_avail)-3)} {buy_price}"
             self.txo.priont_string(f"│{candy_buy_line}{' '*(len(location_line)-len(candy_buy_line))}║")
         self.txo.priont_string(f"╘{'═'*(len(location_line))}╝\n")
 
-    def display_help_message(self, group_tag=None):
-        super().display_help_message(group_tag)
-        # self.txo.clear_add_header("Candy Slinger Help")
-        # self.txo.priont_string("Type 'move <location>' to move to a new location.")
-        # self.txo.priont_string(f" i.e. 'move {random.choice(list(LOCATIONS.keys()))}' or 'move {random.choice(list(LOCATIONS.keys()))}'.")
-        # self.txo.priont_list(list(LOCATIONS.keys()), parent_key="   List of possible locations:")
-        # self.txo.priont_string("\nType 'buy <amount> <candy>' to buy some candy.")
-        # self.txo.priont_string("Type 'sell <amount> <candy>' to sell some candy.")
-        # self.txo.priont_string(f"i.e. 'buy 12 skittle' or 'sell 8 dumdum'.")
-        # self.txo.priont_list(list(CANDIES.keys()), parent_key="   List of possible candies:")
-        # self.txo.priont_string("\nType 'save' to save your progress.")
+    # def display_help_message(self, group_tag=None):
+    #     # super().display_help_message(group_tag)
+    #     # self.txo.clear_add_header("Candy Slinger Help")
+    #     # self.txo.priont_string("Type 'move <location>' to move to a new location.")
+    #     # self.txo.priont_string(f" i.e. 'move {random.choice(list(LOCATIONS.keys()))}' or 'move {random.choice(list(LOCATIONS.keys()))}'.")
+    #     # self.txo.priont_list(list(LOCATIONS.keys()), parent_key="   List of possible locations:")
+    #     # self.txo.priont_string("\nType 'buy <amount> <candy>' to buy some candy.")
+    #     # self.txo.priont_string("Type 'sell <amount> <candy>' to sell some candy.")
+    #     # self.txo.priont_string(f"i.e. 'buy 12 skittle' or 'sell 8 dumdum'.")
+    #     # self.txo.priont_list(list(CANDIES.keys()), parent_key="   List of possible candies:")
+    #     # self.txo.priont_string("\nType 'save' to save your progress.")
+    #     pass
 
     def welcome_message(self, welcoming_msgs=None):
         super().welcome_message([])

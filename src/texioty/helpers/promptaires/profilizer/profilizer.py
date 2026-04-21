@@ -42,7 +42,7 @@ USER_PROFILE_DICT = {
         }
 
     },
-    "laser_tag": {
+    "las_tagger": {
         "tagger_name": {
             "": "tagger_name_string",
             "question": "What's the tagger name?",
@@ -55,6 +55,22 @@ USER_PROFILE_DICT = {
             "question": "What's to name the profile?",
             "question_type": QuestionType.STRICT,
             "default_response": "B1U3B34RD",
+            "response_type": ResponseType.STRING
+        }
+    },
+    "rc_racer": {
+        "racer_name": {
+            "": "racer_name_string",
+            "question": "What's the racer name?",
+            "question_type": QuestionType.STRICT,
+            "default_response": "Blue Streaker",
+            "response_type": ResponseType.STRING
+        },
+        "profile_name": {
+            "": "profile_string",
+            "question": "What's to name the profile?",
+            "question_type": QuestionType.STRICT,
+            "default_response": "Blue Streaker",
             "response_type": ResponseType.STRING
         }
     }
@@ -280,24 +296,24 @@ TCG_PROFILE_DICT = {
     }
 }
 
-LAB_PROFILE_DICT = {
-    "tcg": {
-        "": "tcg_string",
-        "question": "Which trading card game to create for?",
-        "question_type": QuestionType.DECISIONING,
-        "default_response": "Pokemon",
-        "response_type": ResponseType.DECISION,
-        "decision_choices": ["Magic the Gathering", "Pokemon", "Digimon", "Lorcana", "Yu-Gi-Oh"]
-    },
-    "lab": {
-        "": "lab_string",
-        "question": "Which lab profile to make?",
-        "question_type": QuestionType.DECISIONING,
-        "default_response": "printer",
-        "response_type": ResponseType.DECISION,
-        "decision_choices": ["depicter", "blender", "deckster", "puzzler", "downloader"]
-    }
-}
+# LAB_PROFILE_DICT = {
+#     "tcg": {
+#         "": "tcg_string",
+#         "question": "Which trading card game to create for?",
+#         "question_type": QuestionType.DECISIONING,
+#         "default_response": "Pokemon",
+#         "response_type": ResponseType.DECISION,
+#         "decision_choices": ["Magic the Gathering", "Pokemon", "Digimon", "Lorcana", "Yu-Gi-Oh"]
+#     },
+#     "lab": {
+#         "": "lab_string",
+#         "question": "Which lab profile to make?",
+#         "question_type": QuestionType.DECISIONING,
+#         "default_response": "printer",
+#         "response_type": ResponseType.DECISION,
+#         "decision_choices": ["depicter", "blender", "deckster", "puzzler", "downloader"]
+#     }
+# }
 
 WORD_GAIMS = ["crossword", "word_search", "hangman"]
 
@@ -308,9 +324,9 @@ class Profilizer(BasePrompt):
         self.profile_to_make = "Texioty"
         self.word_gaims = WORD_GAIMS
 
-    def _set_deciding_function(self, func: Callable) -> None:
-        if self.txo.master.deciding_function is None or callable(self.txo.master.deciding_function):
-            self.txo.master.deciding_function = func
+    # def _set_deciding_function(self, func: Callable) -> None:
+    #     if self.txo.master.deciding_function is None or callable(self.txo.master.deciding_function):
+    #         self.txo.master.deciding_function = func
 
     def profile_make(self, profile_type: str):
         match profile_type:

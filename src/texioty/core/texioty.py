@@ -51,7 +51,10 @@ class Texioty(tk.LabelFrame):
                 'lite_desc': "Logs the user into a profile. ",
                 'full_desc': ['Logs a user into the system with a Texioty profile.',
                               'Can only be performed in Texioty mode.'],
-                'possible_args': self.available_profiles,
+                'possible_args': {
+                    '[PROFILE_NAME]': list(self.available_profiles.keys()),
+                    '[PROFILE_PASSWORD]': ''
+                },
                 'args_desc': {'[PROFILE_NAME]': ['The name of the profile to log in with.', str],
                               '[PROFILE_PASSWORD]': ['The password of the profile to log in with.', str]},
                 'examples': ['login trevor 8716', 'login bluebeard p455'],
@@ -97,21 +100,17 @@ class Texioty(tk.LabelFrame):
         }
         self.add_command_group(self.helper_commands_dict)
 
-        if helper_registry:
-            for tag, helper in helper_registry.get_all_helpers().items():
-                if hasattr(helper, "helper_commands"):
-                    for cmd_name, cmd_config in helper.helper_commands.items():
-                        self.command_registry.register_command(cmd_name, cmd_config)
+    def register_possible_arguments(self):
+        pass
 
     def register_helper_commands(self, helper_tag: str):
         if self.helper_registry:
             helper = self.helper_registry.get_helper(helper_tag)
             if helper and hasattr(helper, "helper_commands"):
+                print(f"Registering {helper_tag} with {helper}...")
                 for cmd_name, cmd_config in helper.helper_commands.items():
+                    print(f"  {cmd_name}=> {cmd_config['possible_args']} --- {cmd_config['args_desc']}")
                     self.command_registry.register_command(cmd_name, cmd_config)
-
-    def display_konfig_settings(self):
-        pass
 
     def priont_test_tags(self):
         self.texoty.clear_add_header("Testing tags")
@@ -129,11 +128,7 @@ class Texioty(tk.LabelFrame):
             rand_colo2 = u.rgb_to_hex(random.choice([t.BLACK, t.WHITE, t.GREY25]))
             x_start = random.randint(0, 59)
             self.texoty.tag_area(rand_colo, rand_colo2, f'{i}.{x_start}', f'{i}.{x_start+(5*i)}')
-            # self.texoty.priont_colorized_string(test_str,
-            #                                     u.rgb_to_hex(rand_colo), u.rgb_to_hex(rand_colo2),
-            #                                     f'1.0', f'1.3')
-                                            # f'{random.randint(0, 2)}.{random.randint(0, 6)}',
-                                            # f'{random.randint(0, 6)}.{random.randint(0, 6)}')
+
 
     def add_command_group(self, group_of_cmds: dict):
         """
@@ -165,6 +160,7 @@ class Texioty(tk.LabelFrame):
         self.remove_commands()
         self.add_command_group(self.helper_commands_dict)
         for key, helper in self.helper_registry.get_all_helpers().items():
+            print(f"Registering {key} with {helper}...")
             self.register_helper_commands(key)
 
     def close_program(self):
@@ -175,26 +171,10 @@ class Texioty(tk.LabelFrame):
         """
         self.master.quit()
 
-    def add_helper_widget(self, group_tag: str, helper_widget):
-        """
-        Add a helper widget and all of its commands to texioty while supplying access to texoty.
-        :param group_tag: Symbol of helper (e.g. TXTY GAIM DIRY)
-        :param helper_widget:
-        :return:
-        """
-        # helper_widget.txo = self.texoty
-        try:
-            if len(helper_widget.helper_commands) > 0:
-                self.add_command_group(helper_widget.helper_commands)
-        except AttributeError:
-            # print(f"No helper_commands found for {group_tag}.")
-            pass
-        self.active_helper_dict[group_tag] = [helper_widget]
-
-    def clear_texoty(self):
-        """Clear all the text from texoty and replace the header."""
-        self.texoty.delete("0.0", tk.END)
-        self.texoty.set_header()
+    # def clear_texoty(self):
+    #     """Clear all the text from texoty and replace the header."""
+    #     self.texoty.delete("0.0", tk.END)
+    #     self.texoty.set_header()
 
     def process_texity(self, event=None):
         """
@@ -294,37 +274,6 @@ class Texioty(tk.LabelFrame):
         except IndexError:
             self.texoty.priont_string("⦙⦓ What username to login to?")
 
-    # def log_profile_out(self, args):
-    #     if self.active_profile:
-    #         #TODO Save each used command for the profile
-    #         self.texoty.priont_string(f"Logging {self.active_profile.username} out. Goodbye!")
-    #         self.active_profile = self.available_profiles["guest"]
-    #         self.texoty.set_header_theme(self.active_profile.color_theme[0],
-    #                                      self.active_profile.color_theme[1],
-    #                                      16,
-    #                                      self.active_profile.color_theme[2])
-    #     else:
-    #         self.texoty.priont_string("You have to log in before you can log out.")
-
-    # def create_profile(self, args):
-    #     """Create a new profile."""
-    #     print('create_profile_args: ', args)
-    #     if "yes" in args:
-    #         self.texoty.priont_string("Creating a new profile...")
-    #         profile_name = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['profile_name'][1]
-    #         password = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['password'][1]
-    #         color_theme = self.active_helper_dict["PRUN"][0].profilemake.question_prompt_dict['color_theme'][1]
-    #         color_theme = t.DEFAULT_THEMES[color_theme]
-    #         self.available_profiles[profile_name] = u.TexiotyProfile(profile_name, password, color_theme)
-    #         save_path = f"filesOutput/.profiles/{profile_name}.json"
-    #         if not os.path.exists(save_path):
-    #             with open(save_path, 'w') as f:
-    #                 f.write(json.dumps({"texioty": self.available_profiles[profile_name].__dict__}, indent=4, sort_keys=True,
-    #                                    default=lambda o: o.__dict__, ensure_ascii=False))
-    #                 self.texoty.priont_string(f"Profile '{profile_name}' created.")
-    #
-    #         else:
-    #             self.texoty.priont_string(f"Profile '{profile_name}' already exists, did not create.")
 
     def priont_test(self):
         self.texoty.priont_dict({
@@ -373,6 +322,3 @@ class Texioty(tk.LabelFrame):
                 self.texoty.priont_string(f"Profile '{profile_name}' created.")
         else:
             self.texoty.priont_string(f"Profile '{profile_name}' already exists, did not create.")
-
-        # self.texoty.priont_dict(responses)
-

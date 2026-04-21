@@ -17,7 +17,8 @@ from src.texioty.settings import themery as t, alphanumers as a
 # load_dotenv()
 
 PRO_TIPS = ["Double click the click-commands to bring focus back to Texity.",
-            "'welcome' 'commands' 'help' are three helpful commands to welcome a user."]
+            "'welcome' 'commands' 'help' are three helpful commands to welcome a user.",
+            "Arguments in square brackets [] are required, and arguments in parentheses () are optional."]
 
 
 def input_path(*parts: str) -> str:
@@ -248,12 +249,12 @@ def get_point_delta(point1, point2) -> tuple:
     return point2[0] - point1[0], point2[1] - point1[1]
 
 def get_random_font(font_size: int):
-    return ImageFont.truetype(random.choice(glob.glob('settings/fonts/*.ttf')), size=font_size)
+    return ImageFont.truetype(random.choice(glob.glob('src/texioty/assets/fonts/*.ttf')), size=font_size)
 
 def get_font_server_name(server_fonts: List[str], font_size: int):
     font_name = random.choice(server_fonts)
     print(font_name)
-    return ImageFont.truetype(f'settings/fonts/{font_name}', size=font_size)
+    return ImageFont.truetype(f'src/texioty/assets/fonts/{font_name}', size=font_size)
 
 @dataclass
 class TexiotyProfile:

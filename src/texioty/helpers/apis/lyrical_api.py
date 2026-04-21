@@ -30,4 +30,7 @@ class LyricalAPI(BasePrompt, BaseAPIHelper):
         return self.previous_endpoint
 
 
-    def
+    def search(self, query: str):
+        endpoint = self.endpoint_builder(self.endpoint_names['search'][0], f'?q={query}')
+        response = self.get(endpoint)
+        return response.json()

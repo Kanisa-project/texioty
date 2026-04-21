@@ -73,11 +73,26 @@ class TexiotyHelper:
     def __init__(self, txo: "TEXOTY", txi: "TEXITY"):
         self.txo = txo
         self.txi = txi
-
+        self.well_commands = {}
         self.helper_commands = bind_commands(TEXIOTY_COMMANDS,{
-            'welcome': self.welcome_message,
-            'help': self.display_help_message,
-            'commands': self.display_all_available_commands,
+            'welcome': {
+                'call_func':self.welcome_message,
+                'possible_args': {},
+                'args_desc': {}
+            },
+            'commands': {
+                'call_func':self.display_all_available_commands,
+                'possible_args': {},
+                'args_desc': {}
+            },
+            'help': {
+                'call_func':self.display_help_message,
+                'possible_args': {
+                    '(GROUP_TAG)': self.txo.master.active_helpers,
+                    '(COMMAND_NAME)': self.txo.master.command_registry.commands,
+                },
+                'args_desc': {}
+            },
         })
 
     def priont_block_font(self, blk_word: str):

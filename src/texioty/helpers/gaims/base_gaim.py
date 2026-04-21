@@ -114,7 +114,6 @@ class BaseGaim(TexiotyHelper):
         self.txo.priont_string(f"Starting a new {self.game_name} game.")
 
     def save_game(self):
-        """Save this profile progress of this gaim to a file."""
         game_state = self.game_state
         os.makedirs(SAVE_DIR, exist_ok=True)
         # filename = f"{sanitize_filename(self.game_name+'_'+game_state['player_name'])}.json"
@@ -157,9 +156,9 @@ class BaseGaim(TexiotyHelper):
         self.render_with_header()
         self.txo.priont_string(f'Welcome to {self.game_name}!')
 
-    def display_help_message(self, group_tag: Optional[str] = None):
-        """Generic help message."""
-        super().display_help_message(group_tag)
+    # def display_help_message(self, group_tag: Optional[str] = None):
+    #     """Generic help message."""
+    #     super().display_help_message(group_tag)
 
     def display_all_available_commands(self):
         super().display_all_available_commands()

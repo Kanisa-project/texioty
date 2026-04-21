@@ -1,4 +1,5 @@
 import random
+from pathlib import Path
 from typing import List
 
 from PIL import Image, ImageDraw
@@ -14,15 +15,17 @@ def extrude_noodle(img: Image.Image, noodle_profile: dict) -> Image.Image:
 
     base_amount = len(noodle_base) * noodle_length * noodle_thickness
     extruded_amount = 0
+
+    output_path = f"filesOutput/foto_worx/prepped/"
+    Path(output_path).mkdir(parents=True, exist_ok=True)
+
     while extruded_amount < base_amount:
         y_start = random.randint(0, h-noodle_thickness)
         extruded_amount += int(noodle_length + noodle_thickness)
         a_noodle = noodle_box(img, y_start, noodle_thickness, noodle_length)
-        u.save_prepped_image(
-            a_noodle,
-            "extruders",
-            u.safe_filename(f"{noodle_base}_{noodle_thickness}_{noodle_length}.png")
-        )
+        save_name = f"{noodle_base}_{extruded_amount}.png"
+        file_path = Path(output_path) / save_name
+        a_noodle.save(file_path)
     return img
 
 def noodle_box(img: Image.Image, y_start: int, nood_thick: int, nood_len: int) -> Image.Image:

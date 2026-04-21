@@ -1,6 +1,7 @@
 import glob
 import random
 from math import ceil
+from pathlib import Path
 
 from PIL import Image, ImageDraw
 
@@ -17,9 +18,15 @@ def slice_up_image(img: Image.Image, slicer_profile: dict) -> Image.Image:
     angled_img = img.rotate(slangle)
     number_of_slices = slamount//slthickness
     current_slice = 0
+
+    output_dir = f"filesOutput/foto_worx/prepped/"
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+
     while current_slice < number_of_slices:
         a_slice = slide_slicer(angled_img, slthickness, current_slice)
-        a_slice.save(f"helpers/promptaires/worx_hop/fotoes/prepped/{slitem}_{current_slice}.png")
+        save_name = f"{slitem}_{current_slice}.png"
+        file_path = Path(output_dir) / save_name
+        a_slice.save(file_path)
         current_slice += 1
     return img
 

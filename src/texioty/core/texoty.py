@@ -42,7 +42,7 @@ class TEXOTY(Text):
         }
         self.header_state = dict(self.header_defaults)
         self.header_lines = []
-        self.header_line_count = 0
+        self.header_line_count = 4
         self.body_start_index = "3.0"
         self.header_content = [
             self._compose_header_top_line(

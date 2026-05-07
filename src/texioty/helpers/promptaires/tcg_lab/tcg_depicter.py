@@ -1,6 +1,6 @@
 import random
 from pathlib import Path
-from settings import themery as t, alphanumers as a, utils as u
+from src.texioty.settings import themery as t, alphanumers as a, utils as u
 from PIL import Image, ImageDraw
 
 

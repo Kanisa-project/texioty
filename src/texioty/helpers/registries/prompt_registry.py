@@ -4,10 +4,11 @@ from src.texioty.core import texity, texoty
 from src.texioty.helpers.apis.arc_api import ArcApi
 from src.texioty.helpers.promptaires.tcg_lab.tcg_labby import TCGLabby
 from src.texioty.helpers.tex_helper import TexiotyHelper
+from src.texioty.helpers.promptaires.domi_supps.dom_supplier import DominionSupplier
 from src.texioty.helpers.promptaires.worx_hop.foto_worx import FotoWorxHop
 from src.texioty.helpers.promptaires.profilizer.profilizer import Profilizer
 from src.texioty.helpers.registries.command_definitions import (TEXIOTY_COMMANDS, PROMPT_COMMANDS, DIRY_COMMANDS,
-                                                                bind_commands, merge_command_groups)
+                                                                bind_commands, merge_command_groups, DOMINION_COMMANDS)
 
 LAB_OPTIONS = ['Card-0wn1oad3r',
                'Depictinator{}',
@@ -29,6 +30,13 @@ PROFILIZER_OPTIONS = ['users',
                       'beop_boeps',
                       'word_gaims']
 
+DOMINION_KINGDOM_OPTIONS = [
+    'Setup Kingdom',
+    'Check Kingdom',
+    'Reset Kingdom',
+    'Create Kingdom'
+]
+
 class PromptRegistry(TexiotyHelper):
     """
     A registry of promptaires for many different tasks grouped by a common theme/goal.
@@ -38,15 +46,17 @@ class PromptRegistry(TexiotyHelper):
         self.tcg_lab = TCGLabby(txo, txi)
         self.foto_worx = FotoWorxHop(txo, txi)
         self.profilemake = Profilizer(txo, txi)
+        self.domi_supp = DominionSupplier(txo, txi)
         self.arc_api = ArcApi(txo, txi)
-        all_prompt_commands = merge_command_groups(PROMPT_COMMANDS, DIRY_COMMANDS, TEXIOTY_COMMANDS)
+        all_prompt_commands = merge_command_groups(PROMPT_COMMANDS, DIRY_COMMANDS, TEXIOTY_COMMANDS, DOMINION_COMMANDS)
         self.helper_commands = bind_commands(all_prompt_commands,{
             'tcg_lab': self.decide_tcg_lab,
             'foto_worx': self.start_worxhop_prompt,
-            'profile_make': self.start_profiler_prompt
+            'profile_make': self.start_profiler_prompt,
+            'domi_supp': self.start_domi_supplier
         })
         self.in_questionnaire_mode = False
-        self.current_prompt = "N/A"
+        self.current_prompt = None
 
     def _set_deciding_function(self, func: Callable) -> None:
         if self.txo.master.deciding_function is None or callable(self.txo.master.deciding_function):
@@ -63,3 +73,8 @@ class PromptRegistry(TexiotyHelper):
     def start_profiler_prompt(self):
         self.profilemake.decide_decision("What kind of profile to make", PROFILIZER_OPTIONS, "profilizer")
         self._set_deciding_function(self.profilemake.profile_make)
+
+    def start_domi_supplier(self):
+        self.current_prompt = self.domi_supp
+        self.domi_supp.decide_decision("What kind of Dominion game to make", DOMINION_KINGDOM_OPTIONS, "domi_supp")
+        self._set_deciding_function(self.domi_supp.domi_supplier)

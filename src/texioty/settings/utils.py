@@ -1,20 +1,20 @@
+import csv
 import json
 import math
 import os
 import glob
+import sqlite3
+from pathlib import Path
+
+import pandas as pd
 import random
 from dataclasses import dataclass
 from typing import List
 
-# from pytube import YouTube
-
 import requests
 from PIL import ImageFont, Image
-
-# from dotenv import load_dotenv
 from src.texioty.settings import themery as t, alphanumers as a
 
-# load_dotenv()
 
 PRO_TIPS = ["Double click the click-commands to bring focus back to Texity.",
             "'welcome' 'commands' 'help' are three helpful commands to welcome a user.",
@@ -179,9 +179,11 @@ def get_stock_price(ticker):
         url = f"https://api.api-ninjas.com/v1/stockprice?ticker={ticker}"
         response = requests.get(url, headers={"X-Api-Key": os.getenv("API_NINJAS")})
         data = response.json()
-    finally:
-        data = {}
-    return data
+        return data
+    except Exception as e:
+        print(f"{e} say nope")
+        data = {"err": f"{e}"}
+        return data
 
 def clamp(n, minn, maxn) -> int:
     return max(min(maxn, n), minn)
@@ -408,3 +410,13 @@ def retrieve_worx_profiles(equipment: str) -> dict:
 
 def read_json_file(profile_path):
     return None
+
+def convert_json_to_dict(json_string: str) -> dict:
+    return json.loads(json_string)
+
+def convert_csv_to_db(csv_filepath: str, db_filepath: str, table_name: str) -> None:
+    print(f"Converting {csv_filepath} to {db_filepath} with table {table_name}...")
+    data = pd.read_csv(csv_filepath)
+
+    with sqlite3.connect(db_filepath) as conn:
+        data.to_sql(table_name, conn, if_exists='replace', index=False)

@@ -14,3 +14,6 @@ yugioh
 sounddevice
 osrsbox
 scipy
+pythonbible
+pythonbible-gb
+pandas

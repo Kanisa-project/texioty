@@ -7,6 +7,7 @@ from typing import Callable, Dict
 from src.texioty.helpers.promptaires.prompt_helper import ResponseType, Question
 from src.texioty.helpers.registries.command_registry import CommandRegistry
 from src.texioty.settings import themery as t, konfig as k, utils as u
+from src.texioty.helpers.apis.bible_api import BibleAPI
 from src.texioty.core import texity, texoty
 
 
@@ -107,9 +108,9 @@ class Texioty(tk.LabelFrame):
         if self.helper_registry:
             helper = self.helper_registry.get_helper(helper_tag)
             if helper and hasattr(helper, "helper_commands"):
-                print(f"Registering {helper_tag} with {helper}...")
+                # print(f"Registering {helper_tag} with {helper}...")
                 for cmd_name, cmd_config in helper.helper_commands.items():
-                    print(f"  {cmd_name}=> {cmd_config['possible_args']} --- {cmd_config['args_desc']}")
+                    # print(f"  {cmd_name}=> {cmd_config['possible_args']} --- {cmd_config['args_desc']}")
                     self.command_registry.register_command(cmd_name, cmd_config)
 
     def priont_test_tags(self):
@@ -171,11 +172,6 @@ class Texioty(tk.LabelFrame):
         """
         self.master.quit()
 
-    # def clear_texoty(self):
-    #     """Clear all the text from texoty and replace the header."""
-    #     self.texoty.delete("0.0", tk.END)
-    #     self.texoty.set_header()
-
     def process_texity(self, event=None):
         """
         Process the command before executing it. Decide which helpers to use or if just a regular command.
@@ -206,7 +202,10 @@ class Texioty(tk.LabelFrame):
 
             case "Questionnaire":
                 parsed_input = self.texity.parse_question_response()
-                self.helper_registry.get_helper("PRUN").profilemake.store_response(parsed_input)
+                try:
+                    self.helper_registry.get_helper("PRUN").current_prompt.store_response(parsed_input)
+                finally:
+                    print("WHoops no loaded promtpt.")
 
             case "Decisioning":
                 parsed_input = self.texity.parse_decision()
@@ -276,22 +275,9 @@ class Texioty(tk.LabelFrame):
 
 
     def priont_test(self):
-        self.texoty.priont_dict({
-            "Striong": "This is a string",
-            "Iont": 3456123978,
-            "Flioat": 1.236978,
-            "List": ["one", 2, "tree", 45, 6.7],
-            "Dict": {
-                "INT": 654,
-                "STiroRn": "StRiNg",
-                "FLoooatT": 3.21,
-                "LT": [0, "1", 3],
-                "DCT": {'BOOL': True,
-                        "Dict22": {
-                            "this": "one2"
-                        }}
-            }
-        })
+        u.convert_csv_to_db('filesInput/imports/dominion_cards_base.csv',
+                             'filesOutput/domi_cards.db',
+                             'dominion_cards_base')
 
     def responses_to_profile(self, responses: Dict[str, Question]):
         """Create any kind of profile."""

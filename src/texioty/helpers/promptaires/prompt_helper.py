@@ -121,31 +121,12 @@ class BasePrompt(TexiotyHelper):
     def display_loose_question(self):
         pass
 
-    def display_strict_question(self):
-        pass
+    def display_strict_question(self, question: str, required_type: str):
+        self.txo.priont_string(question)
 
     def display_decision_question(self):
         pass
 
-    def start_question_prompt(self, question_dict: Dict[str, Question], clear_txo=False):
-        """
-        Checks if Texioty is already in a questionnaire prompt. If not, sets up the first question and starts the
-        prompt to receive answers. Anything typed and sent in Texity will be saved as answers for the prompt questions.
-        :param question_dict: Dictionary of questions, consider making a dataclass.
-        :param clear_txo: Clears the Texioty header before starting the questionnaire prompt.
-        :return:
-        """
-        if clear_txo:
-            self.txo.clear_add_header()
-        if not self.in_questionnaire_mode:
-            self.question_prompt_dict = question_dict
-            self.question_keys = list(question_dict.keys())
-            self.in_questionnaire_mode = True
-            self.current_question_index = 0
-            self.display_question()
-        else:
-            self.txo.priont_string("Already in a questionnaire prompt.")
-            self.display_question()
 
     def display_foto_option_question(self, question: str, avail_options: list, titled: str = "basic"):
         self.in_decisioning_mode = True
@@ -220,6 +201,28 @@ class BasePrompt(TexiotyHelper):
             for option in current_options
         )
 
+    def start_question_prompt(self, question_dict: Dict[str, Question], clear_txo=False):
+        """
+        Checks if Texioty is already in a questionnaire prompt. If not, sets up the first question and starts the
+        prompt to receive answers. Anything typed and sent in Texity will be saved as answers for the prompt questions.
+        :param question_dict: Dictionary of questions, consider making a dataclass.
+        :param clear_txo: Clears the Texioty header before starting the questionnaire prompt.
+        :return:
+        """
+        self.txo.master.current_mode = "Questionnaire"
+        print(question_dict)
+        if clear_txo:
+            self.txo.clear_add_header()
+        if not self.in_questionnaire_mode:
+            self.question_prompt_dict = question_dict
+            self.question_keys = list(question_dict.keys())
+            self.in_questionnaire_mode = True
+            self.current_question_index = 0
+            self.display_question()
+        else:
+            self.txo.priont_string("Already in a questionnaire prompt.")
+            self.display_question()
+
     def display_question(self):
         """Displays a question from the loaded questionnaire prompt dictionary."""
         if self.current_question_index < len(self.question_keys):
@@ -238,11 +241,12 @@ class BasePrompt(TexiotyHelper):
         self.txo.priont_string("Prompt ended, here are the results: ")
         self.txo.priont_dict(question_dict)
         self.in_questionnaire_mode = False
-        self.txo.master.responses_to_profile(self.question_prompt_dict)
+        # self.txo.master.responses_to_profile(self.question_prompt_dict)
         return question_dict
 
     def store_response(self, answer: str):
         """ Store the response in the questionnaire dictionary and advance to the next question."""
+        # print(self.question_keys, self.current_question_index)
         question_key = self.question_keys[self.current_question_index]
         if answer == "":
             answer = self.question_prompt_dict[question_key].default_response
@@ -250,11 +254,21 @@ class BasePrompt(TexiotyHelper):
         else:
             self.txo.priont_string("|>  " + answer)
         # self.response_dict[question_key].response_type = self.question_prompt_dict[question_key].response_type
-        self.question_prompt_dict[question_key].user_response = answer_to_response_factory(self.question_prompt_dict[question_key],
-                                                                                    answer)
+        self.question_prompt_dict[question_key].user_response = answer_to_response_factory(
+            self.question_prompt_dict[question_key],
+            answer
+        )
 
         self.current_question_index += 1
         self.display_question()
+
+    def display_int_req_question(self, question: str):
+        self.txi.isDecidingDecision = True
+        self.txo.clear_add_header()
+        self.display_strict_question(question, "integer")
+
+    # def nab_a_number(self, question: str):
+    #     self.display_strict_question()
 
     def decide_decision(self, input_question: str, possible_options: list, titled='basic'):
         """
@@ -300,7 +314,7 @@ class BasePrompt(TexiotyHelper):
     def _render_current_option_page(self):
         current_options = self.paged_options[self.current_options_page]
         page_info = f"Page {self.current_options_page+1}/{len(self.paged_options)}"
-        question_line = f"{self.current_decision_question}?\n[{page_info}]"
+        question_line = f"{self.current_decision_question}?\n  [{page_info}]"
 
         title_height = 5
         bottom_block_height = 6 + len(current_options)
@@ -339,6 +353,7 @@ def resize_foto(foto: Image.Image, new_size: tuple[int, int]) -> Image.Image:
     return foto.resize(new_size)
 
 def answer_to_response_factory(question: Question, answer: str) -> UserResponse:
+    print(question.response_type, ResponseType.INT)
     match question.response_type:
         case ResponseType.STRING:
             return UserResponse(question.key, question.response_type, str_response=answer)

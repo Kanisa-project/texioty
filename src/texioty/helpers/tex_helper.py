@@ -4,7 +4,8 @@ from typing import Optional, TYPE_CHECKING
 
 from src.texioty.helpers.registries.command_definitions import bind_commands, TEXIOTY_COMMANDS
 
-from src.texioty.settings.utils import PRO_TIPS
+# from src.texioty.settings.utils import PRO_TIPS
+import src.texioty.settings.utils as u
 
 if TYPE_CHECKING:
     from src.texioty.core.texity import TEXITY
@@ -167,15 +168,14 @@ class TexiotyHelper:
                 self.txo.priont_command_lite(available_commands[command_name])
 
     def welcome_message(self):
-        """
-        Display welcoming messages with a few commands to get started.
-
-        """
         self.txo.clear_add_header("Welcome!")
         today_date = datetime.datetime.date(datetime.datetime.now())
         today_day = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][
             datetime.datetime.weekday(today_date)]
         self.txo.priont_string(
-            f"⦙⦓ Welcome to Texioty! The date is {today_date} on a {today_day}.\n")
+            f"\n⦙⦓ Welcome to Texioty! The date is {today_date} on a {today_day}.\n")
 
-        self.txo.priont_string(f"PRO TIP⁍ {random.choice(PRO_TIPS)}")
+        self.txo.priont_string(f"PRO TIP⁍ {random.choice(u.PRO_TIPS)}\n")
+
+        ticker_info = u.get_stock_price('GME')
+        self.txo.priont_string(f"{ticker_info['name']} ({ticker_info['ticker']}) is at ${ticker_info['price']:.2f}\n")

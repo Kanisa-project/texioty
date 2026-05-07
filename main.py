@@ -2,7 +2,7 @@ import os
 import tkinter as tk
 from src.texioty.core import texioty
 
-from helpers.registries.helper_registry import HelperRegistry, HelperConfig
+from src.texioty.helpers.registries.helper_registry import HelperRegistry, HelperConfig
 from src.texioty.helpers.promptaires.digiary.digiary import Digiary
 from src.texioty.helpers.registries.gaim_registry import GaimRegistry
 from src.texioty.helpers.registries.prompt_registry import PromptRegistry
@@ -80,6 +80,13 @@ class Application(tk.Frame):
             priority=2,
             enabled=True,
             dependencies=["PRUN"]
+        ))
+        self.helper_registry.register(HelperConfig(
+            tag="BEEP",
+            class_ref=GaimRegistry,
+            priority=1,
+            enabled=True,
+            dependencies=[]
         ))
 
 

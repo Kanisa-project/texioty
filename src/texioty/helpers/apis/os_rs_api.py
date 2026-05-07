@@ -15,5 +15,5 @@ class OSRSAPIHelper(BaseAPIHelper):
         }
 
 
-for item in monsters_api.load():
-    print(item.name, item.magic_level)
+for monster in monsters_api.load():
+    print(monster.name, monster.magic_level)

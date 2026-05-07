@@ -1,15 +1,14 @@
 import glob
 import math
 from pathlib import Path
-from mtgsdk import Card
 from PIL import Image, ImageDraw
 import random
 
-from helpers.promptaires.tcg_lab.tcg_depicter import TcgDepicter
+from src.texioty.settings import alphanumers as a, utils as u
+from src.texioty.helpers.promptaires.tcg_lab.tcg_depicter import TcgDepicter
 from src.texioty.helpers.promptaires.prompt_helper import BasePrompt
 from src.texioty.helpers.promptaires.tcg_lab.sourceDGM import SourceDGM
 from src.texioty.helpers.promptaires.tcg_lab.sourceLRCNA import SourceLRCNA
-from src.texioty.settings import themery as t, alphanumers as a, utils as u
 from src.texioty.helpers.promptaires.tcg_lab.sourceMTG import SourceMTG
 from src.texioty.helpers.promptaires.tcg_lab.sourcePKM import SourcePKM
 from src.texioty.helpers.promptaires.tcg_lab.sourceYGO import SourceYGO

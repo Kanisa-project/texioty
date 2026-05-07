@@ -1,6 +1,23 @@
 from typing import Dict, Any, Callable
 from src.texioty.settings import themery as t, utils as u
 
+DOMINION_COMMANDS: Dict[str, Dict[str, Any]] = {
+    "domi_supp": {
+        'name': 'domi_supp',
+        'usage': '"domi_supp"',
+        'call_func': None,
+        'lite_desc': 'Deal with Dominion card game.',
+        'full_desc': ['Make games of supply piles.',
+                      'Create your own supply card.'],
+        'possible_args': {},
+        'args_desc': {},
+        'examples': ['domi_supp'],
+        'group_tag': 'DOMI',
+        'font_color': u.rgb_to_hex(t.JUNGLE_GREEN),
+        'back_color': u.rgb_to_hex(t.BLACK)
+        }
+}
+
 TEXIOTY_COMMANDS: Dict[str, Dict[str, Any]] = {
     "welcome": {
         'name': 'welcome',
